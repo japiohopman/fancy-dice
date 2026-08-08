@@ -66,9 +66,12 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   useEffect(() => {
     if (!containerRef.current || isInitializedRef.current) return;
 
+    const base = import.meta.env.BASE_URL || '/';
+    const resolvedAssetPath = `${base.endsWith('/') ? base : base + '/'}assets/dice-box/`;
+
     const box = new DiceBox({
       container: '#dice-canvas-box',
-      assetPath: '/assets/dice-box/',
+      assetPath: resolvedAssetPath,
       theme: 'default',
       themeColor: getThemeColor(materialTheme),
       offscreen: false, // Run in main thread for reliable rendering
