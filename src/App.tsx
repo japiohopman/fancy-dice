@@ -1,0 +1,177 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { MaterialTheme, RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
+import { parseAndRollFormula } from './lib/diceParser';
+import { audioManager } from './lib/audioManager';
+import { ShakeDetector } from './lib/shakeDetector';
+import { ThreeDiceCanvas } from './components/ThreeDiceCanvas';
+import { TopNotationBar } from './components/TopNotationBar';
+import { LeftOptionsPanel } from './components/LeftOptionsPanel';
+import { RightOptionsPanel } from './components/RightOptionsPanel';
+import { BottomHistoryBar } from './components/BottomHistoryBar';
+
+export default function App() {
+  const [currentFormula, setCurrentFormula] = useState<string>('1d20');
+  const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
+  const [isRolling, setIsRolling] = useState<boolean>(false);
+
+  // Layout Collapsed States for Mobile Side Panels
+  const [leftCollapsed, setLeftCollapsed] = useState<boolean>(false);
+  const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
+
+  // Customization State
+  const [materialTheme, setMaterialTheme] = useState<MaterialTheme>('emerald');
+  const [tableTheme, setTableTheme] = useState<TableTheme>('green');
+
+  // Shake & Audio Settings
+  const [shakeSettings, setShakeSettings] = useState<ShakeSettings>({
+    enabled: true,
+    sensitivity: 6,
+    vibrationEnabled: true,
+    soundEnabled: true,
+  });
+
+  const [history, setHistory] = useState<RollHistoryEntry[]>([]);
+  const shakeDetectorRef = useRef<ShakeDetector | null>(null);
+
+  // Sync Audio Mute setting
+  useEffect(() => {
+    audioManager.setMuted(!shakeSettings.soundEnabled);
+  }, [shakeSettings.soundEnabled]);
+
+  // Execute Roll Logic
+  const handleExecuteRoll = (formulaToRoll?: string, presetName?: string) => {
+    if (isRolling) return;
+
+    const formula = formulaToRoll || currentFormula || '1d20';
+    setCurrentFormula(formula);
+    setIsRolling(true);
+
+    // Play dice bounce sounds
+    audioManager.playDiceRollSound(4);
+
+    // Evaluate roll formula using Fantastic Notation Parser
+    const result = parseAndRollFormula(formula);
+    setCurrentResult(result);
+
+    // 1.2s animation delay for 3D tumbling physics to complete
+    setTimeout(() => {
+      setIsRolling(false);
+
+      // Play victory chime or fumble thud
+      if (result.isCrit) {
+        audioManager.playCritSound();
+      } else if (result.isFumble) {
+        audioManager.playFumbleSound();
+      }
+
+      // Record history
+      const newEntry: RollHistoryEntry = {
+        id: `history-${Date.now()}`,
+        result,
+        presetName
+      };
+      setHistory(prev => [newEntry, ...prev].slice(0, 50));
+    }, 1250);
+  };
+
+  // Initialize Shake Motion Detector
+  useEffect(() => {
+    const detector = new ShakeDetector(shakeSettings);
+    shakeDetectorRef.current = detector;
+
+    detector.setCallbacks(
+      () => {
+        handleExecuteRoll();
+      },
+      () => {}
+    );
+
+    if (shakeSettings.enabled) {
+      detector.start();
+    }
+
+    return () => {
+      detector.stop();
+    };
+  }, [shakeSettings, currentFormula]);
+
+  const handleUpdateShakeSettings = (newSettings: ShakeSettings) => {
+    setShakeSettings(newSettings);
+    if (shakeDetectorRef.current) {
+      shakeDetectorRef.current.updateSettings(newSettings);
+    }
+  };
+
+  const handleRequestPermission = async () => {
+    if (shakeDetectorRef.current) {
+      return await shakeDetectorRef.current.requestPermission();
+    }
+    return true;
+  };
+
+  const handleSimulateShake = () => {
+    if (shakeDetectorRef.current) {
+      shakeDetectorRef.current.triggerSimulatedShake();
+    } else {
+      handleExecuteRoll();
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen overflow-hidden bg-[#12100e] text-[#d4c3a1] flex flex-col font-sans select-none">
+      {/* 1. TOP NOTATION & QUICK FORMULA BAR */}
+      <TopNotationBar
+        currentFormula={currentFormula}
+        onFormulaChange={setCurrentFormula}
+        onRoll={(f) => handleExecuteRoll(f)}
+        isRolling={isRolling}
+        soundEnabled={shakeSettings.soundEnabled}
+        onToggleSound={() => handleUpdateShakeSettings({ ...shakeSettings, soundEnabled: !shakeSettings.soundEnabled })}
+        shakeEnabled={shakeSettings.enabled}
+      />
+
+      {/* 2. MIDDLE VIEWPORT (LEFT SIDEBAR + CENTER 3D CANVAS + RIGHT SIDEBAR) */}
+      <div className="flex-1 flex w-full h-full min-h-0 relative overflow-hidden">
+        {/* Left Option Menu: Dice Selectors & RPG Presets */}
+        <LeftOptionsPanel
+          onRoll={(f) => handleExecuteRoll(f)}
+          isRolling={isRolling}
+          collapsed={leftCollapsed}
+          onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
+        />
+
+        {/* Center Stage: 3D Physics Dice Box Canvas with Outcome Overlay */}
+        <main className="flex-1 h-full relative overflow-hidden bg-[#064e3b] shadow-inner">
+          <ThreeDiceCanvas
+            rollResult={currentResult}
+            isRolling={isRolling}
+            materialTheme={materialTheme}
+            tableTheme={tableTheme}
+            onRollComplete={() => {}}
+          />
+        </main>
+
+        {/* Right Option Menu: Style/Themes & Motion/Audio Settings */}
+        <RightOptionsPanel
+          materialTheme={materialTheme}
+          tableTheme={tableTheme}
+          onChangeMaterialTheme={setMaterialTheme}
+          onChangeTableTheme={setTableTheme}
+          shakeSettings={shakeSettings}
+          onUpdateShakeSettings={handleUpdateShakeSettings}
+          onRequestSensorPermission={handleRequestPermission}
+          onSimulateShake={handleSimulateShake}
+          collapsed={rightCollapsed}
+          onToggleCollapse={() => setRightCollapsed(!rightCollapsed)}
+        />
+      </div>
+
+      {/* 3. FOOTER ROLL HISTORY ticker */}
+      <BottomHistoryBar
+        history={history}
+        onReroll={(f) => handleExecuteRoll(f)}
+        onClearHistory={() => setHistory([])}
+      />
+    </div>
+  );
+}
