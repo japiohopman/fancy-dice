@@ -1,0 +1,6 @@
+{
+  "name": "Fantastic Dice Roller",
+  "description": "3D RPG dice roller with Fantastic Dice notation, shake-your-phone motion rolling, customizable 3D materials, sound effects, RPG presets, and Android mobile support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

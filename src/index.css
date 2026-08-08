@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'EB Garamond', Georgia, serif;
+    background-color: #1a1714;
+    color: #d4c3a1;
+    background-image: radial-gradient(circle at center, #2d241e 0%, #1a1714 100%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Cinzel', serif;
+  }
+}
