@@ -21,6 +21,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<any>(null);
   const isInitializedRef = useRef<boolean>(false);
+  const isInitializingRef = useRef<boolean>(false);
 
   const pendingRollRef = useRef<string[] | null>(null);
 
@@ -64,9 +65,11 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
   // Initialize DiceBox instance once
   useEffect(() => {
-    if (!containerRef.current || isInitializedRef.current) return;
+    if (!containerRef.current || isInitializedRef.current || isInitializingRef.current) return;
 
-    const base = import.meta.env.BASE_URL || '/';
+    isInitializingRef.current = true;
+
+    const base = (import.meta as any).env.BASE_URL || '/';
     const resolvedAssetPath = `${base.endsWith('/') ? base : base + '/'}assets/dice-box/`;
 
     const box = new DiceBox({
@@ -85,6 +88,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
     box.init().then(() => {
       isInitializedRef.current = true;
+      isInitializingRef.current = false;
 
       box.onRollComplete = () => {
         if (onRollComplete) onRollComplete();
@@ -103,6 +107,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       }
     }).catch((err: any) => {
       console.error('Error initializing DiceBox:', err);
+      isInitializingRef.current = false;
     });
 
     return () => {
@@ -113,6 +118,11 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
           // ignore cleanup errors
         }
       }
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+      isInitializedRef.current = false;
+      isInitializingRef.current = false;
     };
   }, []);
 
