@@ -45,7 +45,7 @@ export class ShakeDetector {
 
   public start() {
     if (this.isListening) return;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
       window.addEventListener('devicemotion', this.handleDeviceMotion, false);
       this.isListening = true;
     }
@@ -53,7 +53,7 @@ export class ShakeDetector {
 
   public stop() {
     if (!this.isListening) return;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
       window.removeEventListener('devicemotion', this.handleDeviceMotion, false);
       this.isListening = false;
     }
