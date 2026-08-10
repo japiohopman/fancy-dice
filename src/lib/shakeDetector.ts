@@ -45,7 +45,8 @@ export class ShakeDetector {
 
   public start() {
     if (this.isListening) return;
-    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+    const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (isMobile && typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
       window.addEventListener('devicemotion', this.handleDeviceMotion, false);
       this.isListening = true;
     }
@@ -53,7 +54,8 @@ export class ShakeDetector {
 
   public stop() {
     if (!this.isListening) return;
-    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+    const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (isMobile && typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
       window.removeEventListener('devicemotion', this.handleDeviceMotion, false);
       this.isListening = false;
     }
