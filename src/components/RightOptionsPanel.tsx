@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MaterialTheme, ShakeSettings, TableTheme } from '../types';
-import { Palette, Smartphone, Volume2, VolumeX, Vibrate, SlidersHorizontal, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Palette, Smartphone, Volume2, VolumeX, Vibrate, SlidersHorizontal, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 
 interface RightOptionsPanelProps {
   materialTheme: MaterialTheme;
@@ -80,17 +80,9 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   }
 
   return (
-    <aside className="w-48 bg-[#1c1815] border-l border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
+    <div className="absolute bottom-20 right-6 z-40 w-64 bg-[#1c1815]/95 backdrop-blur-md border border-[#3d3329] rounded-2xl shadow-2xl flex flex-col select-none max-h-[calc(100vh-14rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
       {/* Top Header & Collapse Toggle */}
-      <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#171412]">
-        <button
-          onClick={onToggleCollapse}
-          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#28211b]"
-          title="Collapse Menu"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-
+      <div className="flex items-center justify-between p-3 border-b border-[#3d3329] bg-[#171412]">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('themes')}
@@ -115,10 +107,18 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             <span>Motion</span>
           </button>
         </div>
+
+        <button
+          onClick={onToggleCollapse}
+          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#28211b]"
+          title="Close Menu"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-xs">
+      <div className="flex-1 p-3 flex flex-col justify-between overflow-y-auto gap-3 text-xs">
         {activeTab === 'themes' ? (
           <div className="flex flex-col gap-3">
             {/* Dice Material Colors */}
@@ -253,6 +253,6 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
           </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 };

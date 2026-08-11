@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DieType } from '../types';
-import { Dices, BookOpen, Plus, Minus, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dices, BookOpen, Plus, Minus, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 interface LeftOptionsPanelProps {
   onRoll: (formula: string) => void;
@@ -114,9 +114,9 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   }
 
   return (
-    <aside className="w-48 bg-[#1c1815] border-r border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
+    <div className="absolute bottom-20 left-6 z-40 w-64 bg-[#1c1815]/95 backdrop-blur-md border border-[#3d3329] rounded-2xl shadow-2xl flex flex-col select-none max-h-[calc(100vh-14rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
       {/* Top Header & Collapse Toggle */}
-      <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#171412]">
+      <div className="flex items-center justify-between p-3 border-b border-[#3d3329] bg-[#171412]">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('dice')}
@@ -145,14 +145,14 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
         <button
           onClick={onToggleCollapse}
           className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#28211b]"
-          title="Collapse Menu"
+          title="Close Menu"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 p-2 flex flex-col justify-between overflow-hidden gap-1.5 text-xs">
+      <div className="flex-1 p-3 flex flex-col justify-between overflow-y-auto gap-3 text-xs">
         {activeTab === 'dice' ? (
           <>
             {/* Grid of Die Selectors */}
@@ -302,6 +302,6 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
           </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 };

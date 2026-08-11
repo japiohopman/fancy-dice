@@ -14,7 +14,7 @@ export const BottomHistoryBar: React.FC<BottomHistoryBarProps> = ({
   onClearHistory,
 }) => {
   return (
-    <footer className="w-full bg-[#181412] border-t border-[#3d3329] px-3 flex items-center justify-between gap-2 shadow-inner z-20 shrink-0 select-none h-48">
+    <footer className="w-full bg-[#181412] border-t border-[#3d3329] px-3 flex items-center justify-between gap-2 shadow-inner z-20 shrink-0 select-none h-12">
       {/* Label */}
       <div className="flex items-center gap-1.5 shrink-0 text-xs font-semibold text-[#8c7851]">
         <History className="w-3.5 h-3.5" />
