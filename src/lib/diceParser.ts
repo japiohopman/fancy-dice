@@ -194,3 +194,87 @@ export function getDieSides(dieType: DieType): number {
     case 'dfate': return 3;
   }
 }
+
+export function updateParsedResultWithPhysicalRolls(
+  parsed: RollParsedResult,
+  physicalResults: any
+): RollParsedResult {
+  // Create a map/list of physical values for each die type
+  const physicalValuesByType: Record<string, number[]> = {};
+
+  if (Array.isArray(physicalResults)) {
+    physicalResults.forEach((group: any) => {
+      if (group && Array.isArray(group.rolls)) {
+        group.rolls.forEach((r: any) => {
+          const type = r.dieType || `d${r.sides}`;
+          if (!physicalValuesByType[type]) {
+            physicalValuesByType[type] = [];
+          }
+          physicalValuesByType[type].push(r.value);
+        });
+      }
+    });
+  }
+
+  let overallIsCrit = false;
+  let overallIsFumble = false;
+
+  const updatedDiceGroupResults = parsed.diceGroupResults.map(group => {
+    const updatedRolls = group.rolls.map(die => {
+      const physicalVals = physicalValuesByType[die.type];
+      let val = die.value; // Keep original if no physical roll found (fallback)
+      if (physicalVals && physicalVals.length > 0) {
+        val = physicalVals.shift()!;
+      }
+
+      const maxSides = getDieSides(die.type);
+      let isCrit = false;
+      let isFumble = false;
+
+      if (die.type === 'd20') {
+        if (val === 20) { isCrit = true; overallIsCrit = true; }
+        if (val === 1) { isFumble = true; overallIsFumble = true; }
+      } else if (die.type !== 'dfate') {
+        if (val === maxSides) isCrit = true;
+      }
+
+      let text = String(val);
+      if (die.type === 'dfate') {
+        text = val === 1 ? '+' : val === -1 ? '-' : '0';
+      } else if (die.exploded) {
+        text = `${val}!`;
+      }
+
+      return {
+        ...die,
+        value: val,
+        text,
+        isCrit,
+        isFumble
+      };
+    });
+
+    const originalKeptRollsSum = group.rolls.reduce((acc, r) => acc + (r.dropped ? 0 : r.value), 0);
+    const sign = originalKeptRollsSum === 0 ? (group.sum < 0 ? -1 : 1) : (group.sum / originalKeptRollsSum < 0 ? -1 : 1);
+    const sum = updatedRolls.reduce((acc, r) => acc + (r.dropped ? 0 : r.value), 0) * sign;
+
+    return {
+      ...group,
+      rolls: updatedRolls,
+      sum
+    };
+  });
+
+  // Calculate final total
+  const diceTotal = updatedDiceGroupResults.reduce((acc, grp) => acc + grp.sum, 0);
+  const finalTotal = diceTotal + parsed.modifier;
+
+  return {
+    ...parsed,
+    diceGroupResults: updatedDiceGroupResults,
+    total: finalTotal,
+    isCrit: overallIsCrit,
+    isFumble: overallIsFumble,
+    timestamp: new Date()
+  };
+}

@@ -8,7 +8,7 @@ interface ThreeDiceCanvasProps {
   isRolling: boolean;
   materialTheme: MaterialTheme;
   tableTheme: TableTheme;
-  onRollComplete?: () => void;
+  onRollComplete?: (results: any) => void;
 }
 
 export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
@@ -24,6 +24,13 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   const isInitializingRef = useRef<boolean>(false);
 
   const pendingRollRef = useRef<string[] | null>(null);
+
+  // Keep reference to the latest onRollComplete callback to avoid stale closure issues
+  const onRollCompleteRef = useRef<typeof onRollComplete>(onRollComplete);
+
+  useEffect(() => {
+    onRollCompleteRef.current = onRollComplete;
+  }, [onRollComplete]);
 
   // Map user materialTheme choice to DiceBox theme color
   const getThemeColor = (theme: MaterialTheme): string => {
@@ -97,8 +104,8 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       isInitializedRef.current = true;
       isInitializingRef.current = false;
 
-      box.onRollComplete = () => {
-        if (onRollComplete) onRollComplete();
+      box.onRollComplete = (results: any) => {
+        if (onRollCompleteRef.current) onRollCompleteRef.current(results);
       };
 
       // Execute any roll that came in while initializing
