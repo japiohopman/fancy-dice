@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MaterialTheme, RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
-import { parseAndRollFormula } from './lib/diceParser';
+import { parseAndRollFormula, updateParsedResultWithPhysicalRolls } from './lib/diceParser';
 import { audioManager } from './lib/audioManager';
 import { ShakeDetector } from './lib/shakeDetector';
 import { ThreeDiceCanvas } from './components/ThreeDiceCanvas';
@@ -33,6 +33,10 @@ export default function App() {
   const [history, setHistory] = useState<RollHistoryEntry[]>([]);
   const shakeDetectorRef = useRef<ShakeDetector | null>(null);
 
+  // Refs to capture active roll state for physical evaluation
+  const activePresetNameRef = useRef<string | undefined>(undefined);
+  const activeResultRef = useRef<RollParsedResult | null>(null);
+
   // Sync Audio Mute setting
   useEffect(() => {
     audioManager.setMuted(!shakeSettings.soundEnabled);
@@ -49,29 +53,45 @@ export default function App() {
     // Play dice bounce sounds
     audioManager.playDiceRollSound(4);
 
-    // Evaluate roll formula using Fantastic Notation Parser
+    // Evaluate roll formula layout using Fantastic Notation Parser
     const result = parseAndRollFormula(formula);
+
+    // Store active context to map physical results when they land
+    activeResultRef.current = result;
+    activePresetNameRef.current = presetName;
+
+    // Trigger visual roll of correct dice structure
     setCurrentResult(result);
+  };
 
-    // 1.2s animation delay for 3D tumbling physics to complete
-    setTimeout(() => {
-      setIsRolling(false);
+  const handleRollComplete = (physicalResults: any) => {
+    if (!isRolling || !activeResultRef.current) return;
 
-      // Play victory chime or fumble thud
-      if (result.isCrit) {
-        audioManager.playCritSound();
-      } else if (result.isFumble) {
-        audioManager.playFumbleSound();
-      }
+    // Map the actual physical rolling results back into our parsed structure
+    const finalizedResult = updateParsedResultWithPhysicalRolls(activeResultRef.current, physicalResults);
 
-      // Record history
-      const newEntry: RollHistoryEntry = {
-        id: `history-${Date.now()}`,
-        result,
-        presetName
-      };
-      setHistory(prev => [newEntry, ...prev].slice(0, 50));
-    }, 1250);
+    // Update state to render the visual outcomes and finish rolling
+    setCurrentResult(finalizedResult);
+    setIsRolling(false);
+
+    // Play victory chime or fumble thud based on the actual physical roll result
+    if (finalizedResult.isCrit) {
+      audioManager.playCritSound();
+    } else if (finalizedResult.isFumble) {
+      audioManager.playFumbleSound();
+    }
+
+    // Record to history using the actual physical roll result
+    const newEntry: RollHistoryEntry = {
+      id: `history-${Date.now()}`,
+      result: finalizedResult,
+      presetName: activePresetNameRef.current
+    };
+    setHistory(prev => [newEntry, ...prev].slice(0, 50));
+
+    // Clear active ref
+    activeResultRef.current = null;
+    activePresetNameRef.current = undefined;
   };
 
   // Initialize Shake Motion Detector
@@ -147,7 +167,7 @@ export default function App() {
             isRolling={isRolling}
             materialTheme={materialTheme}
             tableTheme={tableTheme}
-            onRollComplete={() => {}}
+            onRollComplete={handleRollComplete}
           />
         </main>
 
