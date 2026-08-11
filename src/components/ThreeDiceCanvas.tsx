@@ -65,7 +65,14 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
   // Initialize DiceBox instance once
   useEffect(() => {
-    if (!containerRef.current || isInitializedRef.current || isInitializingRef.current) return;
+    // If we've already initialized or are currently initializing, don't trigger another one.
+    if (isInitializedRef.current || isInitializingRef.current) return;
+
+    // Ensure we start with a clean div container to avoid duplicate canvas elements
+    // if React double-mounts the component during StrictMode or hot reloading.
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
 
     isInitializingRef.current = true;
 
