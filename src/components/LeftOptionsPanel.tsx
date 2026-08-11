@@ -114,7 +114,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   }
 
   return (
-    <aside className="w-56 bg-[#1c1815] border-r border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
+    <aside className="w-48 bg-[#1c1815] border-r border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
       {/* Top Header & Collapse Toggle */}
       <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#171412]">
         <div className="flex items-center gap-1">
