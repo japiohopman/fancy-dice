@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import DiceBox from '@3d-dice/dice-box';
-import { MaterialTheme, RollParsedResult, TableTheme } from '../types';
+import { RollParsedResult, TableTheme } from '../types';
 import { RollOutcomeOverlay } from './RollOutcomeOverlay';
 
 interface ThreeDiceCanvasProps {
   rollResult: RollParsedResult | null;
   isRolling: boolean;
-  materialTheme: MaterialTheme;
+  materialTheme: string;
   tableTheme: TableTheme;
+  diceTheme: string;
   onRollComplete?: (results: any) => void;
 }
 
@@ -16,6 +17,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   isRolling,
   materialTheme,
   tableTheme,
+  diceTheme,
   onRollComplete
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,7 +35,8 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   }, [onRollComplete]);
 
   // Map user materialTheme choice to DiceBox theme color
-  const getThemeColor = (theme: MaterialTheme): string => {
+  const getThemeColor = (theme: string): string => {
+    if (theme.startsWith('#')) return theme;
     switch (theme) {
       case 'emerald': return '#059669';
       case 'ruby': return '#d97706';
@@ -89,7 +92,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     const box = new DiceBox({
       container: '#dice-canvas-box',
       assetPath: resolvedAssetPath,
-      theme: 'default',
+      theme: diceTheme,
       themeColor: getThemeColor(materialTheme),
       offscreen: false, // Run in main thread for reliable rendering
       scale: 6,
@@ -147,6 +150,13 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       diceBoxRef.current.updateConfig({ themeColor: hexColor });
     }
   }, [materialTheme]);
+
+  // Update theme when diceTheme changes
+  useEffect(() => {
+    if (diceBoxRef.current && isInitializedRef.current) {
+      diceBoxRef.current.updateConfig({ theme: diceTheme });
+    }
+  }, [diceTheme]);
 
   // Roll dice when a new rollResult arrives and isRolling is true
   useEffect(() => {

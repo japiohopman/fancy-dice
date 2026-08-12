@@ -45,7 +45,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   };
 
   return (
-    <header className="w-full h-32 bg-[#1c1815] border-b border-[#3d3329] px-6 py-3 flex flex-col justify-between shadow-md z-30 shrink-0 select-none">
+    <header className="w-full h-40 bg-[#1c1815] border-b border-[#3d3329] px-6 py-4 flex flex-col justify-between shadow-md z-30 shrink-0 select-none">
       {/* Top Row: Brand & Sound & Motion Badge */}
       <div className="flex items-center justify-between w-full">
         {/* Brand */}

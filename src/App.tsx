@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MaterialTheme, RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
+import { RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
 import { parseAndRollFormula, updateParsedResultWithPhysicalRolls } from './lib/diceParser';
 import { audioManager } from './lib/audioManager';
 import { ShakeDetector } from './lib/shakeDetector';
@@ -19,8 +19,9 @@ export default function App() {
   const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
 
   // Customization State
-  const [materialTheme, setMaterialTheme] = useState<MaterialTheme>('emerald');
+  const [materialTheme, setMaterialTheme] = useState<string>('emerald');
   const [tableTheme, setTableTheme] = useState<TableTheme>('green');
+  const [diceTheme, setDiceTheme] = useState<string>('default');
 
   // Shake & Audio Settings
   const [shakeSettings, setShakeSettings] = useState<ShakeSettings>({
@@ -139,7 +140,7 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#12100e] text-[#d4c3a1] flex flex-col font-sans select-none">
-      {/* 1. TOP NOTATION & QUICK FORMULA BAR */}
+      {/* 1. TOP NOTATION & QUICK FORMULA BAR (h-32) */}
       <TopNotationBar
         currentFormula={currentFormula}
         onFormulaChange={setCurrentFormula}
@@ -150,14 +151,14 @@ export default function App() {
         shakeEnabled={shakeSettings.enabled}
       />
 
-      {/* 2. MIDDLE VIEWPORT (LEFT SIDEBAR + CENTER 3D CANVAS + RIGHT SIDEBAR) */}
+      {/* 2. MIDDLE VIEWPORT (LEFT SIDEBAR (w-40) + CENTER 3D CANVAS + RIGHT SIDEBAR (w-40)) */}
       <div className="flex-1 flex w-full h-full min-h-0 relative overflow-hidden">
         {/* Left Option Menu: Dice Selectors & RPG Presets */}
         <LeftOptionsPanel
-          onRoll={(f) => handleExecuteRoll(f)}
-          isRolling={isRolling}
+          onFormulaUpdate={setCurrentFormula}
           collapsed={leftCollapsed}
           onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
+          currentFormula={currentFormula}
         />
 
         {/* Center Stage: 3D Physics Dice Box Canvas with Outcome Overlay */}
@@ -167,6 +168,7 @@ export default function App() {
             isRolling={isRolling}
             materialTheme={materialTheme}
             tableTheme={tableTheme}
+            diceTheme={diceTheme}
             onRollComplete={handleRollComplete}
           />
         </main>
@@ -175,8 +177,10 @@ export default function App() {
         <RightOptionsPanel
           materialTheme={materialTheme}
           tableTheme={tableTheme}
+          diceTheme={diceTheme}
           onChangeMaterialTheme={setMaterialTheme}
           onChangeTableTheme={setTableTheme}
+          onChangeDiceTheme={setDiceTheme}
           shakeSettings={shakeSettings}
           onUpdateShakeSettings={handleUpdateShakeSettings}
           onRequestSensorPermission={handleRequestPermission}
@@ -186,7 +190,7 @@ export default function App() {
         />
       </div>
 
-      {/* 3. FOOTER ROLL HISTORY ticker */}
+      {/* 3. FOOTER ROLL HISTORY ticker (h-32) */}
       <BottomHistoryBar
         history={history}
         onReroll={(f) => handleExecuteRoll(f)}
