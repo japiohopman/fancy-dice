@@ -26,6 +26,7 @@ export default function App() {
   // Customization State
   const [materialTheme, setMaterialTheme] = useState<MaterialTheme>('emerald');
   const [tableTheme, setTableTheme] = useState<TableTheme>('green');
+  const [diceTheme, setDiceTheme] = useState<string>('default');
 
   // Shake & Audio Settings
   const [shakeSettings, setShakeSettings] = useState<ShakeSettings>({
@@ -164,6 +165,7 @@ export default function App() {
             isRolling={isRolling}
             materialTheme={materialTheme}
             tableTheme={tableTheme}
+            diceTheme={diceTheme}
             onRollComplete={handleRollComplete}
           />
 
@@ -219,8 +221,10 @@ export default function App() {
             <RightOptionsPanel
               materialTheme={materialTheme}
               tableTheme={tableTheme}
+              diceTheme={diceTheme}
               onChangeMaterialTheme={setMaterialTheme}
               onChangeTableTheme={setTableTheme}
+              onChangeDiceTheme={setDiceTheme}
               shakeSettings={shakeSettings}
               onUpdateShakeSettings={handleUpdateShakeSettings}
               onRequestSensorPermission={handleRequestPermission}
