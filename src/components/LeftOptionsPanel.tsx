@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DieType } from '../types';
-import { Dices, BookOpen, Plus, Minus, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Dices, BookOpen, Plus, Minus, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface LeftOptionsPanelProps {
   onRoll: (formula: string) => void;
@@ -52,13 +52,6 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
 
   const handleDecrement = (type: DieType) => {
     setStagedDice(prev => ({ ...prev, [type]: Math.max(0, prev[type] - 1) }));
-  };
-
-  const getIconSrc = (type: string) => {
-    const base = (import.meta as any).env.BASE_URL || '/';
-    const cleanBase = base.endsWith('/') ? base : `${base}/`;
-    const iconName = type === 'dfate' ? 'd6' : type === 'd100' ? 'd10' : type;
-    return `${cleanBase}assets/icons/dice/${iconName}.svg`;
   };
 
   const handleClear = () => {
@@ -121,30 +114,30 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   }
 
   return (
-    <div className="absolute bottom-20 left-6 z-40 w-64 bg-[#1c1815]/95 backdrop-blur-md border border-[#3d3329] rounded-2xl shadow-2xl flex flex-col select-none max-h-[calc(100vh-14rem)] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+    <aside className="w-48 bg-[#1c1815] border-r border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
       {/* Top Header & Collapse Toggle */}
-      <div className="flex items-center justify-between p-3 border-b border-[#3d3329] bg-[#171412]">
+      <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#171412]">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('dice')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-0.5 transition-all ${
               activeTab === 'dice'
                 ? 'bg-[#8c7851] text-white shadow-sm'
                 : 'text-[#d4c3a1]/70 hover:text-[#f4ead5]'
             }`}
           >
-            <Dices className="w-3.5 h-3.5" />
+            <Dices className="w-3 h-3" />
             <span>Dice</span>
           </button>
           <button
             onClick={() => setActiveTab('presets')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-0.5 transition-all ${
               activeTab === 'presets'
                 ? 'bg-[#8c7851] text-white shadow-sm'
                 : 'text-[#d4c3a1]/70 hover:text-[#f4ead5]'
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5" />
+            <BookOpen className="w-3 h-3" />
             <span>Presets</span>
           </button>
         </div>
@@ -152,22 +145,22 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
         <button
           onClick={onToggleCollapse}
           className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#28211b]"
-          title="Close Menu"
+          title="Collapse Menu"
         >
-          <X className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 p-3 flex flex-col justify-between overflow-y-auto gap-3 text-xs">
+      <div className="flex-1 p-2 flex flex-col justify-between overflow-hidden gap-1 text-xs">
         {activeTab === 'dice' ? (
           <>
             {/* Grid of Die Selectors */}
-            <div className="grid grid-cols-2 gap-1.5 overflow-hidden">
+            <div className="grid grid-cols-2 gap-1 overflow-hidden">
               {diceList.map((die) => (
                 <div
                   key={die.type}
-                  className={`flex items-center justify-between px-2 py-1 rounded-lg border text-xs ${
+                  className={`flex items-center justify-between px-1.5 py-1 rounded-lg border text-[11px] ${
                     stagedDice[die.type] > 0
                       ? 'bg-[#8c7851]/20 border-[#8c7851] text-[#f4ead5]'
                       : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]'
@@ -175,31 +168,26 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 >
                   <button
                     onClick={() => handleIncrement(die.type)}
-                    className="flex items-center gap-1.5 font-mono font-bold hover:text-white flex-1 text-left group"
+                    className="font-mono font-bold hover:text-white flex-1 text-left"
                   >
-                    <img
-                      src={getIconSrc(die.type)}
-                      className="w-4 h-4 object-contain brightness-0 invert-[89%] sepia-[12%] saturate-[485%] hue-rotate-[353deg] contrast-[91%] opacity-80 group-hover:opacity-100 transition-opacity"
-                      alt={die.label}
-                    />
-                    <span>{die.label}</span>
+                    {die.label}
                   </button>
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-0.5 shrink-0">
                     {stagedDice[die.type] > 0 && (
                       <button
                         onClick={() => handleDecrement(die.type)}
-                        className="w-4 h-4 rounded bg-[#28211b] hover:bg-rose-900/60 text-[#d4c3a1] flex items-center justify-center text-[10px]"
+                        className="w-3.5 h-3.5 rounded bg-[#28211b] hover:bg-rose-900/60 text-[#d4c3a1] flex items-center justify-center text-[9px]"
                       >
                         -
                       </button>
                     )}
-                    <span className="w-4 text-center font-mono font-bold text-xs text-[#8c7851]">
+                    <span className="w-3 text-center font-mono font-bold text-[11px] text-[#8c7851]">
                       {stagedDice[die.type]}
                     </span>
                     <button
                       onClick={() => handleIncrement(die.type)}
-                      className="w-4 h-4 rounded bg-[#8c7851]/40 hover:bg-[#8c7851] text-white flex items-center justify-center text-[10px]"
+                      className="w-3.5 h-3.5 rounded bg-[#8c7851]/40 hover:bg-[#8c7851] text-white flex items-center justify-center text-[9px]"
                     >
                       +
                     </button>
@@ -231,37 +219,53 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 </div>
               </div>
 
-              {/* Advantage Radio Chips */}
+              {/* Advantage Radio Chips with Custom Rotated SVG Icons */}
               <div className="grid grid-cols-3 gap-1 pt-1 border-t border-[#3d3329]">
                 <button
                   onClick={() => setAdvantage('none')}
-                  className={`py-1 rounded text-[10px] font-bold border transition-colors ${
+                  className={`py-1 rounded text-[10px] font-bold border transition-all flex flex-col items-center justify-center gap-0.5 ${
                     advantage === 'none'
-                      ? 'bg-[#8c7851] text-white border-[#8c7851]'
-                      : 'bg-[#28211b] text-[#d4c3a1]/60 border-[#3d3329]'
+                      ? 'bg-[#8c7851] text-white border-[#8c7851] shadow'
+                      : 'bg-[#28211b] text-[#d4c3a1]/60 border-[#3d3329] hover:text-[#f4ead5]'
                   }`}
                 >
-                  Norm
+                  <span>Norm</span>
                 </button>
                 <button
                   onClick={() => setAdvantage('advantage')}
-                  className={`py-1 rounded text-[10px] font-bold border transition-colors ${
+                  className={`py-1 rounded text-[10px] font-bold border transition-all flex flex-col items-center justify-center gap-0.5 ${
                     advantage === 'advantage'
-                      ? 'bg-emerald-700 text-white border-emerald-600'
-                      : 'bg-[#28211b] text-[#d4c3a1]/60 border-[#3d3329]'
+                      ? 'bg-emerald-700 text-white border-emerald-600 shadow'
+                      : 'bg-[#28211b] text-[#d4c3a1]/60 border-[#3d3329] hover:text-emerald-400'
                   }`}
+                  title="Advantage"
                 >
-                  ADV
+                  <img
+                    src={`${(import.meta as any).env.BASE_URL || '/'}assets/icons/dice/advantage.svg`}
+                    alt="Advantage"
+                    className={`w-3.5 h-3.5 object-contain transition-all ${
+                      advantage === 'advantage' ? 'brightness-0 invert' : 'brightness-0 invert-[60%] sepia-[15%] saturate-[400%] hue-rotate-[100deg]'
+                    }`}
+                  />
+                  <span>ADV</span>
                 </button>
                 <button
                   onClick={() => setAdvantage('disadvantage')}
-                  className={`py-1 rounded text-[10px] font-bold border transition-colors ${
+                  className={`py-1 rounded text-[10px] font-bold border transition-all flex flex-col items-center justify-center gap-0.5 ${
                     advantage === 'disadvantage'
-                      ? 'bg-rose-800 text-white border-rose-700'
-                      : 'bg-[#28211b] text-[#d4c3a1]/60 border-[#3d3329]'
+                      ? 'bg-rose-800 text-white border-rose-700 shadow'
+                      : 'bg-[#28211b] text-[#d4c3a1]/60 border-[#3d3329] hover:text-rose-400'
                   }`}
+                  title="Disadvantage (Advantage Rotated 180°)"
                 >
-                  DIS
+                  <img
+                    src={`${(import.meta as any).env.BASE_URL || '/'}assets/icons/dice/disadvantage.svg`}
+                    alt="Disadvantage"
+                    className={`w-3.5 h-3.5 object-contain transition-all ${
+                      advantage === 'disadvantage' ? 'brightness-0 invert' : 'brightness-0 invert-[50%] sepia-[15%] saturate-[400%] hue-rotate-[320deg]'
+                    }`}
+                  />
+                  <span>DIS</span>
                 </button>
               </div>
             </div>
@@ -314,6 +318,6 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </aside>
   );
 };

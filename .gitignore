@@ -7,7 +7,3 @@ coverage/
 .env*
 !.env.example
 android/
-
-# Copied dynamic themes
-public/assets/themes/
-public/assets/dice-box/themes/

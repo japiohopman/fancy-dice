@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",
-    "@3d-dice/dice-themes": "^0.2.1",
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",

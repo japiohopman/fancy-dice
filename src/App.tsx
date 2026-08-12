@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dices, SlidersHorizontal } from 'lucide-react';
 import { MaterialTheme, RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
 import { parseAndRollFormula, updateParsedResultWithPhysicalRolls } from './lib/diceParser';
 import { audioManager } from './lib/audioManager';
@@ -15,10 +14,6 @@ export default function App() {
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
 
-  // Overlay state for minimal layout
-  const [showDicePicker, setShowDicePicker] = useState<boolean>(false);
-  const [showOptions, setShowOptions] = useState<boolean>(false);
-
   // Layout Collapsed States for Mobile Side Panels
   const [leftCollapsed, setLeftCollapsed] = useState<boolean>(false);
   const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
@@ -26,7 +21,6 @@ export default function App() {
   // Customization State
   const [materialTheme, setMaterialTheme] = useState<MaterialTheme>('emerald');
   const [tableTheme, setTableTheme] = useState<TableTheme>('green');
-  const [diceTheme, setDiceTheme] = useState<string>('default');
 
   // Shake & Audio Settings
   const [shakeSettings, setShakeSettings] = useState<ShakeSettings>({
@@ -156,8 +150,16 @@ export default function App() {
         shakeEnabled={shakeSettings.enabled}
       />
 
-      {/* 2. MIDDLE VIEWPORT (CENTER 3D CANVAS WITH OVERLAYS) */}
+      {/* 2. MIDDLE VIEWPORT (LEFT SIDEBAR + CENTER 3D CANVAS + RIGHT SIDEBAR) */}
       <div className="flex-1 flex w-full h-full min-h-0 relative overflow-hidden">
+        {/* Left Option Menu: Dice Selectors & RPG Presets */}
+        <LeftOptionsPanel
+          onRoll={(f) => handleExecuteRoll(f)}
+          isRolling={isRolling}
+          collapsed={leftCollapsed}
+          onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
+        />
+
         {/* Center Stage: 3D Physics Dice Box Canvas with Outcome Overlay */}
         <main className="flex-1 h-full relative overflow-hidden bg-[#064e3b] shadow-inner">
           <ThreeDiceCanvas
@@ -165,75 +167,23 @@ export default function App() {
             isRolling={isRolling}
             materialTheme={materialTheme}
             tableTheme={tableTheme}
-            diceTheme={diceTheme}
             onRollComplete={handleRollComplete}
           />
-
-          {/* Floating Toggle Buttons */}
-          {/* Left Floating Button: Dice Selector */}
-          <button
-            onClick={() => {
-              setShowDicePicker(!showDicePicker);
-              setShowOptions(false);
-            }}
-            className={`absolute bottom-6 left-6 z-30 p-3 rounded-full border shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all cursor-pointer font-display ${
-              showDicePicker
-                ? 'bg-[#8c7851] text-white border-[#8c7851]'
-                : 'bg-[#1c1815]/90 hover:bg-[#28211b] border-[#8c7851]/40 text-[#f4ead5]'
-            }`}
-            title="Open Dice Picker"
-          >
-            <Dices className="w-5 h-5 text-current" />
-            <span className="text-xs font-bold tracking-wider hidden sm:inline">Dice</span>
-          </button>
-
-          {/* Right Floating Button: Settings/Style */}
-          <button
-            onClick={() => {
-              setShowOptions(!showOptions);
-              setShowDicePicker(false);
-            }}
-            className={`absolute bottom-6 right-6 z-30 p-3 rounded-full border shadow-xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all cursor-pointer font-display ${
-              showOptions
-                ? 'bg-[#8c7851] text-white border-[#8c7851]'
-                : 'bg-[#1c1815]/90 hover:bg-[#28211b] border-[#8c7851]/40 text-[#f4ead5]'
-            }`}
-            title="Open Style & Settings"
-          >
-            <SlidersHorizontal className="w-5 h-5 text-current" />
-            <span className="text-xs font-bold tracking-wider hidden sm:inline">Options</span>
-          </button>
-
-          {/* Absolute Overlays */}
-          {showDicePicker && (
-            <LeftOptionsPanel
-              onRoll={(f) => {
-                handleExecuteRoll(f);
-                setShowDicePicker(false); // Close overlay after rolling
-              }}
-              isRolling={isRolling}
-              collapsed={false}
-              onToggleCollapse={() => setShowDicePicker(false)} // Treat toggle collapse as close in overlay mode
-            />
-          )}
-
-          {showOptions && (
-            <RightOptionsPanel
-              materialTheme={materialTheme}
-              tableTheme={tableTheme}
-              diceTheme={diceTheme}
-              onChangeMaterialTheme={setMaterialTheme}
-              onChangeTableTheme={setTableTheme}
-              onChangeDiceTheme={setDiceTheme}
-              shakeSettings={shakeSettings}
-              onUpdateShakeSettings={handleUpdateShakeSettings}
-              onRequestSensorPermission={handleRequestPermission}
-              onSimulateShake={handleSimulateShake}
-              collapsed={false}
-              onToggleCollapse={() => setShowOptions(false)} // Treat toggle collapse as close in overlay mode
-            />
-          )}
         </main>
+
+        {/* Right Option Menu: Style/Themes & Motion/Audio Settings */}
+        <RightOptionsPanel
+          materialTheme={materialTheme}
+          tableTheme={tableTheme}
+          onChangeMaterialTheme={setMaterialTheme}
+          onChangeTableTheme={setTableTheme}
+          shakeSettings={shakeSettings}
+          onUpdateShakeSettings={handleUpdateShakeSettings}
+          onRequestSensorPermission={handleRequestPermission}
+          onSimulateShake={handleSimulateShake}
+          collapsed={rightCollapsed}
+          onToggleCollapse={() => setRightCollapsed(!rightCollapsed)}
+        />
       </div>
 
       {/* 3. FOOTER ROLL HISTORY ticker */}

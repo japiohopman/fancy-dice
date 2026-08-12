@@ -97,9 +97,10 @@ class AudioManager {
   }
 
   /**
-   * Plays the critical success synthesizer sound as a fallback
+   * Plays a dramatic fanfare chord for Natural 20 / Critical Success
    */
-  private playCritSynthSound() {
+  public playCritSound() {
+    if (this.isMuted) return;
     this.initContext();
     if (!this.ctx) return;
 
@@ -127,28 +128,10 @@ class AudioManager {
   }
 
   /**
-   * Plays a dramatic fanfare sound for Natural 20 / Critical Success
-   * Attempts to play custom WAV file, falling back to the synthesizer
+   * Plays a low thud / fumble sound for Natural 1
    */
-  public playCritSound() {
+  public playFumbleSound() {
     if (this.isMuted) return;
-    try {
-      const base = (import.meta as any).env.BASE_URL || '/';
-      const resolvedPath = `${base.endsWith('/') ? base : base + '/'}assets/sounds/sfx/success_roll_20.wav`;
-      const audio = new Audio(resolvedPath);
-      audio.play().catch(err => {
-        console.warn('Failed to play custom critical 20 sound, falling back to synthesizer:', err);
-        this.playCritSynthSound();
-      });
-    } catch (e) {
-      this.playCritSynthSound();
-    }
-  }
-
-  /**
-   * Plays the fumble synthesizer sound as a fallback
-   */
-  private playFumbleSynthSound() {
     this.initContext();
     if (!this.ctx) return;
 
@@ -168,25 +151,6 @@ class AudioManager {
 
     osc.start(now);
     osc.stop(now + 0.45);
-  }
-
-  /**
-   * Plays a low thud / fumble sound for Natural 1
-   * Attempts to play custom WAV file, falling back to the synthesizer
-   */
-  public playFumbleSound() {
-    if (this.isMuted) return;
-    try {
-      const base = (import.meta as any).env.BASE_URL || '/';
-      const resolvedPath = `${base.endsWith('/') ? base : base + '/'}assets/sounds/sfx/roll_1.wav`;
-      const audio = new Audio(resolvedPath);
-      audio.play().catch(err => {
-        console.warn('Failed to play custom fumble 1 sound, falling back to synthesizer:', err);
-        this.playFumbleSynthSound();
-      });
-    } catch (e) {
-      this.playFumbleSynthSound();
-    }
   }
 }
 
