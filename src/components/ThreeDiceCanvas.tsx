@@ -8,7 +8,6 @@ interface ThreeDiceCanvasProps {
   isRolling: boolean;
   materialTheme: MaterialTheme;
   tableTheme: TableTheme;
-  diceTheme: string;
   onRollComplete?: (results: any) => void;
 }
 
@@ -17,7 +16,6 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   isRolling,
   materialTheme,
   tableTheme,
-  diceTheme,
   onRollComplete
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,7 +89,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     const box = new DiceBox({
       container: '#dice-canvas-box',
       assetPath: resolvedAssetPath,
-      theme: diceTheme,
+      theme: 'default',
       themeColor: getThemeColor(materialTheme),
       offscreen: false, // Run in main thread for reliable rendering
       scale: 6,
@@ -149,13 +147,6 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       diceBoxRef.current.updateConfig({ themeColor: hexColor });
     }
   }, [materialTheme]);
-
-  // Update theme when diceTheme changes
-  useEffect(() => {
-    if (diceBoxRef.current && isInitializedRef.current) {
-      diceBoxRef.current.updateConfig({ theme: diceTheme });
-    }
-  }, [diceTheme]);
 
   // Roll dice when a new rollResult arrives and isRolling is true
   useEffect(() => {
