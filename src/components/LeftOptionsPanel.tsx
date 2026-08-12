@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DieType } from '../types';
 import { Dices, BookOpen, Plus, Minus, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface LeftOptionsPanelProps {
-  onRoll: (formula: string) => void;
-  isRolling: boolean;
+  onFormulaUpdate: (formula: string) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  currentFormula: string;
 }
 
 export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
-  onRoll,
-  isRolling,
+  onFormulaUpdate,
   collapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  currentFormula
 }) => {
   const [activeTab, setActiveTab] = useState<'dice' | 'presets'>('dice');
 
@@ -46,6 +46,35 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     { name: 'Fate (4dF)', formula: '4dF', icon: Dices, color: 'text-purple-400' },
   ];
 
+  // Sync staged dice changes to top notation bar formula in real-time
+  useEffect(() => {
+    const parts: string[] = [];
+
+    if (stagedDice.d20 > 0 && advantage !== 'none') {
+      if (advantage === 'advantage') parts.push('2d20kh1');
+      else parts.push('2d20kl1');
+    } else if (stagedDice.d20 > 0) {
+      parts.push(`${stagedDice.d20}d20`);
+    }
+
+    (Object.keys(stagedDice) as DieType[]).forEach(type => {
+      if (type === 'd20') return;
+      const cnt = stagedDice[type];
+      if (cnt > 0) parts.push(`${cnt}${type}`);
+    });
+
+    if (parts.length === 0) {
+      // If nothing staged, keep it default or don't override if there's custom input
+      return;
+    }
+
+    let formula = parts.join('+');
+    if (modifier > 0) formula += `+${modifier}`;
+    if (modifier < 0) formula += `${modifier}`;
+
+    onFormulaUpdate(formula);
+  }, [stagedDice, modifier, advantage]);
+
   const handleIncrement = (type: DieType) => {
     setStagedDice(prev => ({ ...prev, [type]: prev[type] + 1 }));
   };
@@ -65,33 +94,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     setStagedDice({ d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0, dfate: 0 });
     setModifier(0);
     setAdvantage('none');
-  };
-
-  const buildAndRoll = () => {
-    const parts: string[] = [];
-
-    if (stagedDice.d20 > 0 && advantage !== 'none') {
-      if (advantage === 'advantage') parts.push('2d20kh1');
-      else parts.push('2d20kl1');
-    } else if (stagedDice.d20 > 0) {
-      parts.push(`${stagedDice.d20}d20`);
-    }
-
-    (Object.keys(stagedDice) as DieType[]).forEach(type => {
-      if (type === 'd20') return;
-      const cnt = stagedDice[type];
-      if (cnt > 0) parts.push(`${cnt}${type}`);
-    });
-
-    if (parts.length === 0) {
-      parts.push('1d20');
-    }
-
-    let formula = parts.join('+');
-    if (modifier > 0) formula += `+${modifier}`;
-    if (modifier < 0) formula += `${modifier}`;
-
-    onRoll(formula);
+    onFormulaUpdate('1d20');
   };
 
   if (collapsed) {
@@ -163,7 +166,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
         {activeTab === 'dice' ? (
           <>
             {/* Grid of Die Selectors with SVGs */}
-            <div className="grid grid-cols-2 gap-1 overflow-y-auto max-h-[calc(100vh-14rem)] pr-0.5">
+            <div className="grid grid-cols-2 gap-1 overflow-y-auto max-h-[calc(100vh-12rem)] pr-0.5">
               {diceList.map((die) => (
                 <div
                   key={die.type}
@@ -289,23 +292,15 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Clear Button */}
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={handleClear}
-                className="p-1.5 rounded-xl bg-[#28211b] hover:bg-rose-950/30 hover:text-rose-400 text-[#d4c3a1]/70 border border-[#3d3329]"
+                className="w-full py-1.5 rounded-xl bg-[#28211b] hover:bg-rose-950/30 hover:text-rose-300 text-[#d4c3a1]/70 border border-[#3d3329] flex items-center justify-center gap-1 text-[10px] font-bold"
                 title="Reset staged dice"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={buildAndRoll}
-                disabled={isRolling}
-                className="flex-1 py-1.5 rounded-xl bg-[#8c7851] hover:bg-[#6d5b3d] text-white font-bold text-[10px] uppercase tracking-wider shadow-md font-display flex items-center justify-center gap-1"
-              >
-                <Dices className="w-3.5 h-3.5" />
-                <span>Roll Staged</span>
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset Picker</span>
               </button>
             </div>
           </>
@@ -320,9 +315,8 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               return (
                 <button
                   key={p.name}
-                  onClick={() => onRoll(p.formula)}
-                  disabled={isRolling}
-                  className="w-full flex items-center justify-between p-1.5 rounded-xl bg-[#141210] hover:bg-[#8c7851]/20 border border-[#3d3329] hover:border-[#8c7851] text-left transition-all active:scale-95 group min-w-0"
+                  onClick={() => onFormulaUpdate(p.formula)}
+                  className="w-full flex items-center justify-between p-1.5 rounded-xl bg-[#141210] hover:bg-[#8c7851]/20 border border-[#3d3329] hover:border-[#8c7851] text-left transition-all active:scale-95 group min-w-0 cursor-pointer"
                 >
                   <div className="flex items-center gap-1 min-w-0">
                     <IconComp className={`w-3 h-3 shrink-0 ${p.color}`} />
