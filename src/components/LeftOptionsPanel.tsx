@@ -54,6 +54,13 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     setStagedDice(prev => ({ ...prev, [type]: Math.max(0, prev[type] - 1) }));
   };
 
+  const getIconSrc = (type: string) => {
+    const base = (import.meta as any).env.BASE_URL || '/';
+    const cleanBase = base.endsWith('/') ? base : `${base}/`;
+    const iconName = type === 'dfate' ? 'd6' : type === 'd100' ? 'd10' : type;
+    return `${cleanBase}assets/icons/dice/${iconName}.svg`;
+  };
+
   const handleClear = () => {
     setStagedDice({ d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0, dfate: 0 });
     setModifier(0);
@@ -168,9 +175,14 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 >
                   <button
                     onClick={() => handleIncrement(die.type)}
-                    className="font-mono font-bold hover:text-white flex-1 text-left"
+                    className="flex items-center gap-1.5 font-mono font-bold hover:text-white flex-1 text-left group"
                   >
-                    {die.label}
+                    <img
+                      src={getIconSrc(die.type)}
+                      className="w-4 h-4 object-contain brightness-0 invert-[89%] sepia-[12%] saturate-[485%] hue-rotate-[353deg] contrast-[91%] opacity-80 group-hover:opacity-100 transition-opacity"
+                      alt={die.label}
+                    />
+                    <span>{die.label}</span>
                   </button>
 
                   <div className="flex items-center gap-1 shrink-0">
