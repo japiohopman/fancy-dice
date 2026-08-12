@@ -5,8 +5,10 @@ import { Palette, Smartphone, Volume2, VolumeX, Vibrate, SlidersHorizontal, Chev
 interface RightOptionsPanelProps {
   materialTheme: MaterialTheme;
   tableTheme: TableTheme;
+  diceTheme: string;
   onChangeMaterialTheme: (theme: MaterialTheme) => void;
   onChangeTableTheme: (theme: TableTheme) => void;
+  onChangeDiceTheme: (theme: string) => void;
   shakeSettings: ShakeSettings;
   onUpdateShakeSettings: (settings: ShakeSettings) => void;
   onRequestSensorPermission: () => Promise<boolean>;
@@ -18,8 +20,10 @@ interface RightOptionsPanelProps {
 export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   materialTheme,
   tableTheme,
+  diceTheme,
   onChangeMaterialTheme,
   onChangeTableTheme,
+  onChangeDiceTheme,
   shakeSettings,
   onUpdateShakeSettings,
   onRequestSensorPermission,
@@ -29,6 +33,19 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'themes' | 'shake'>('themes');
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+
+  const diceThemeOptions: { id: string; name: string; color: string }[] = [
+    { id: 'default', name: 'Standard Classic', color: 'bg-zinc-600' },
+    { id: 'smooth', name: 'Smooth Plastic', color: 'bg-sky-600' },
+    { id: 'wooden', name: 'Carved Wooden', color: 'bg-amber-800' },
+    { id: 'rust', name: 'Rusted Metal', color: 'bg-orange-800' },
+    { id: 'rock', name: 'Chiseled Stone', color: 'bg-stone-500' },
+    { id: 'gemstone', name: 'Polished Gem', color: 'bg-emerald-500' },
+    { id: 'gemstoneMarble', name: 'Gemstone Marble', color: 'bg-teal-500' },
+    { id: 'diceOfRolling', name: 'Dice of Rolling', color: 'bg-rose-500' },
+    { id: 'blueGreenMetal', name: 'Blue-Green Metal', color: 'bg-cyan-600' },
+    { id: 'smooth-pip', name: 'Smooth Pips', color: 'bg-yellow-600' },
+  ];
 
   const materialOptions: { id: MaterialTheme; name: string; color: string }[] = [
     { id: 'emerald', name: 'Emerald', color: 'bg-emerald-600' },
@@ -142,6 +159,32 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                       <span>{item.name}</span>
                     </div>
                     {materialTheme === item.id && <Check className="w-3.5 h-3.5 text-[#8c7851]" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3D Dice Skins */}
+            <div className="flex flex-col gap-1.5 pt-2 border-t border-[#3d3329]">
+              <span className="text-[10px] uppercase font-bold text-[#d4c3a1]/60 tracking-wider">
+                3D Dice Skin:
+              </span>
+              <div className="grid grid-cols-1 gap-1">
+                {diceThemeOptions.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onChangeDiceTheme(item.id)}
+                    className={`flex items-center justify-between p-1.5 rounded-xl border text-xs transition-all ${
+                      diceTheme === item.id
+                        ? 'bg-[#8c7851]/20 border-[#8c7851] text-[#f4ead5] font-bold'
+                        : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-3.5 h-3.5 rounded-full ${item.color} border border-white/20`} />
+                      <span>{item.name}</span>
+                    </div>
+                    {diceTheme === item.id && <Check className="w-3.5 h-3.5 text-[#8c7851]" />}
                   </button>
                 ))}
               </div>
