@@ -162,11 +162,11 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 p-2 flex flex-col justify-between overflow-hidden gap-1 text-xs">
+      <div className="flex-1 p-1.5 flex flex-col min-h-0 overflow-y-auto gap-1.5 text-xs no-scrollbar">
         {activeTab === 'dice' ? (
           <>
             {/* Grid of Die Selectors with SVGs */}
-            <div className="grid grid-cols-2 gap-1 overflow-y-auto max-h-[calc(100vh-12rem)] pr-0.5">
+            <div className="grid grid-cols-2 gap-1 pr-0.5 shrink-0">
               {diceList.map((die) => (
                 <div
                   key={die.type}

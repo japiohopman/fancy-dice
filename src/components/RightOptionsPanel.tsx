@@ -200,21 +200,31 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
   return (
     <aside className="w-40 bg-[#1c1815] border-l border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
-      {/* Submenu Tabs list */}
-      <div className="grid grid-cols-4 gap-0.5 p-1 border-b border-[#3d3329] bg-[#171412]">
-        {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`py-1 text-[9px] font-bold uppercase rounded transition-all ${
-              activeTab === tab
-                ? 'bg-[#8c7851] text-white'
-                : 'text-[#d4c3a1]/60 hover:text-[#f4ead5] hover:bg-[#28211b]'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      {/* Submenu Tabs list & Collapse toggle */}
+      <div className="flex items-center justify-between p-1 border-b border-[#3d3329] bg-[#171412]">
+        <div className="grid grid-cols-4 gap-0.5 flex-1 mr-1">
+          {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-1 text-[8.5px] font-bold uppercase rounded transition-all ${
+                activeTab === tab
+                  ? 'bg-[#8c7851] text-white'
+                  : 'text-[#d4c3a1]/60 hover:text-[#f4ead5] hover:bg-[#28211b]'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={onToggleCollapse}
+          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#28211b] shrink-0"
+          title="Collapse Menu"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Content Body */}

@@ -7,11 +7,13 @@ export class ShakeDetector {
   private lastZ: number | null = null;
   private lastTime: number = 0;
   private shakeCount: number = 0;
+  private stillnessDuration: number = 0;
+  private isCupShaking: boolean = false;
   private isListening: boolean = false;
   private settings: ShakeSettings;
 
   private onShakeCallback?: () => void;
-  private onShakeProgressCallback?: (intensity: number) => void;
+  private onCupStateChangeCallback?: (isCupShaking: boolean) => void;
 
   constructor(settings: ShakeSettings) {
     this.settings = settings;
@@ -22,9 +24,12 @@ export class ShakeDetector {
     this.settings = newSettings;
   }
 
-  public setCallbacks(onShake: () => void, onProgress?: (intensity: number) => void) {
+  public setCallbacks(
+    onShake: () => void,
+    onCupStateChange?: (isCupShaking: boolean) => void
+  ) {
     this.onShakeCallback = onShake;
-    this.onShakeProgressCallback = onProgress;
+    this.onCupStateChangeCallback = onCupStateChange;
   }
 
   public async requestPermission(): Promise<boolean> {
@@ -70,7 +75,7 @@ export class ShakeDetector {
     }
 
     const curTime = Date.now();
-    if (curTime - this.lastTime > 80) { // Check every ~80ms
+    if (curTime - this.lastTime > 70) { // Check every ~70ms
       const diffTime = curTime - this.lastTime;
       this.lastTime = curTime;
 
@@ -83,42 +88,57 @@ export class ShakeDetector {
 
         const speed = ((deltaX + deltaY + deltaZ) / diffTime) * 10000;
 
-        // Sensitivity mapped: 1 (hard threshold: 2500) to 10 (gentle threshold: 900)
-        const threshold = 2800 - (this.settings.sensitivity * 180);
+        // Active shake threshold
+        const shakeThreshold = 2800 - (this.settings.sensitivity * 180);
+        // Table placement / stillness threshold
+        const stillnessThreshold = Math.max(200, shakeThreshold * 0.25);
 
-        if (speed > threshold) {
+        if (speed > shakeThreshold) {
           this.shakeCount++;
-          const progressIntensity = Math.min(this.shakeCount / 3, 1.0);
+          this.stillnessDuration = 0;
 
-          if (this.onShakeProgressCallback) {
-            this.onShakeProgressCallback(progressIntensity);
-          }
-
+          // Play cup rattle sound on each shake pulse
           if (this.settings.soundEnabled) {
             audioManager.playShakeRattle();
           }
 
           if (this.settings.vibrationEnabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-            navigator.vibrate(30);
+            navigator.vibrate(25);
           }
 
-          // Trigger roll after 3 energetic shake detection pulses
-          if (this.shakeCount >= 3) {
+          // Enter "Cup Shaking" state
+          if (this.shakeCount >= 2 && !this.isCupShaking) {
+            this.isCupShaking = true;
+            if (this.onCupStateChangeCallback) {
+              this.onCupStateChangeCallback(true);
+            }
+          }
+        } else if (this.isCupShaking && speed < stillnessThreshold) {
+          // Device is placed flat/still on table/platform after shaking
+          this.stillnessDuration += diffTime;
+
+          // After ~350ms of stillness on table, release dice from cup to table!
+          if (this.stillnessDuration >= 350) {
+            this.isCupShaking = false;
+            this.stillnessDuration = 0;
             this.shakeCount = 0;
+
+            if (this.onCupStateChangeCallback) {
+              this.onCupStateChangeCallback(false);
+            }
+
             if (this.settings.vibrationEnabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
               navigator.vibrate([40, 30, 60]);
             }
+
             if (this.onShakeCallback) {
               this.onShakeCallback();
             }
           }
-        } else {
-          // Slowly decay shake count if motion pauses
+        } else if (!this.isCupShaking) {
+          // Slowly decay shake count if motion pauses without entering cup state
           if (this.shakeCount > 0) {
             this.shakeCount = Math.max(0, this.shakeCount - 0.5);
-            if (this.onShakeProgressCallback) {
-              this.onShakeProgressCallback(this.shakeCount / 3);
-            }
           }
         }
       }
@@ -133,14 +153,25 @@ export class ShakeDetector {
    * Helper to simulate a shake action manually (e.g. for desktop or button click)
    */
   public triggerSimulatedShake() {
-    if (this.settings.vibrationEnabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate([50, 40, 80]);
-    }
+    // 1. Cup shaking rattle sound
     if (this.settings.soundEnabled) {
       audioManager.playShakeRattle();
     }
-    if (this.onShakeCallback) {
-      this.onShakeCallback();
+    if (this.settings.vibrationEnabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate([50, 40, 80]);
     }
+    if (this.onCupStateChangeCallback) {
+      this.onCupStateChangeCallback(true);
+    }
+
+    // 2. Table placement roll after brief delay
+    setTimeout(() => {
+      if (this.onCupStateChangeCallback) {
+        this.onCupStateChangeCallback(false);
+      }
+      if (this.onShakeCallback) {
+        this.onShakeCallback();
+      }
+    }, 500);
   }
 }
