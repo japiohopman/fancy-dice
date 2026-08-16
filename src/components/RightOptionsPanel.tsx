@@ -192,7 +192,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
           className="p-1.5 rounded-lg bg-[#28211b] hover:bg-[#3d3329] text-[#d4c3a1]"
           title="Expand Right Menu"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
       </div>
     );

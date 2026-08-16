@@ -186,12 +186,6 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
         className="w-full h-full [&>canvas]:w-full [&>canvas]:h-full [&>canvas]:block cursor-grab active:cursor-grabbing"
       />
 
-      {/* Floating 3D Physics Badge */}
-      <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-[#1a1714]/80 backdrop-blur-md text-[10px] text-[#d4c3a1] border border-[#3d3329] flex items-center gap-1.5 pointer-events-none z-10">
-        <span className="w-2 h-2 rounded-full bg-[#8c7851] animate-pulse" />
-        <span className="font-semibold font-display tracking-wider">3D AMMO PHYSICS</span>
-      </div>
-
       {/* Auto-Fading Roll Outcome Overlay in the Middle */}
       <RollOutcomeOverlay
         result={rollResult}
