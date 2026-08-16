@@ -18,6 +18,14 @@ export default function App() {
   const [leftCollapsed, setLeftCollapsed] = useState<boolean>(false);
   const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
 
+  // Auto-collapse side panels on small screens (< 768px)
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setLeftCollapsed(true);
+      setRightCollapsed(true);
+    }
+  }, []);
+
   // Customization State
   const [materialTheme, setMaterialTheme] = useState<string>('emerald');
   const [tableTheme, setTableTheme] = useState<TableTheme>('green');
