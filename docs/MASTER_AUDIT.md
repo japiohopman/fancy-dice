@@ -8,6 +8,15 @@
 
 ---
 
+## OFFICIAL EXTERNAL REFERENCE
+
+The official ecosystem documentation for `@3d-dice` is located at:
+👉 **[Fantastic Dice Documentation](https://fantasticdice.games/docs/intro)**
+
+This external documentation serves as the authoritative reference for the underlying `@3d-dice` ecosystem, including DiceBox configuration, rolling mechanisms, parser interfaces, theme creation, callbacks, physics methods, and addons. External documentation is not copied into this repository; Fancy Dice-specific architecture and behaviors remain documented locally in `docs/`.
+
+---
+
 ## A. EXECUTIVE SUMMARY
 
 Fancy Dice is a mobile-first, static-landscape 3D tabletop dice rolling application. Its core capabilities—realistic 3D polyhedral dice physics powered by Three.js and Ammo.js (`@3d-dice/dice-box`), custom TRPG notation parsing (`1d20+5`, `4d6kh3`, `4dF`), device shake/motion controls, Web Audio sound synthesis, felt table customizations, and collapsible sidebar panels—are functionally implemented and operational `[Verified]`.
@@ -23,7 +32,24 @@ However, a technical audit reveals that while the application is functional as a
 
 ---
 
-## B. ARCHITECTURE ASSESSMENT
+## B. PRODUCT FREEZE BOUNDARIES
+
+The existing feature set is strictly **frozen**. The following categories are explicitly **OUT OF SCOPE**:
+
+- ❌ New gameplay features
+- ❌ Social features / Friends lists
+- ❌ Account systems / User registration
+- ❌ Cloud synchronization / Remote databases
+- ❌ Multiplayer / Shared rooms
+- ❌ Artificer companion integration implementation
+- ❌ Remote rolling implementation
+- ❌ Bluetooth / WebSockets / Backend services
+
+Every proposed change in the roadmap must serve strictly to improve performance, reliability, usability, clarity, responsiveness, accessibility, visual quality, maintainability, or Android compatibility.
+
+---
+
+## C. ARCHITECTURE ASSESSMENT
 
 ### Core React Architecture & State Management
 - **State Organization `[Verified]`**: Application state resides in root `App.tsx` (`currentFormula`, `currentResult`, `isRolling`, `isCupShaking`, `shakeSettings`, `history`, `materialTheme`, `tableTheme`, `diceTheme`).
@@ -38,7 +64,7 @@ However, a technical audit reveals that while the application is functional as a
 
 ---
 
-## C. ANDROID READINESS
+## D. ANDROID READINESS
 
 ### Capacitor Bridge Analysis
 | Component / Layer | Configured State | Audit Finding | Verification Status |
@@ -51,7 +77,7 @@ However, a technical audit reveals that while the application is functional as a
 
 ---
 
-## D. PERFORMANCE ASSESSMENT
+## E. PERFORMANCE ASSESSMENT
 
 ### Identified Bottlenecks
 
@@ -75,29 +101,17 @@ However, a technical audit reveals that while the application is functional as a
 
 ---
 
-## E. UX / UI ASSESSMENT
+## F. UX / UI ASSESSMENT
 
 ### Critical UX Findings
 1. **Viewport Width Contraction on Mobile `[Verified]`**: On screens between 768px and 1024px in landscape mode, expanding both `LeftOptionsPanel` (160px) and `RightOptionsPanel` (160px) consumes 320px of horizontal space, reducing the center 3D canvas stage to less than 50% of the screen width.
 2. **Outcome Text Size Overflow `[Verified]`**: `RollOutcomeOverlay.tsx` uses fixed font size classes (`text-[120px] sm:text-[160px]`). On 3-digit total results (e.g. `128`), text overflows mobile viewport bounds.
 
-### Important UX Findings
-1. **Redundant Top Notation Input `[Verified]`**: The text input in `TopNotationBar.tsx` allows manual typing, but on mobile devices opening the software keyboard obscures the 3D dice canvas.
-2. **Lack of Touch Visual Feedback on Quick Presets `[Verified]`**: Quick preset chips lack tactile active states on mobile touch displays.
-
 ---
 
-## F. CODE QUALITY ASSESSMENT
+## G. CODE QUALITY ASSESSMENT
 
 ### Technical Debt & Maintenance Concerns
 1. **Dead Code Accumulation `[Verified]`**: 6 legacy files (`DiceTray.tsx`, `RPGPresets.tsx`, `RollHistory.tsx`, `ThemeSelector.tsx`, `AndroidMobileGuide.tsx`, `RollResultModal.tsx`) remain in `src/components/`, creating developer confusion.
 2. **Magic Numbers in Motion Detection `[Verified]`**: `ShakeDetector.ts` uses hardcoded speed thresholds (`2800`, `200`, `180`) and delay intervals (`70ms`, `350ms`) without named constants or adaptive Android calibration.
 3. **Implicit `any` Types in Callback Handlers `[Verified]`**: `handleRollComplete(physicalResults: any)` in `App.tsx` and `ThreeDiceCanvas.tsx` lacks full TypeScript interfaces for Ammo.js physical roll event payloads.
-
----
-
-## G. DOCUMENTATION ASSESSMENT
-
-1. **`README.md` `[Verified]`**: Outdated Google AI Studio boilerplate. Must be rewritten to reflect Fancy Dice architecture, installation, build commands, and native Android sync procedures.
-2. **`docs/ARCHITECTURE.md` `[Verified]`**: Accurate overall, but missing details on current collapsible sidebar layout and real-time formula staging.
-3. **`docs/ANDROID_ROADMAP.md` `[Verified]`**: Recommends obsolete manual Kotlin code; should be updated to prioritize Capacitor native plugins and automated asset sync.
