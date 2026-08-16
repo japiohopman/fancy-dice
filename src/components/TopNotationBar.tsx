@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dices, Volume2, VolumeX, Smartphone, Play, Sparkles } from 'lucide-react';
 
 interface TopNotationBarProps {
@@ -21,6 +21,11 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   shakeEnabled,
 }) => {
   const [inputVal, setInputVal] = useState<string>(currentFormula || '1d20');
+
+  // Keep inputVal in sync with parent currentFormula updates (e.g. from dice picker or presets)
+  useEffect(() => {
+    setInputVal(currentFormula);
+  }, [currentFormula]);
 
   // Quick notation presets
   const quickNotations = [
