@@ -150,7 +150,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#12100e] text-[#d4c3a1] flex flex-col font-sans select-none">
+    <div className="h-screen w-screen overflow-hidden bg-[#12100e] text-[#d4c3a1] flex flex-col font-serif select-none">
       {/* 1. TOP NOTATION & QUICK FORMULA BAR (h-32) */}
       <TopNotationBar
         currentFormula={currentFormula}
