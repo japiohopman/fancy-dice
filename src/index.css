@@ -8,8 +8,67 @@
     background-image: radial-gradient(circle at center, #2d241e 0%, #1a1714 100%);
     background-attachment: fixed;
   }
+}
 
-  h1, h2, h3, h4, .font-display {
-    font-family: 'Cinzel', serif;
-  }
+.font-display {
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+}
+
+.font-title {
+  font-family: 'Cinzel', serif;
+}
+
+.font-serif {
+  font-family: 'EB Garamond', Georgia, serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom UI Glows & Accents */
+.text-shadow-gold {
+  text-shadow: 0 0 12px rgba(212, 195, 161, 0.4), 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.text-shadow-crit {
+  text-shadow: 0 0 20px rgba(234, 179, 8, 0.8), 0 0 10px rgba(245, 158, 11, 0.6), 0 4px 12px rgba(0, 0, 0, 0.9);
+}
+
+.text-shadow-fumble {
+  text-shadow: 0 0 20px rgba(225, 29, 72, 0.8), 0 0 10px rgba(159, 18, 57, 0.6), 0 4px 12px rgba(0, 0, 0, 0.9);
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #a38c5e 0%, #8c7851 50%, #6d5b3d 100%);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #fef3c7 0%, #d4c3a1 50%, #8c7851 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom Scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #141210;
+}
+::-webkit-scrollbar-thumb {
+  background: #3d3329;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8c7851;
 }

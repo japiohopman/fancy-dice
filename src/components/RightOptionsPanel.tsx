@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MaterialTheme, ShakeSettings, TableTheme } from '../types';
-import { Palette, Smartphone, Volume2, VolumeX, Vibrate, Check, SlidersHorizontal, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, Vibrate, Volume2, VolumeX, Smartphone, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface RightOptionsPanelProps {
   materialTheme: MaterialTheme | string;
@@ -78,18 +78,17 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
 
   // Local state for interactive Color Wheel
-  const [wheelH, setWheelH] = useState<number>(140); // default emerald hue
+  const [wheelH, setWheelH] = useState<number>(140);
   const [wheelS, setWheelS] = useState<number>(100);
   const isDraggingRef = useRef<boolean>(false);
 
-  // Load color presets or convert current materialTheme if it is a hex color
+  // Sync color presets or convert current materialTheme if it is a hex color
   useEffect(() => {
     if (materialTheme.startsWith('#')) {
       const hsl = hexToHsl(materialTheme);
       setWheelH(hsl.h);
       setWheelS(hsl.s);
     } else {
-      // Map standard presets to HSL
       const presetColors: Record<string, string> = {
         emerald: '#059669',
         ruby: '#d97706',
@@ -127,8 +126,8 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     { id: 'green', name: 'Emerald Felt', color: 'bg-[#064e3b]' },
     { id: 'blue', name: 'Sapphire Felt', color: 'bg-[#1e3a8a]' },
     { id: 'crimson', name: 'Crimson Felt', color: 'bg-[#881337]' },
-    { id: 'dark', name: 'Midnight felt', color: 'bg-[#0f172a]' },
-    { id: 'leather', name: 'Leather felt', color: 'bg-[#451a03]' },
+    { id: 'dark', name: 'Midnight Felt', color: 'bg-[#0f172a]' },
+    { id: 'leather', name: 'Leather Felt', color: 'bg-[#451a03]' },
   ];
 
   const handleGrantPermission = async () => {
@@ -142,16 +141,13 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-    // Position relative to center
     const x = clientX - (rect.left + rect.width / 2);
     const y = clientY - (rect.top + rect.height / 2);
 
-    // Angle in radians
     let angle = Math.atan2(y, x);
     let h = Math.round((angle * 180) / Math.PI);
     if (h < 0) h += 360;
 
-    // Distance from center
     const dist = Math.sqrt(x * x + y * y);
     const radius = rect.width / 2;
     const s = Math.min(100, Math.round((dist / radius) * 100));
@@ -178,18 +174,17 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     isDraggingRef.current = false;
   };
 
-  // Calculate thumb coordinate on wheel
   const angleRad = (wheelH * Math.PI) / 180;
-  const thumbDist = (wheelS / 100) * 44; // 44px is max distance inside 48px radius wheel
+  const thumbDist = (wheelS / 100) * 44;
   const thumbX = Math.round(Math.cos(angleRad) * thumbDist);
   const thumbY = Math.round(Math.sin(angleRad) * thumbDist);
 
   if (collapsed) {
     return (
-      <div className="bg-[#1c1815] border-l border-[#3d3329] w-10 flex flex-col items-center py-2 gap-3 z-20 shrink-0">
+      <div className="bg-[#1a1613] border-l border-[#3d3329] w-10 flex flex-col items-center py-2 gap-3 z-20 shrink-0">
         <button
           onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg bg-[#28211b] hover:bg-[#3d3329] text-[#d4c3a1]"
+          className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] cursor-pointer"
           title="Expand Right Menu"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -199,18 +194,18 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   }
 
   return (
-    <aside className="w-40 bg-[#1c1815] border-l border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
+    <aside className="w-44 bg-[#1a1613] border-l border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
       {/* Submenu Tabs list & Collapse toggle */}
-      <div className="flex items-center justify-between p-1 border-b border-[#3d3329] bg-[#171412]">
+      <div className="flex items-center justify-between p-1.5 border-b border-[#3d3329] bg-[#14100e]">
         <div className="grid grid-cols-4 gap-0.5 flex-1 mr-1">
           {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-1 text-[8.5px] font-bold uppercase rounded transition-all ${
+              className={`py-1 text-[8.5px] font-title font-bold uppercase rounded transition-all cursor-pointer ${
                 activeTab === tab
-                  ? 'bg-[#8c7851] text-white'
-                  : 'text-[#d4c3a1]/60 hover:text-[#f4ead5] hover:bg-[#28211b]'
+                  ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
+                  : 'text-[#d4c3a1]/60 hover:text-[#f4ead5] hover:bg-[#241e1a]'
               }`}
             >
               {tab}
@@ -220,7 +215,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
         <button
           onClick={onToggleCollapse}
-          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#28211b] shrink-0"
+          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#241e1a] shrink-0 cursor-pointer"
           title="Collapse Menu"
         >
           <ChevronRight className="w-4 h-4" />
@@ -228,25 +223,25 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-1.5 text-[11px]">
+      <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-[11px] no-scrollbar">
         {activeTab === 'theme' && (
           <div className="flex flex-col gap-2">
-            <span className="text-[9px] uppercase font-bold text-[#d4c3a1]/60 tracking-wider">
+            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
               3D Dice Skin:
             </span>
-            <div className="grid grid-cols-1 gap-1">
+            <div className="grid grid-cols-1 gap-1.5">
               {diceThemeOptions.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => onChangeDiceTheme(item.id)}
-                  className={`flex items-center justify-between p-1.5 rounded-lg border text-[10px] transition-all ${
+                  className={`flex items-center justify-between p-2 rounded-xl border text-[10.5px] font-title font-semibold transition-all cursor-pointer ${
                     diceTheme === item.id
-                      ? 'bg-[#8c7851]/20 border-[#8c7851] text-[#f4ead5] font-bold'
-                      : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
+                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold shadow-sm'
+                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
                   }`}
                 >
                   <span className="truncate">{item.name}</span>
-                  {diceTheme === item.id && <Check className="w-3 h-3 text-[#8c7851] shrink-0" />}
+                  {diceTheme === item.id && <Check className="w-3.5 h-3.5 text-[#a38c5e] shrink-0" />}
                 </button>
               ))}
             </div>
@@ -254,14 +249,14 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
         )}
 
         {activeTab === 'color' && (
-          <div className="flex flex-col items-center gap-3">
-            <span className="text-[9px] uppercase font-bold text-[#d4c3a1]/60 tracking-wider self-start">
-              Custom color picker:
+          <div className="flex flex-col items-center gap-2.5">
+            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider self-start">
+              Custom Color Picker:
             </span>
 
             {/* Interactive custom circular Color Wheel */}
             <div
-              className="w-24 h-24 rounded-full relative cursor-crosshair border border-[#3d3329] shadow-inner select-none shrink-0"
+              className="w-24 h-24 rounded-full relative cursor-crosshair border-2 border-[#a38c5e]/60 shadow-lg select-none shrink-0"
               style={{
                 background: 'conic-gradient(from 0deg, red, yellow, lime, cyan, blue, magenta, red)'
               }}
@@ -272,28 +267,25 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
               onTouchStart={handleColorPick}
               onTouchMove={handleColorPick}
             >
-              {/* Radial white-to-transparent overlay for saturation */}
               <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,white,transparent_100%)] opacity-70 pointer-events-none" />
-
-              {/* Center thumb selector knob */}
               <div
-                className="absolute w-3.5 h-3.5 rounded-full border-2 border-white bg-black/60 shadow pointer-events-none transition-transform duration-75"
+                className="absolute w-4 h-4 rounded-full border-2 border-white bg-black/70 shadow-md pointer-events-none transition-transform duration-75"
                 style={{
-                  left: 'calc(50% - 7px)',
-                  top: 'calc(50% - 7px)',
+                  left: 'calc(50% - 8px)',
+                  top: 'calc(50% - 8px)',
                   transform: `translate(${thumbX}px, ${thumbY}px)`
                 }}
               />
             </div>
 
             {/* Active Hex Display */}
-            <div className="flex items-center gap-1 bg-[#141210] px-2 py-1 rounded border border-[#3d3329] w-full justify-between">
-              <span className="text-[9px] text-[#d4c3a1]/50 uppercase font-mono">Picked:</span>
-              <span className="font-mono text-[10px] font-bold text-[#f4ead5]">
+            <div className="flex items-center gap-1 bg-[#12100e] px-2.5 py-1.5 rounded-xl border border-[#3d3329] w-full justify-between shadow-inner">
+              <span className="text-[9px] text-[#8c7851] uppercase font-mono font-bold">Picked:</span>
+              <span className="font-mono text-[10.5px] font-bold text-[#f4ead5]">
                 {materialTheme.startsWith('#') ? materialTheme.toUpperCase() : hslToHex(wheelH, wheelS, 50).toUpperCase()}
               </span>
               <span
-                className="w-3.5 h-3.5 rounded border border-white/20 shadow-sm"
+                className="w-4 h-4 rounded-md border border-white/20 shadow-sm"
                 style={{
                   backgroundColor: materialTheme.startsWith('#') ? materialTheme : hslToHex(wheelH, wheelS, 50)
                 }}
@@ -301,18 +293,18 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             </div>
 
             {/* Solid material color presets */}
-            <div className="grid grid-cols-2 gap-1 w-full pt-1.5 border-t border-[#3d3329]/50">
+            <div className="grid grid-cols-2 gap-1 w-full pt-1.5 border-t border-[#3d3329]">
               {materialOptions.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => onChangeMaterialTheme(item.id)}
-                  className={`flex items-center gap-1 p-1 rounded border text-[9px] transition-all truncate ${
+                  className={`flex items-center gap-1.5 p-1.5 rounded-lg border text-[9.5px] font-title transition-all truncate cursor-pointer ${
                     materialTheme === item.id
-                      ? 'bg-[#8c7851]/20 border-[#8c7851] text-[#f4ead5] font-bold'
-                      : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
+                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold'
+                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.hex }} />
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: item.hex }} />
                   <span className="truncate">{item.name}</span>
                 </button>
               ))}
@@ -322,25 +314,25 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
         {activeTab === 'board' && (
           <div className="flex flex-col gap-2">
-            <span className="text-[9px] uppercase font-bold text-[#d4c3a1]/60 tracking-wider">
+            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
               Board Felt:
             </span>
-            <div className="grid grid-cols-1 gap-1">
+            <div className="grid grid-cols-1 gap-1.5">
               {tableOptions.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => onChangeTableTheme(item.id)}
-                  className={`flex items-center justify-between p-1.5 rounded-lg border text-[10px] transition-all ${
+                  className={`flex items-center justify-between p-2 rounded-xl border text-[10.5px] font-title font-semibold transition-all cursor-pointer ${
                     tableTheme === item.id
-                      ? 'bg-[#8c7851]/20 border-[#8c7851] text-[#f4ead5] font-bold'
-                      : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
+                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold shadow-sm'
+                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className={`w-2.5 h-2.5 rounded-full ${item.color} border border-white/20 shrink-0`} />
+                  <div className="flex items-center gap-2 truncate">
+                    <span className={`w-3 h-3 rounded-full ${item.color} border border-white/30 shrink-0 shadow-sm`} />
                     <span className="truncate">{item.name}</span>
                   </div>
-                  {tableTheme === item.id && <Check className="w-3 h-3 text-[#8c7851] shrink-0" />}
+                  {tableTheme === item.id && <Check className="w-3.5 h-3.5 text-[#a38c5e] shrink-0" />}
                 </button>
               ))}
             </div>
@@ -349,35 +341,35 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
         {activeTab === 'settings' && (
           <div className="flex flex-col gap-2">
-            <span className="text-[9px] uppercase font-bold text-[#d4c3a1]/60 tracking-wider">
+            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
               Settings & Haptics:
             </span>
 
             {/* Permission button */}
             <button
               onClick={handleGrantPermission}
-              className="w-full py-1.5 px-2 rounded-lg bg-[#8c7851]/20 hover:bg-[#8c7851]/30 border border-[#8c7851] text-[#f4ead5] text-[9px] font-semibold flex items-center justify-between transition-colors min-w-0"
+              className="w-full py-1.5 px-2.5 rounded-xl bg-[#8c7851]/20 hover:bg-[#8c7851]/30 border border-[#a38c5e] text-[#f4ead5] text-[10px] font-title font-bold flex items-center justify-between transition-colors min-w-0 cursor-pointer shadow-sm"
             >
               <span className="truncate">Calibrate Sensors</span>
-              {permissionGranted && <Check className="w-3 h-3 text-emerald-400 shrink-0" />}
+              {permissionGranted && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
             </button>
 
             {/* Shake Phone to Roll */}
-            <div className="flex items-center justify-between bg-[#141210] p-1.5 rounded-lg border border-[#3d3329]">
-              <span className="text-[9px] text-[#d4c3a1]/80 font-medium truncate">Shake Roll</span>
+            <div className="flex items-center justify-between bg-[#12100e] p-2 rounded-xl border border-[#3d3329] shadow-inner">
+              <span className="text-[10px] text-[#d4c3a1]/80 font-title font-medium truncate">Shake Roll</span>
               <input
                 type="checkbox"
                 checked={shakeSettings.enabled}
                 onChange={(e) => onUpdateShakeSettings({ ...shakeSettings, enabled: e.target.checked })}
-                className="w-3.5 h-3.5 accent-[#8c7851] rounded cursor-pointer shrink-0"
+                className="w-4 h-4 accent-[#a38c5e] rounded cursor-pointer shrink-0"
               />
             </div>
 
             {/* Sensitivity Slider */}
-            <div className="flex flex-col gap-1 bg-[#141210] p-1.5 rounded-lg border border-[#3d3329]">
-              <div className="flex justify-between items-center text-[9px]">
+            <div className="flex flex-col gap-1 bg-[#12100e] p-2 rounded-xl border border-[#3d3329] shadow-inner">
+              <div className="flex justify-between items-center text-[10px] font-title">
                 <span className="text-[#d4c3a1]/70">Sensitivity:</span>
-                <span className="font-mono font-bold text-[#8c7851]">{shakeSettings.sensitivity}</span>
+                <span className="font-mono font-bold text-[#a38c5e]">{shakeSettings.sensitivity}</span>
               </div>
               <input
                 type="range"
@@ -385,18 +377,18 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 max="10"
                 value={shakeSettings.sensitivity}
                 onChange={(e) => onUpdateShakeSettings({ ...shakeSettings, sensitivity: parseInt(e.target.value) })}
-                className="w-full accent-[#8c7851] cursor-pointer"
+                className="w-full accent-[#a38c5e] cursor-pointer"
               />
             </div>
 
             {/* Haptics & Audio Buttons */}
-            <div className="grid grid-cols-2 gap-1">
+            <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => onUpdateShakeSettings({ ...shakeSettings, vibrationEnabled: !shakeSettings.vibrationEnabled })}
-                className={`p-1 rounded-lg border text-[9px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
+                className={`p-1.5 rounded-xl border text-[9.5px] font-title font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   shakeSettings.vibrationEnabled
-                    ? 'bg-[#8c7851]/30 border-[#8c7851] text-[#f4ead5]'
-                    : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]/50'
+                    ? 'bg-[#8c7851]/30 border-[#a38c5e] text-[#f4ead5]'
+                    : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/50'
                 }`}
                 title="Haptic vibration feedback"
               >
@@ -406,10 +398,10 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
               <button
                 onClick={() => onUpdateShakeSettings({ ...shakeSettings, soundEnabled: !shakeSettings.soundEnabled })}
-                className={`p-1 rounded-lg border text-[9px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
+                className={`p-1.5 rounded-xl border text-[9.5px] font-title font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   shakeSettings.soundEnabled
-                    ? 'bg-[#8c7851]/30 border-[#8c7851] text-[#f4ead5]'
-                    : 'bg-[#141210] border-[#3d3329] text-[#d4c3a1]/50'
+                    ? 'bg-[#8c7851]/30 border-[#a38c5e] text-[#f4ead5]'
+                    : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/50'
                 }`}
                 title="Roll audio feedback"
               >
@@ -421,9 +413,9 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             {/* Simulate Roll */}
             <button
               onClick={onSimulateShake}
-              className="w-full py-1.5 rounded-lg bg-[#28211b] hover:bg-[#3d3329] border border-[#3d3329] text-[#f4ead5] font-bold text-[10px] flex items-center justify-center gap-1 transition-colors mt-1"
+              className="w-full py-1.5 rounded-xl bg-[#241e1a] hover:bg-[#352c26] border border-[#3d3329] hover:border-[#a38c5e] text-[#f4ead5] font-title font-bold text-[10.5px] flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-1 shadow-sm"
             >
-              <Smartphone className="w-3 h-3 text-[#8c7851]" />
+              <Smartphone className="w-3.5 h-3.5 text-[#a38c5e]" />
               <span>Simulate Roll</span>
             </button>
           </div>

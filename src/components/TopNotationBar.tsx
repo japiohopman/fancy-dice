@@ -22,7 +22,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
 }) => {
   const [inputVal, setInputVal] = useState<string>(currentFormula || '1d20');
 
-  // Keep inputVal in sync with parent currentFormula updates (e.g. from dice picker or presets)
+  // Keep inputVal in sync with parent currentFormula updates
   useEffect(() => {
     setInputVal(currentFormula);
   }, [currentFormula]);
@@ -50,47 +50,47 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   };
 
   return (
-    <header className="w-full h-auto bg-[#1c1815] border-b border-[#3d3329] px-3 sm:px-4 py-2 flex flex-col gap-2 shadow-md z-30 shrink-0 select-none">
-      {/* Top Row: Brand & Sound & Motion Badge */}
+    <header className="w-full h-auto bg-[#1a1613] border-b border-[#3d3329] px-3 sm:px-5 py-2 flex flex-col gap-2 shadow-lg z-30 shrink-0 select-none">
+      {/* Top Row: Brand & Controls */}
       <div className="flex items-center justify-between w-full">
         {/* Brand */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-[#8c7851] flex items-center justify-center text-white shadow-md">
-            <Dices className="w-3.5 h-3.5 stroke-[2.5]" />
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="w-8 h-8 rounded-lg gold-gradient-bg border border-[#a38c5e]/50 flex items-center justify-center text-amber-100 shadow-md">
+            <Dices className="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <h1 className="font-bold text-xs text-[#f4ead5] font-display tracking-wider leading-none">
+            <h1 className="font-bold text-sm sm:text-base font-display tracking-wider leading-none text-shadow-gold gold-gradient-text">
               FANTASTIC DICE
             </h1>
-            <p className="text-[8px] uppercase tracking-widest text-[#d4c3a1]/50 mt-0.5">3D Mobile Roller</p>
+            <p className="text-[9px] uppercase tracking-widest text-[#8c7851] font-title mt-0.5">3D Mobile Roller</p>
           </div>
         </div>
 
         {/* Audio & Motion Controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onToggleSound}
-            className="p-1 rounded-lg bg-[#28211b] hover:bg-[#3d3329] text-[#d4c3a1] border border-[#3d3329] transition-colors"
+            className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] border border-[#3d3329] transition-all cursor-pointer shadow-sm"
             title={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
           >
             {soundEnabled ? (
-              <Volume2 className="w-3.5 h-3.5 text-[#8c7851]" />
+              <Volume2 className="w-3.5 h-3.5 text-[#a38c5e]" />
             ) : (
               <VolumeX className="w-3.5 h-3.5 opacity-40" />
             )}
           </button>
 
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#8c7851]/15 border border-[#8c7851]/30 text-[#f4ead5] text-[10px] font-medium">
-            <Smartphone className={`w-3 h-3 text-[#8c7851] ${shakeEnabled ? 'animate-pulse' : 'opacity-40'}`} />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#8c7851]/15 border border-[#8c7851]/40 text-[#f4ead5] text-[10px] font-title font-medium shadow-sm">
+            <Smartphone className={`w-3.5 h-3.5 text-[#a38c5e] ${shakeEnabled ? 'animate-pulse' : 'opacity-40'}`} />
             <span>{shakeEnabled ? 'Shake Active' : 'Shake Off'}</span>
           </div>
         </div>
       </div>
 
-      {/* Bottom Row: Notation Bar & Quick Presets & Big Roll Button */}
-      <form onSubmit={handleSubmit} className="w-full flex items-center gap-1.5 sm:gap-2">
-        <div className="flex-1 flex items-center bg-[#141210] border border-[#3d3329] rounded-xl px-2 py-1 shadow-inner">
-          <Sparkles className="w-3.5 h-3.5 text-[#8c7851] mr-1.5 shrink-0" />
+      {/* Bottom Row: Formula Input, Quick Chips & Roll Button */}
+      <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
+        <div className="flex-1 flex items-center bg-[#12100e] border border-[#3d3329] focus-within:border-[#a38c5e] rounded-xl px-2.5 py-1.5 shadow-inner transition-colors">
+          <Sparkles className="w-3.5 h-3.5 text-[#a38c5e] mr-2 shrink-0" />
           <input
             type="text"
             value={inputVal}
@@ -99,7 +99,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
               onFormulaChange(e.target.value);
             }}
             placeholder="e.g. 1d20+10 or 4d4"
-            className="w-full bg-transparent text-xs font-mono text-[#f4ead5] focus:outline-none placeholder:text-[#d4c3a1]/30"
+            className="w-full bg-transparent text-xs sm:text-sm font-mono font-bold text-[#f4ead5] focus:outline-none placeholder:text-[#d4c3a1]/30 tracking-wide"
           />
         </div>
 
@@ -110,10 +110,10 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
               key={item.formula}
               type="button"
               onClick={() => handleSelectQuick(item.formula)}
-              className={`px-2 py-0.5 rounded-lg border text-[10px] font-mono font-bold transition-all ${
+              className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all cursor-pointer ${
                 inputVal === item.formula
-                  ? 'bg-[#8c7851] text-white border-[#8c7851] shadow-sm'
-                  : 'bg-[#28211b] text-[#d4c3a1] border-[#3d3329] hover:border-[#8c7851]'
+                  ? 'bg-[#8c7851] text-white border-[#a38c5e] shadow-sm'
+                  : 'bg-[#241e1a] text-[#d4c3a1] border-[#3d3329] hover:border-[#a38c5e]'
               }`}
             >
               {item.label}
@@ -125,10 +125,10 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
         <button
           type="submit"
           disabled={isRolling}
-          className="px-3.5 py-1 rounded-xl bg-[#8c7851] hover:bg-[#6d5b3d] active:scale-95 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1 shadow-md transition-all disabled:opacity-50 shrink-0 font-display h-7.5"
+          className="px-4 py-1.5 rounded-xl gold-gradient-bg hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-[#a38c5e]/50 transition-all disabled:opacity-50 shrink-0 font-title cursor-pointer"
         >
-          <Play className="w-3 h-3 fill-current" />
-          <span>{isRolling ? 'Rolling...' : 'Roll'}</span>
+          <Play className="w-3.5 h-3.5 fill-current text-amber-200" />
+          <span className="drop-shadow-sm">{isRolling ? 'Rolling...' : 'Roll'}</span>
         </button>
       </form>
     </header>
