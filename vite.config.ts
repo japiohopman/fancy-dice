@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // GitHub Pages hosts this repository under /fancy-dice/; keep local/dev builds at /.
+    base: process.env.GITHUB_ACTIONS === 'true' ? '/fancy-dice/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
