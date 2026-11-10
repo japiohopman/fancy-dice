@@ -1,0 +1,22 @@
+{
+  "id": "./",
+  "name": "Fantastic Dice 3D",
+  "short_name": "Fancy Dice",
+  "description": "A mobile-first 3D physics dice roller for tabletop RPGs.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#1a1714",
+  "theme_color": "#1a1714",
+  "categories": ["games", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/fancy-dice.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
