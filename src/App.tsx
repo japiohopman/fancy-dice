@@ -116,6 +116,7 @@ export default function App() {
     vibrationEnabled: true,
     soundEnabled: true,
   });
+  const [motionPermissionGranted, setMotionPermissionGranted] = useState<boolean | null>(null);
 
   const [history, setHistory] = useState<RollHistoryEntry[]>([]);
   const shakeDetectorRef = useRef<ShakeDetector | null>(null);
@@ -216,10 +217,16 @@ export default function App() {
 
   /** Requests permission for device motion when the platform requires it. */
   const handleRequestPermission = async () => {
-    if (shakeDetectorRef.current) {
-      return await shakeDetectorRef.current.requestPermission();
+    try {
+      const granted = shakeDetectorRef.current
+        ? await shakeDetectorRef.current.requestPermission()
+        : true;
+      setMotionPermissionGranted(granted);
+      return granted;
+    } catch {
+      setMotionPermissionGranted(false);
+      return false;
     }
-    return true;
   };
 
   /** Runs the shake-to-roll feedback sequence without requiring physical device movement. */
@@ -355,6 +362,7 @@ export default function App() {
                   shakeSettings={shakeSettings}
                   onUpdateShakeSettings={handleUpdateShakeSettings}
                   onRequestSensorPermission={handleRequestPermission}
+                  sensorPermissionGranted={motionPermissionGranted}
                   onSimulateShake={handleSimulateShake}
                   activeTab={activeMenuSection === 'themes' ? 'theme' : activeMenuSection === 'color' ? 'color' : 'settings'}
                 />
