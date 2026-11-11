@@ -12,6 +12,7 @@ interface RightOptionsPanelProps {
   shakeSettings: ShakeSettings;
   onUpdateShakeSettings: (settings: ShakeSettings) => void;
   onRequestSensorPermission: () => Promise<boolean>;
+  sensorPermissionGranted: boolean | null;
   onSimulateShake: () => void;
   activeTab: 'theme' | 'color' | 'settings';
 }
@@ -70,10 +71,10 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   shakeSettings,
   onUpdateShakeSettings,
   onRequestSensorPermission,
+  sensorPermissionGranted: permissionGranted,
   onSimulateShake,
   activeTab,
 }) => {
-  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
   const hasMotionSensor = typeof window !== 'undefined' && 'DeviceMotionEvent' in window;
   const supportsMotionPermissionRequest =
     typeof DeviceMotionEvent !== 'undefined' &&
@@ -172,12 +173,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
   /** Requests device-motion permission and records the permission result for the UI. */
   const handleGrantPermission = async () => {
-    try {
-      const granted = await onRequestSensorPermission();
-      setPermissionGranted(granted);
-    } catch {
-      setPermissionGranted(false);
-    }
+    await onRequestSensorPermission();
   };
 
   // Color picking handler on the Color Wheel conic gradient
@@ -368,11 +364,17 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             <button
               type="button"
               onClick={handleGrantPermission}
-              disabled={!hasMotionSensor || permissionGranted === true}
+              disabled={!hasMotionSensor || !supportsMotionPermissionRequest || permissionGranted === true}
               className="w-full py-1.5 px-2.5 rounded-xl bg-[#8c7851]/20 hover:bg-[#8c7851]/30 border border-[#a38c5e] text-[#f4ead5] text-[10px] font-title font-bold flex items-center justify-between transition-colors min-w-0 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
             >
               <span className="truncate">
-                {!hasMotionSensor ? 'Motion access unavailable' : permissionGranted ? 'Motion access enabled' : 'Allow motion access'}
+                {!hasMotionSensor
+                  ? 'Motion access unavailable'
+                  : !supportsMotionPermissionRequest
+                    ? 'No permission required'
+                    : permissionGranted
+                      ? 'Motion access enabled'
+                      : 'Allow motion access'}
               </span>
               {permissionGranted && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
             </button>
