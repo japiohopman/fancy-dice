@@ -62,7 +62,7 @@ No agent may cross a human approval gate without explicit human sign-off.
 - **Outputs**: Native Android project syncs, Capacitor plugin integrations, APK build configurations.
 
 ### D. UX/UI Polish Agent
-- **Responsibility**: Mobile landscape responsiveness, touch target optimization, visual hierarchy, layout collision prevention, text overflow handling, and legacy component cleanup.
+- **Responsibility**: Portrait and landscape responsiveness, touch target optimization, visual hierarchy, layout collision prevention, text overflow handling, and legacy component cleanup.
 - **Allowed Scope**: UI components, CSS/Tailwind styling, layout responsiveness handlers, and unimported legacy component cleanup.
 - **Forbidden Scope**: 3D physics collision logic, notation parser math algorithms.
 - **Inputs**: Screen resolution matrices, mobile touch guidelines, UX audit findings.
