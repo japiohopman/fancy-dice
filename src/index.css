@@ -142,13 +142,30 @@
   animation: menu-panel-fade-out 150ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
-.menu-section-enter-dice,
-.menu-section-enter-presets,
-.menu-section-enter-themes,
-.menu-section-enter-color,
-.menu-section-enter-options,
+/* Distinct animation names ensure changing tabs retriggers motion even when
+   their content shares a persistent wrapper and stateful component tree. */
+.menu-section-enter-dice {
+  animation: menu-section-fade-in-dice 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.menu-section-enter-presets {
+  animation: menu-section-fade-in-presets 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.menu-section-enter-themes {
+  animation: menu-section-fade-in-themes 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.menu-section-enter-color {
+  animation: menu-section-fade-in-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.menu-section-enter-options {
+  animation: menu-section-fade-in-options 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 .menu-section-enter-about {
-  animation: menu-section-fade-in 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: menu-section-fade-in-about 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @keyframes menu-overlay-fade-in {
@@ -183,7 +200,62 @@
   }
 }
 
-@keyframes menu-section-fade-in {
+@keyframes menu-section-fade-in-dice {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menu-section-fade-in-presets {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menu-section-fade-in-themes {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menu-section-fade-in-color {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menu-section-fade-in-options {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menu-section-fade-in-about {
   from {
     opacity: 0;
     transform: translateY(4px);
