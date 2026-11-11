@@ -11,6 +11,7 @@ interface LeftOptionsPanelProps {
   onActiveTabChange: (tab: 'dice' | 'presets') => void;
 }
 
+/** Renders the die builder and RPG preset sections in the existing left-side panel. */
 export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   onFormulaUpdate,
   collapsed,
@@ -77,14 +78,17 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     onFormulaUpdate(formula);
   }, [stagedDice, modifier, advantage]);
 
+  /** Increases the staged count for the selected die type. */
   const handleIncrement = (type: DieType) => {
     setStagedDice(prev => ({ ...prev, [type]: prev[type] + 1 }));
   };
 
+  /** Decreases the staged count for the selected die type without going below zero. */
   const handleDecrement = (type: DieType) => {
     setStagedDice(prev => ({ ...prev, [type]: Math.max(0, prev[type] - 1) }));
   };
 
+  /** Builds the base-aware asset URL for the matching die icon. */
   const getIconSrc = (type: string) => {
     const base = (import.meta as any).env.BASE_URL || '/';
     const cleanBase = base.endsWith('/') ? base : `${base}/`;
@@ -92,6 +96,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     return `${cleanBase}assets/icons/dice/${iconName}.svg`;
   };
 
+  /** Resets staged dice, modifiers, advantage state, and the active formula. */
   const handleClear = () => {
     setStagedDice({ d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0, dfate: 0 });
     setModifier(0);

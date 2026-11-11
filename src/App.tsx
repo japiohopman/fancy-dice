@@ -9,6 +9,7 @@ import { LeftOptionsPanel } from './components/LeftOptionsPanel';
 import { RightOptionsPanel } from './components/RightOptionsPanel';
 import { BottomHistoryBar } from './components/BottomHistoryBar';
 
+/** Owns dice-roll state, navigation state, themes, sensor settings, and history for the app. */
 export default function App() {
   const [currentFormula, setCurrentFormula] = useState<string>('1d20');
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
@@ -31,24 +32,28 @@ export default function App() {
 
   // Primary navigation currently targets the existing side-panel sections.
   // Issue #31 will move these surfaces into overlays without changing this navigation model.
+  /** Selects the dice builder section and hides the opposite options panel. */
   const selectDiceSection = () => {
     setActiveLeftTab('dice');
     setLeftCollapsed(false);
     setRightCollapsed(true);
   };
 
+  /** Selects the RPG presets section and hides the opposite options panel. */
   const selectPresetsSection = () => {
     setActiveLeftTab('presets');
     setLeftCollapsed(false);
     setRightCollapsed(true);
   };
 
+  /** Selects the dice appearance section and hides the opposite options panel. */
   const selectAppearanceSection = () => {
     setActiveRightTab('theme');
     setRightCollapsed(false);
     setLeftCollapsed(true);
   };
 
+  /** Selects the device and interaction options section and hides the opposite panel. */
   const selectOptionsSection = () => {
     setActiveRightTab('settings');
     setRightCollapsed(false);
@@ -81,6 +86,7 @@ export default function App() {
   }, [shakeSettings.soundEnabled]);
 
   // Execute Roll Logic
+  /** Parses the requested formula and starts its physical DiceBox roll. */
   const handleExecuteRoll = (formulaToRoll?: string, presetName?: string) => {
     if (isRolling) return;
 
@@ -102,6 +108,7 @@ export default function App() {
     setCurrentResult(result);
   };
 
+  /** Maps landed physical dice values into the parsed result and records the completed roll. */
   const handleRollComplete = (physicalResults: any) => {
     if (!isRolling || !activeResultRef.current) return;
 
@@ -155,6 +162,7 @@ export default function App() {
     };
   }, [shakeSettings, currentFormula]);
 
+  /** Stores updated sensor, haptic, and audio preferences and syncs the active detector. */
   const handleUpdateShakeSettings = (newSettings: ShakeSettings) => {
     setShakeSettings(newSettings);
     if (shakeDetectorRef.current) {
@@ -162,6 +170,7 @@ export default function App() {
     }
   };
 
+  /** Requests permission for device motion when the platform requires it. */
   const handleRequestPermission = async () => {
     if (shakeDetectorRef.current) {
       return await shakeDetectorRef.current.requestPermission();
@@ -169,6 +178,7 @@ export default function App() {
     return true;
   };
 
+  /** Runs the shake-to-roll feedback sequence without requiring physical device movement. */
   const handleSimulateShake = () => {
     if (shakeDetectorRef.current) {
       shakeDetectorRef.current.triggerSimulatedShake();

@@ -19,6 +19,7 @@ interface TopNotationBarProps {
   onSelectOptions: () => void;
 }
 
+/** Renders the primary navigation row and the always-visible notation/Roll controls. */
 export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   currentFormula,
   onFormulaChange,
@@ -36,6 +37,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
     setInputVal(currentFormula);
   }, [currentFormula]);
 
+  /** Normalizes the entered notation and submits it to the roll handler. */
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const finalFormula = inputVal.trim() || '1d20';
@@ -55,8 +57,8 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
     <header className="z-30 flex w-full shrink-0 select-none flex-col gap-1.5 border-b border-[#3d3329] bg-[#1a1613] px-3 py-1.5 shadow-lg sm:px-5">
       {/* Primary navigation: identity and section entry points. */}
       <div className="flex min-h-8 w-full items-center justify-between gap-2">
-        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#a38c5e]/50 gold-gradient-bg text-amber-100 shadow-md">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#a38c5e]/50 gold-gradient-bg text-amber-100 shadow-md">
             <Dices className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
           </div>
           <div className="min-w-0">
@@ -69,7 +71,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
           </div>
         </div>
 
-        <nav aria-label="Primary navigation" className="flex min-w-0 items-center justify-end gap-1 sm:gap-1.5">
+        <nav aria-label="Primary navigation" className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-1.5">
           {navigationItems.map(({ label, Icon, onClick }) => (
             <button
               key={label}
