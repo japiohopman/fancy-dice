@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MaterialTheme, ShakeSettings, TableTheme } from '../types';
-import { Check, Vibrate, Volume2, VolumeX, Smartphone, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, Vibrate, Volume2, VolumeX, Smartphone, X } from 'lucide-react';
 
 interface RightOptionsPanelProps {
   materialTheme: MaterialTheme | string;
@@ -13,8 +13,7 @@ interface RightOptionsPanelProps {
   onUpdateShakeSettings: (settings: ShakeSettings) => void;
   onRequestSensorPermission: () => Promise<boolean>;
   onSimulateShake: () => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
+  onClose: () => void;
   activeTab: 'theme' | 'color' | 'board' | 'settings';
   onActiveTabChange: (tab: 'theme' | 'color' | 'board' | 'settings') => void;
 }
@@ -74,8 +73,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   onUpdateShakeSettings,
   onRequestSensorPermission,
   onSimulateShake,
-  collapsed,
-  onToggleCollapse,
+  onClose,
   activeTab,
   onActiveTabChange,
 }) => {
@@ -188,23 +186,9 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   const thumbX = Math.round(Math.cos(angleRad) * thumbDist);
   const thumbY = Math.round(Math.sin(angleRad) * thumbDist);
 
-  if (collapsed) {
-    return (
-      <div className="bg-[#1a1613] border-l border-[#3d3329] w-10 flex flex-col items-center py-2 gap-3 z-20 shrink-0">
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] cursor-pointer"
-          title="Expand Right Menu"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <aside className="w-44 bg-[#1a1613] border-l border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
-      {/* Submenu Tabs list & Collapse toggle */}
+    <aside className="flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-l border-[#8c7851]/40 bg-[#1a1613]/90 shadow-2xl backdrop-blur-xl">
+      {/* Appearance sections and close action */}
       <div className="flex items-center justify-between p-1.5 border-b border-[#3d3329] bg-[#14100e]">
         <div className="grid grid-cols-4 gap-0.5 flex-1 mr-1">
           {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
@@ -223,11 +207,12 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
         </div>
 
         <button
-          onClick={onToggleCollapse}
-          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#241e1a] shrink-0 cursor-pointer"
-          title="Collapse Menu"
+          onClick={onClose}
+          className="shrink-0 rounded-lg p-1.5 text-[#d4c3a1]/50 transition-colors hover:bg-[#241e1a] hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+          aria-label="Close menu"
+          title="Close menu"
         >
-          <ChevronRight className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 

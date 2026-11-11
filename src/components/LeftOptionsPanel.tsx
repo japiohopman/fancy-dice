@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { DieType } from '../types';
-import { Dices, BookOpen, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dices, BookOpen, RotateCcw, Shield, Flame, Sword, Sparkles, X } from 'lucide-react';
 
 interface LeftOptionsPanelProps {
   onFormulaUpdate: (formula: string) => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
+  onClose: () => void;
   currentFormula: string;
   activeTab: 'dice' | 'presets';
   onActiveTabChange: (tab: 'dice' | 'presets') => void;
@@ -14,8 +13,7 @@ interface LeftOptionsPanelProps {
 /** Renders the die builder and RPG preset sections in the existing left-side panel. */
 export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   onFormulaUpdate,
-  collapsed,
-  onToggleCollapse,
+  onClose,
   currentFormula,
   activeTab,
   onActiveTabChange
@@ -104,35 +102,9 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     onFormulaUpdate('1d20');
   };
 
-  if (collapsed) {
-    return (
-      <div className="bg-[#1a1613] border-r border-[#3d3329] w-10 flex flex-col items-center py-2 gap-3 z-20 shrink-0">
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] transition-colors cursor-pointer"
-          title="Expand Left Menu"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { onToggleCollapse(); onActiveTabChange('dice'); }}
-          className="p-1.5 rounded-lg text-[#d4c3a1]/70 hover:text-[#f4ead5] cursor-pointer"
-        >
-          <Dices className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { onToggleCollapse(); onActiveTabChange('presets'); }}
-          className="p-1.5 rounded-lg text-[#d4c3a1]/70 hover:text-[#f4ead5] cursor-pointer"
-        >
-          <BookOpen className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <aside className="w-44 bg-[#1a1613] border-r border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
-      {/* Top Header & Collapse Toggle */}
+    <aside className="flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-[#8c7851]/40 bg-[#1a1613]/90 shadow-2xl backdrop-blur-xl">
+      {/* Drawer tabs and close action */}
       <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#14100e]">
         <div className="flex items-center gap-1">
           <button
@@ -160,11 +132,12 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
         </div>
 
         <button
-          onClick={onToggleCollapse}
-          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#241e1a] cursor-pointer"
-          title="Collapse Menu"
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-[#d4c3a1]/60 transition-colors hover:bg-[#241e1a] hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+          aria-label="Close menu"
+          title="Close menu"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 

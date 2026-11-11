@@ -16,49 +16,105 @@ export default function App() {
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
 
-  // Layout Collapsed States for Mobile Side Panels
-  const [leftCollapsed, setLeftCollapsed] = useState<boolean>(false);
-  const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
+  // Drawer selection is independent from the 3D stage: opening a menu never changes
+  // the main element's size or remounts the DiceBox canvas.
+  const [activeOverlay, setActiveOverlay] = useState<'dice' | 'presets' | 'appearance' | 'options' | null>(null);
   const [activeLeftTab, setActiveLeftTab] = useState<'dice' | 'presets'>('dice');
   const [activeRightTab, setActiveRightTab] = useState<'theme' | 'color' | 'board' | 'settings'>('theme');
+  const leftOverlayRef = useRef<HTMLDivElement>(null);
+  const rightOverlayRef = useRef<HTMLDivElement>(null);
+  const lastFocusedTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const previousOverlayRef = useRef<typeof activeOverlay>(null);
 
-  // Auto-collapse side panels on small screens (< 768px)
-  useEffect(() => {
-    if (window.innerWidth < 768) {
-      setLeftCollapsed(true);
-      setRightCollapsed(true);
-    }
-  }, []);
+  /** Opens the requested drawer and remembers the navigation button for focus restoration. */
+  const openOverlay = (overlay: NonNullable<typeof activeOverlay>, trigger: HTMLButtonElement) => {
+    lastFocusedTriggerRef.current = trigger;
+    setActiveOverlay(overlay);
+  };
 
-  // Primary navigation currently targets the existing side-panel sections.
-  // Issue #31 will move these surfaces into overlays without changing this navigation model.
-  /** Selects the dice builder section and hides the opposite options panel. */
-  const selectDiceSection = () => {
+  /** Closes the active drawer; focus returns to the navigation button that opened it. */
+  const closeOverlay = () => {
+    setActiveOverlay(null);
+  };
+
+  /** Opens the dice builder drawer. */
+  const selectDiceSection = (trigger: HTMLButtonElement) => {
     setActiveLeftTab('dice');
-    setLeftCollapsed(false);
-    setRightCollapsed(true);
+    openOverlay('dice', trigger);
   };
 
-  /** Selects the RPG presets section and hides the opposite options panel. */
-  const selectPresetsSection = () => {
+  /** Opens the RPG presets drawer. */
+  const selectPresetsSection = (trigger: HTMLButtonElement) => {
     setActiveLeftTab('presets');
-    setLeftCollapsed(false);
-    setRightCollapsed(true);
+    openOverlay('presets', trigger);
   };
 
-  /** Selects the dice appearance section and hides the opposite options panel. */
-  const selectAppearanceSection = () => {
+  /** Opens the appearance drawer. */
+  const selectAppearanceSection = (trigger: HTMLButtonElement) => {
     setActiveRightTab('theme');
-    setRightCollapsed(false);
-    setLeftCollapsed(true);
+    openOverlay('appearance', trigger);
   };
 
-  /** Selects the device and interaction options section and hides the opposite panel. */
-  const selectOptionsSection = () => {
+  /** Opens the device and interaction options drawer. */
+  const selectOptionsSection = (trigger: HTMLButtonElement) => {
     setActiveRightTab('settings');
-    setRightCollapsed(false);
-    setLeftCollapsed(true);
+    openOverlay('options', trigger);
   };
+
+  // Manage keyboard dismissal, initial focus, focus trapping, and focus restoration.
+  useEffect(() => {
+    if (!activeOverlay) {
+      if (previousOverlayRef.current) {
+        lastFocusedTriggerRef.current?.focus();
+      }
+      previousOverlayRef.current = activeOverlay;
+      return;
+    }
+
+    const panel = activeOverlay === 'dice' || activeOverlay === 'presets'
+      ? leftOverlayRef.current
+      : rightOverlayRef.current;
+
+    const getFocusableElements = () => panel
+      ? Array.from(panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(element => !element.hasAttribute('hidden'))
+      : [];
+
+    getFocusableElements()[0]?.focus();
+
+    const handleOverlayKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeOverlay();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = getFocusableElements();
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        panel?.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleOverlayKeyDown);
+    previousOverlayRef.current = activeOverlay;
+    return () => window.removeEventListener('keydown', handleOverlayKeyDown);
+  }, [activeOverlay]);
 
   // Customization State
   const [materialTheme, setMaterialTheme] = useState<string>('emerald');
@@ -199,22 +255,12 @@ export default function App() {
         onSelectPresets={selectPresetsSection}
         onSelectAppearance={selectAppearanceSection}
         onSelectOptions={selectOptionsSection}
+        activeOverlay={activeOverlay}
       />
 
-      {/* 2. MIDDLE VIEWPORT (LEFT SIDEBAR (w-40) + CENTER 3D CANVAS + RIGHT SIDEBAR (w-40)) */}
-      <div className="flex-1 flex w-full h-full min-h-0 relative overflow-hidden">
-        {/* Left Option Menu: Dice Selectors & RPG Presets */}
-        <LeftOptionsPanel
-          onFormulaUpdate={setCurrentFormula}
-          collapsed={leftCollapsed}
-          onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
-          currentFormula={currentFormula}
-          activeTab={activeLeftTab}
-          onActiveTabChange={setActiveLeftTab}
-        />
-
-        {/* Center Stage: 3D Physics Dice Box Canvas with Outcome Overlay */}
-        <main className="flex-1 h-full relative overflow-hidden bg-[#064e3b] shadow-inner">
+      {/* 2. FULL-WIDTH 3D TABLE WITH DRAWERS LAYERED ABOVE IT */}
+      <div className="relative flex-1 min-h-0 w-full overflow-hidden">
+        <main className="absolute inset-0 h-full w-full overflow-hidden bg-[#064e3b] shadow-inner">
           <ThreeDiceCanvas
             rollResult={currentResult}
             isRolling={isRolling}
@@ -224,34 +270,74 @@ export default function App() {
             onRollComplete={handleRollComplete}
           />
 
-          {/* Cup Shaking Active Overlay Badge */}
+          {/* Cup shaking feedback remains attached to the table, beneath the drawer layer. */}
           {isCupShaking && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-2xl bg-[#1f1914]/90 backdrop-blur-md border border-[#8c7851] shadow-2xl flex items-center gap-2.5 z-30 animate-bounce">
-              <span className="w-3 h-3 rounded-full bg-amber-400 animate-ping" />
-              <span className="font-display font-bold text-xs text-[#f4ead5] tracking-wider uppercase">
+            <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2.5 rounded-2xl border border-[#8c7851] bg-[#1f1914]/90 px-4 py-2 shadow-2xl backdrop-blur-md">
+              <span className="h-3 w-3 animate-ping rounded-full bg-amber-400" />
+              <span className="font-display text-xs font-bold uppercase tracking-wider text-[#f4ead5]">
                 Rattling Cup... Set Phone Still on Table to Roll!
               </span>
             </div>
           )}
         </main>
 
-        {/* Right Option Menu: Style/Themes & Motion/Audio Settings */}
-        <RightOptionsPanel
-          materialTheme={materialTheme}
-          tableTheme={tableTheme}
-          diceTheme={diceTheme}
-          onChangeMaterialTheme={setMaterialTheme}
-          onChangeTableTheme={setTableTheme}
-          onChangeDiceTheme={setDiceTheme}
-          shakeSettings={shakeSettings}
-          onUpdateShakeSettings={handleUpdateShakeSettings}
-          onRequestSensorPermission={handleRequestPermission}
-          onSimulateShake={handleSimulateShake}
-          collapsed={rightCollapsed}
-          onToggleCollapse={() => setRightCollapsed(!rightCollapsed)}
-          activeTab={activeRightTab}
-          onActiveTabChange={setActiveRightTab}
-        />
+        {activeOverlay && (
+          <div className="absolute inset-0 z-40">
+            <button
+              type="button"
+              aria-label="Close menu"
+              tabIndex={-1}
+              onClick={closeOverlay}
+              className="absolute inset-0 cursor-default bg-black/10 backdrop-blur-[1px]"
+            />
+
+            <div
+              id="dice-overlay"
+              ref={leftOverlayRef}
+              hidden={activeOverlay !== 'dice' && activeOverlay !== 'presets'}
+              role="dialog"
+              aria-modal="true"
+              aria-label={activeOverlay === 'presets' ? 'Presets menu' : 'Dice menu'}
+              tabIndex={-1}
+              className="overlay-panel-left pointer-events-auto absolute bottom-0 left-0 top-0 w-[min(18rem,calc(100vw-1rem))] max-w-full"
+            >
+              <LeftOptionsPanel
+                onFormulaUpdate={setCurrentFormula}
+                onClose={closeOverlay}
+                currentFormula={currentFormula}
+                activeTab={activeLeftTab}
+                onActiveTabChange={setActiveLeftTab}
+              />
+            </div>
+
+            <div
+              id="appearance-overlay"
+              ref={rightOverlayRef}
+              hidden={activeOverlay !== 'appearance' && activeOverlay !== 'options'}
+              role="dialog"
+              aria-modal="true"
+              aria-label={activeOverlay === 'options' ? 'Options menu' : 'Appearance menu'}
+              tabIndex={-1}
+              className="overlay-panel-right pointer-events-auto absolute bottom-0 right-0 top-0 w-[min(18rem,calc(100vw-1rem))] max-w-full"
+            >
+              <RightOptionsPanel
+                materialTheme={materialTheme}
+                tableTheme={tableTheme}
+                diceTheme={diceTheme}
+                onChangeMaterialTheme={setMaterialTheme}
+                onChangeTableTheme={setTableTheme}
+                onChangeDiceTheme={setDiceTheme}
+                shakeSettings={shakeSettings}
+                onUpdateShakeSettings={handleUpdateShakeSettings}
+                onRequestSensorPermission={handleRequestPermission}
+                onSimulateShake={handleSimulateShake}
+                onClose={closeOverlay}
+                activeTab={activeRightTab}
+                onActiveTabChange={setActiveRightTab}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 3. FOOTER ROLL HISTORY ticker (h-32) */}

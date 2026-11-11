@@ -13,10 +13,11 @@ interface TopNotationBarProps {
   onFormulaChange: (formula: string) => void;
   onRoll: (formula: string) => void;
   isRolling: boolean;
-  onSelectDice: () => void;
-  onSelectPresets: () => void;
-  onSelectAppearance: () => void;
-  onSelectOptions: () => void;
+  onSelectDice: (trigger: HTMLButtonElement) => void;
+  onSelectPresets: (trigger: HTMLButtonElement) => void;
+  onSelectAppearance: (trigger: HTMLButtonElement) => void;
+  onSelectOptions: (trigger: HTMLButtonElement) => void;
+  activeOverlay: 'dice' | 'presets' | 'appearance' | 'options' | null;
 }
 
 /** Renders the primary navigation row and the always-visible notation/Roll controls. */
@@ -29,6 +30,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   onSelectPresets,
   onSelectAppearance,
   onSelectOptions,
+  activeOverlay,
 }) => {
   const [inputVal, setInputVal] = useState<string>(currentFormula || '1d20');
 
@@ -47,11 +49,11 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   };
 
   const navigationItems = [
-    { label: 'Dice', Icon: Dices, onClick: onSelectDice },
-    { label: 'Presets', Icon: BookOpen, onClick: onSelectPresets },
-    { label: 'Appearance', Icon: Palette, onClick: onSelectAppearance },
-    { label: 'Options', Icon: SlidersHorizontal, onClick: onSelectOptions },
-  ];
+    { id: 'dice', label: 'Dice', Icon: Dices, onClick: onSelectDice },
+    { id: 'presets', label: 'Presets', Icon: BookOpen, onClick: onSelectPresets },
+    { id: 'appearance', label: 'Appearance', Icon: Palette, onClick: onSelectAppearance },
+    { id: 'options', label: 'Options', Icon: SlidersHorizontal, onClick: onSelectOptions },
+  ] as const;
 
   return (
     <header className="z-30 flex w-full shrink-0 select-none flex-col gap-1.5 border-b border-[#3d3329] bg-[#1a1613] px-3 py-1.5 shadow-lg sm:px-5">
@@ -72,12 +74,14 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
         </div>
 
         <nav aria-label="Primary navigation" className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-1.5">
-          {navigationItems.map(({ label, Icon, onClick }) => (
+          {navigationItems.map(({ id, label, Icon, onClick }) => (
             <button
               key={label}
               type="button"
-              onClick={onClick}
+              onClick={(event) => onClick(event.currentTarget)}
               aria-label={label}
+              aria-expanded={activeOverlay === id}
+              aria-controls={id === 'dice' || id === 'presets' ? 'dice-overlay' : 'appearance-overlay'}
               title={label}
               className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-transparent px-2 text-[#b8a47f] transition-colors hover:border-[#8c7851]/60 hover:bg-[#8c7851]/15 hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b] sm:px-2.5 md:px-3"
             >
