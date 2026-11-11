@@ -108,11 +108,8 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               {diceList.map((die) => (
                 <div
                   key={die.type}
-                  className={`relative flex flex-col items-center justify-between p-1.5 rounded-xl border transition-all ${
-                    stagedDice[die.type] > 0
-                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] shadow-md'
-                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1] hover:border-[#8c7851]/50'
-                  }`}
+                  data-selected={stagedDice[die.type] > 0}
+                  className="ui-choice-tile relative flex flex-col items-center justify-between p-1.5"
                 >
                   {/* Count badge at top-right */}
                   {stagedDice[die.type] > 0 && (
@@ -141,13 +138,13 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                     <button
                       onClick={() => handleDecrement(die.type)}
                       disabled={stagedDice[die.type] === 0}
-                      className="flex-1 py-0.5 rounded-lg bg-[#241e1a] hover:bg-rose-950/40 text-[#d4c3a1] flex items-center justify-center font-mono text-[10px] disabled:opacity-20 transition-all cursor-pointer"
+                      className="ui-stepper-button flex-1"
                     >
                       -
                     </button>
                     <button
                       onClick={() => handleIncrement(die.type)}
-                      className="flex-1 py-0.5 rounded-lg bg-[#8c7851]/30 hover:bg-[#8c7851] text-white flex items-center justify-center font-mono text-[10px] transition-all cursor-pointer"
+                      className="ui-stepper-button flex-1"
                     >
                       +
                     </button>
@@ -157,13 +154,13 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
             </div>
 
             {/* Modifier & Advantage Controls */}
-            <div className="flex flex-col gap-1.5 bg-[#12100e] p-2 rounded-xl border border-[#3d3329] shrink-0 shadow-inner">
+            <div className="ui-inset-surface flex shrink-0 flex-col gap-1.5 p-2">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-[#d4c3a1]/80 font-title font-semibold">Modifier:</span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setModifier(prev => prev - 1)}
-                    className="w-5 h-5 rounded-lg bg-[#241e1a] text-[#d4c3a1] hover:text-white flex items-center justify-center font-mono font-bold cursor-pointer border border-[#3d3329]"
+                    className="ui-stepper-button h-10 w-10"
                   >
                     -
                   </button>
@@ -172,7 +169,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                   </span>
                   <button
                     onClick={() => setModifier(prev => prev + 1)}
-                    className="w-5 h-5 rounded-lg bg-[#241e1a] text-[#d4c3a1] hover:text-white flex items-center justify-center font-mono font-bold cursor-pointer border border-[#3d3329]"
+                    className="ui-stepper-button h-10 w-10"
                   >
                     +
                   </button>
@@ -183,21 +180,17 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-[#3d3329]">
                 <button
                   onClick={() => setAdvantage('none')}
-                  className={`py-1 rounded-lg text-[9px] font-title font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
-                    advantage === 'none'
-                      ? 'gold-gradient-bg text-white border-[#a38c5e] shadow'
-                      : 'bg-[#241e1a] text-[#d4c3a1]/60 border-transparent hover:text-[#f4ead5]'
-                  }`}
+                  aria-pressed={advantage === 'none'}
+                  data-selected={advantage === 'none'}
+                  className="ui-segment-button flex-col"
                 >
                   <span>NORM</span>
                 </button>
                 <button
                   onClick={() => setAdvantage('advantage')}
-                  className={`py-1 rounded-lg text-[9px] font-title font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
-                    advantage === 'advantage'
-                      ? 'bg-emerald-800 text-white border-emerald-600 shadow'
-                      : 'bg-[#241e1a] text-[#d4c3a1]/60 border-transparent hover:text-emerald-400'
-                  }`}
+                  aria-pressed={advantage === 'advantage'}
+                  data-selected={advantage === 'advantage'}
+                  className="ui-segment-button flex-col"
                   title="Advantage"
                 >
                   <img
@@ -211,11 +204,9 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 </button>
                 <button
                   onClick={() => setAdvantage('disadvantage')}
-                  className={`py-1 rounded-lg text-[9px] font-title font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
-                    advantage === 'disadvantage'
-                      ? 'bg-rose-900 text-white border-rose-700 shadow'
-                      : 'bg-[#241e1a] text-[#d4c3a1]/60 border-transparent hover:text-rose-400'
-                  }`}
+                  aria-pressed={advantage === 'disadvantage'}
+                  data-selected={advantage === 'disadvantage'}
+                  className="ui-segment-button flex-col"
                   title="Disadvantage"
                 >
                   <img
@@ -234,7 +225,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={handleClear}
-                className="w-full py-1.5 rounded-xl bg-[#241e1a] hover:bg-rose-950/30 hover:text-rose-300 text-[#d4c3a1]/80 border border-[#3d3329] flex items-center justify-center gap-1.5 text-[10px] font-title font-bold transition-all cursor-pointer"
+                className="ui-button ui-button--quiet w-full"
                 title="Reset staged dice"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -245,7 +236,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
         ) : (
           /* RPG Presets Tab */
           <div className="flex flex-col gap-1.5 overflow-y-auto max-h-full pr-0.5">
-            <span className="text-[9px] uppercase tracking-wider text-[#8c7851] font-title font-bold px-1 block">
+            <span className="ui-section-label px-1">
               Quick RPG Actions:
             </span>
             {presets.map((p) => {
@@ -254,7 +245,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 <button
                   key={p.name}
                   onClick={() => onFormulaUpdate(p.formula)}
-                  className="w-full flex items-center justify-between p-2 rounded-xl bg-[#12100e] hover:bg-[#8c7851]/20 border border-[#3d3329] hover:border-[#a38c5e] text-left transition-all active:scale-95 group min-w-0 cursor-pointer shadow-sm"
+                  className="ui-choice-button group min-w-0"
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <IconComp className={`w-3.5 h-3.5 shrink-0 ${p.color}`} />

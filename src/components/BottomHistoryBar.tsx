@@ -15,7 +15,7 @@ export const BottomHistoryBar: React.FC<BottomHistoryBarProps> = ({
   onClearHistory,
 }) => {
   return (
-    <footer className="z-20 flex h-11 w-full shrink-0 select-none items-center gap-2 border-t border-[#3d3329] bg-[#181412] px-2 shadow-xl sm:px-4">
+    <footer className="ui-chrome-bar z-20 flex h-11 w-full shrink-0 select-none items-center gap-2 border-t px-2 sm:px-4">
       <History className="h-4 w-4 shrink-0 text-[#a38c5e]" aria-label="Roll history" />
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-1 no-scrollbar" aria-label="Recent rolls">
         {history.length === 0 ? (
@@ -25,13 +25,7 @@ export const BottomHistoryBar: React.FC<BottomHistoryBarProps> = ({
             <button
               key={entry.id}
               onClick={() => onReroll(entry.result.rawFormula)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono text-[10px] font-bold shadow-sm transition-colors hover:border-[#a38c5e] ${
-                entry.result.isCrit
-                  ? 'border-[#a38c5e] bg-[#8c7851]/30 text-[#f4ead5]'
-                  : entry.result.isFumble
-                  ? 'border-rose-800 bg-rose-950/30 text-rose-300'
-                  : 'border-[#3d3329] bg-[#241e1a] text-[#f4ead5]'
-              }`}
+              className={`ui-history-chip ${entry.result.isCrit ? 'ui-history-chip--critical' : entry.result.isFumble ? 'ui-history-chip--fumble' : ''}`}
               title={`Re-roll ${entry.result.rawFormula}`}
             >
               <span className="max-w-24 truncate text-[#d4c3a1]/70 font-normal">
@@ -51,7 +45,7 @@ export const BottomHistoryBar: React.FC<BottomHistoryBarProps> = ({
           onClick={onClearHistory}
           aria-label="Clear roll history"
           title="Clear roll history"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#d4c3a1]/55 transition-colors hover:bg-rose-950/40 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+          className="ui-icon-button ui-icon-button--danger shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
         >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
