@@ -171,7 +171,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     { id: 'leather', name: 'Leather Felt', color: 'bg-[#451a03]' },
   ];
 
-  /** Requests device-motion permission and records the permission result for the UI. */
+  /** Requests device-motion permission through App, which retains the result across menu unmounts. */
   const handleGrantPermission = async () => {
     await onRequestSensorPermission();
   };
