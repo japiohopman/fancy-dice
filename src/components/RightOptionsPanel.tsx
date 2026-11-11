@@ -184,7 +184,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
   return (
     <div className="h-full min-h-0">
-      <div className="flex h-full min-h-0 flex-col overflow-y-auto gap-3 p-2 text-[11px] no-scrollbar">      <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-[11px] no-scrollbar">
+      <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-[11px] no-scrollbar">
         {activeTab === 'theme' && (
           <div className="flex flex-col gap-2">
             <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
