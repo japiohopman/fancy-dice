@@ -281,8 +281,7 @@ export default function App() {
           )}
         </main>
 
-        {activeOverlay && (
-          <div className="absolute inset-0 z-40">
+        <div hidden={!activeOverlay} className="absolute inset-0 z-40">
             <button
               type="button"
               aria-label="Close menu"
@@ -336,8 +335,7 @@ export default function App() {
                 onActiveTabChange={setActiveRightTab}
               />
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* 3. FOOTER ROLL HISTORY ticker (h-32) */}
