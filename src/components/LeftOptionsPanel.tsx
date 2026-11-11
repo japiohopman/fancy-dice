@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { DieType } from '../types';
-import { Dices, BookOpen, RotateCcw, Shield, Flame, Sword, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dices, RotateCcw, Shield, Flame, Sword, Sparkles } from 'lucide-react';
 
 interface LeftOptionsPanelProps {
   onFormulaUpdate: (formula: string) => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
   currentFormula: string;
   activeTab: 'dice' | 'presets';
-  onActiveTabChange: (tab: 'dice' | 'presets') => void;
 }
 
 /** Renders the die builder and RPG preset sections in the existing left-side panel. */
 export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   onFormulaUpdate,
-  collapsed,
-  onToggleCollapse,
   currentFormula,
-  activeTab,
-  onActiveTabChange
+  activeTab
 }) => {
 
   // Staged counts for each die type
@@ -104,71 +98,8 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     onFormulaUpdate('1d20');
   };
 
-  if (collapsed) {
-    return (
-      <div className="bg-[#1a1613] border-r border-[#3d3329] w-10 flex flex-col items-center py-2 gap-3 z-20 shrink-0">
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] transition-colors cursor-pointer"
-          title="Expand Left Menu"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { onToggleCollapse(); onActiveTabChange('dice'); }}
-          className="p-1.5 rounded-lg text-[#d4c3a1]/70 hover:text-[#f4ead5] cursor-pointer"
-        >
-          <Dices className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { onToggleCollapse(); onActiveTabChange('presets'); }}
-          className="p-1.5 rounded-lg text-[#d4c3a1]/70 hover:text-[#f4ead5] cursor-pointer"
-        >
-          <BookOpen className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <aside className="w-44 bg-[#1a1613] border-r border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
-      {/* Top Header & Collapse Toggle */}
-      <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#14100e]">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => onActiveTabChange('dice')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-title font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              activeTab === 'dice'
-                ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
-                : 'text-[#d4c3a1]/70 hover:text-[#f4ead5]'
-            }`}
-          >
-            <Dices className="w-3 h-3" />
-            <span>Dice</span>
-          </button>
-          <button
-            onClick={() => onActiveTabChange('presets')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-title font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              activeTab === 'presets'
-                ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
-                : 'text-[#d4c3a1]/70 hover:text-[#f4ead5]'
-            }`}
-          >
-            <BookOpen className="w-3 h-3" />
-            <span>Presets</span>
-          </button>
-        </div>
-
-        <button
-          onClick={onToggleCollapse}
-          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#241e1a] cursor-pointer"
-          title="Collapse Menu"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Content Body */}
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 p-2 flex flex-col min-h-0 overflow-y-auto gap-2 text-xs no-scrollbar">
         {activeTab === 'dice' ? (
           <>
@@ -338,6 +269,6 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
           </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 };

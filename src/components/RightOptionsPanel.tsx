@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MaterialTheme, ShakeSettings, TableTheme } from '../types';
-import { Check, Vibrate, Volume2, VolumeX, Smartphone, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, Vibrate, Volume2, VolumeX, Smartphone } from 'lucide-react';
 
 interface RightOptionsPanelProps {
   materialTheme: MaterialTheme | string;
@@ -13,10 +13,7 @@ interface RightOptionsPanelProps {
   onUpdateShakeSettings: (settings: ShakeSettings) => void;
   onRequestSensorPermission: () => Promise<boolean>;
   onSimulateShake: () => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
-  activeTab: 'theme' | 'color' | 'board' | 'settings';
-  onActiveTabChange: (tab: 'theme' | 'color' | 'board' | 'settings') => void;
+  activeTab: 'theme' | 'color' | 'settings';
 }
 
 /** Converts hue, saturation, and lightness values into a hexadecimal CSS color. */
@@ -74,10 +71,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   onUpdateShakeSettings,
   onRequestSensorPermission,
   onSimulateShake,
-  collapsed,
-  onToggleCollapse,
   activeTab,
-  onActiveTabChange,
 }) => {
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
 
@@ -188,50 +182,8 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   const thumbX = Math.round(Math.cos(angleRad) * thumbDist);
   const thumbY = Math.round(Math.sin(angleRad) * thumbDist);
 
-  if (collapsed) {
-    return (
-      <div className="bg-[#1a1613] border-l border-[#3d3329] w-10 flex flex-col items-center py-2 gap-3 z-20 shrink-0">
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] cursor-pointer"
-          title="Expand Right Menu"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <aside className="w-44 bg-[#1a1613] border-l border-[#3d3329] flex flex-col z-20 shrink-0 h-full overflow-hidden select-none">
-      {/* Submenu Tabs list & Collapse toggle */}
-      <div className="flex items-center justify-between p-1.5 border-b border-[#3d3329] bg-[#14100e]">
-        <div className="grid grid-cols-4 gap-0.5 flex-1 mr-1">
-          {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => onActiveTabChange(tab)}
-              className={`py-1 text-[8.5px] font-title font-bold uppercase rounded transition-all cursor-pointer ${
-                activeTab === tab
-                  ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
-                  : 'text-[#d4c3a1]/60 hover:text-[#f4ead5] hover:bg-[#241e1a]'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={onToggleCollapse}
-          className="p-1 rounded-lg text-[#d4c3a1]/50 hover:text-[#f4ead5] hover:bg-[#241e1a] shrink-0 cursor-pointer"
-          title="Collapse Menu"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Content Body */}
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-[11px] no-scrollbar">
         {activeTab === 'theme' && (
           <div className="flex flex-col gap-2">
@@ -253,6 +205,30 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                   {diceTheme === item.id && <Check className="w-3.5 h-3.5 text-[#a38c5e] shrink-0" />}
                 </button>
               ))}
+            </div>
+            <div className="mt-1 flex flex-col gap-2 border-t border-[#3d3329] pt-3">
+              <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
+                Table Felt:
+              </span>
+              <div className="grid grid-cols-1 gap-1.5">
+                {tableOptions.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onChangeTableTheme(item.id)}
+                    className={`flex items-center justify-between p-2 rounded-xl border text-[10.5px] font-title font-semibold transition-all cursor-pointer ${
+                      tableTheme === item.id
+                        ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold shadow-sm'
+                        : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <span className={`w-3 h-3 rounded-full ${item.color} border border-white/30 shrink-0 shadow-sm`} />
+                      <span className="truncate">{item.name}</span>
+                    </div>
+                    {tableTheme === item.id && <Check className="w-3.5 h-3.5 text-[#a38c5e] shrink-0" />}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -315,33 +291,6 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 >
                   <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: item.hex }} />
                   <span className="truncate">{item.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'board' && (
-          <div className="flex flex-col gap-2">
-            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
-              Board Felt:
-            </span>
-            <div className="grid grid-cols-1 gap-1.5">
-              {tableOptions.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => onChangeTableTheme(item.id)}
-                  className={`flex items-center justify-between p-2 rounded-xl border text-[10.5px] font-title font-semibold transition-all cursor-pointer ${
-                    tableTheme === item.id
-                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold shadow-sm'
-                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className={`w-3 h-3 rounded-full ${item.color} border border-white/30 shrink-0 shadow-sm`} />
-                    <span className="truncate">{item.name}</span>
-                  </div>
-                  {tableTheme === item.id && <Check className="w-3.5 h-3.5 text-[#a38c5e] shrink-0" />}
                 </button>
               ))}
             </div>
@@ -430,6 +379,6 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
           </div>
         )}
       </div>
-    </aside>
+    </div>
   );
 };

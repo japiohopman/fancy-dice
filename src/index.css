@@ -72,3 +72,54 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #8c7851;
 }
+
+
+/* Overlay drawers float above the unchanged dice stage. */
+.overlay-panel-left {
+  animation: overlay-enter-left 180ms ease-out both;
+}
+
+.overlay-panel-right {
+  animation: overlay-enter-right 180ms ease-out both;
+}
+
+@keyframes overlay-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes overlay-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-panel-left,
+  .overlay-panel-right {
+    animation: none;
+  }
+}
+
+
+/* The explicit Roll action is for desktop pointer devices, not touch-only phones. */
+.desktop-roll-button {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
+  .desktop-roll-button {
+    display: inline-flex;
+  }
+}
