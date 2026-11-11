@@ -116,40 +116,13 @@ class MainActivity : BridgeActivity(), SensorEventListener {
 
 ---
 
-## 🔒 Android Manifest Configuration (Force Landscape Mode)
+## 🔒 Android orientation policy
 
-Update `android/app/src/main/AndroidManifest.xml` to lock orientation to landscape and request hardware vibration permissions:
+The installable PWA does not force an orientation: its manifest omits the `orientation` member so the device/operating system can choose portrait or landscape. The page uses safe-area insets to keep controls clear of display cutouts and system UI.
 
-```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+Keep a future Capacitor/native Android build separate from the PWA policy. **Do not add** `android:screenOrientation="landscape"` or `"sensorLandscape"` to `AndroidManifest.xml` by copying an old example. Leave the activity's orientation unspecified by default so Android can follow the device and user orientation settings. A fixed native orientation would require a separate, explicit product decision and physical-device verification.
 
-    <!-- Permissions -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
-
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme">
-
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:screenOrientation="sensorLandscape"
-            android:launchMode="singleTask"
-            android:exported="true">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-```
+For a native build, also verify the Android status/navigation bars, edge-to-edge behaviour and safe-area spacing together with the WebView content. The current repository does not declare a native orientation lock in `capacitor.config.ts`.
 
 ---
 
@@ -192,7 +165,7 @@ For a lightweight web APK without native plugins:
 
 - [x] **3D Physics Engine**: Ammo.js WebGL rendering for d4–d100 & Fate dice.
 - [x] **Motion Detection**: `DeviceMotionEvent` accelerometer shake handler.
-- [x] **Landscape Static UI**: No scrollbars, top notation bar, left/right collapsible menus, bottom history ticker.
+- [ ] **Responsive portrait/landscape UI**: Validate the dice stage, overlays, header/footer and Android system bars in both orientations (issue #37).
 - [x] **Auto-Fading Outcome**: Center result modal with critical success/fumble particle animations.
 - [ ] **Native Capacitor Build**: Android Studio project generation (`npx cap add android`).
 - [ ] **Custom App Icon & Splash**: 512x512 adaptive icon for Android home screen launcher.
