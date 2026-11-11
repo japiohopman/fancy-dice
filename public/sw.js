@@ -4,7 +4,7 @@
  * a new build gets a new URL. Increment CACHE_NAME when changing the cache
  * strategy or the precache list.
  */
-const CACHE_NAME = 'fancy-dice-pwa-v2';
+const CACHE_NAME = 'fancy-dice-pwa-v3';
 const APP_SHELL_URL = new URL('.', self.registration.scope).href;
 const MANIFEST_URL = new URL('manifest.webmanifest', APP_SHELL_URL).href;
 const ICON_URLS = [
@@ -12,6 +12,9 @@ const ICON_URLS = [
   new URL('icons/fancy-dice-192.png', APP_SHELL_URL).href,
   new URL('icons/fancy-dice-512.png', APP_SHELL_URL).href,
 ];
+// Filled by the Vite build plugin with every generated JS chunk and CSS file.
+const BUILD_ASSET_FILES = [];
+const BUILD_ASSET_URLS = BUILD_ASSET_FILES.map((file) => new URL(file, APP_SHELL_URL).href);
 const SCOPE_PATH = new URL(self.registration.scope).pathname;
 const STATIC_ASSET_PATTERN = /\.(?:avif|css|gif|ico|jpe?g|js|json|png|svg|webp|wasm|woff2?)$/i;
 // Vite names bundles like index-<hash>.js, not index.<hash>.js.
@@ -21,7 +24,9 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll([APP_SHELL_URL, MANIFEST_URL, ...ICON_URLS]))
+      .then((cache) =>
+        cache.addAll([APP_SHELL_URL, MANIFEST_URL, ...ICON_URLS, ...BUILD_ASSET_URLS]),
+      )
       .then(() => self.skipWaiting()),
   );
 });
@@ -41,12 +46,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-async function fetchAndCache(request) {
+async function fetchAndCache(request, cacheKey = request) {
   const response = await fetch(request);
   if (response.ok && response.type === 'basic') {
     try {
       const cache = await caches.open(CACHE_NAME);
-      await cache.put(request, response.clone());
+      await cache.put(cacheKey, response.clone());
     } catch (error) {
       // A cache quota/write failure must not turn a successful network
       // response into a failed page or game-asset request.
@@ -57,10 +62,13 @@ async function fetchAndCache(request) {
 }
 
 async function networkFirst(request) {
+  // A single app-shell cache key prevents query strings from creating
+  // unbounded navigation entries.
+  const cacheKey = request.mode === 'navigate' ? APP_SHELL_URL : request;
   try {
-    return await fetchAndCache(request);
+    return await fetchAndCache(request, cacheKey);
   } catch {
-    const cached = await caches.match(request);
+    const cached = await caches.match(cacheKey);
     if (cached) return cached;
     if (request.mode === 'navigate') {
       const appShell = await caches.match(APP_SHELL_URL);

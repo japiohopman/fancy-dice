@@ -29,13 +29,16 @@ If Chrome does not offer installation, check that the page loaded over HTTPS, th
 - [ ] Vibration works when vibration feedback is enabled and the device/browser permits it.
 - [ ] Shake-to-roll responds to a deliberate shake and does not trigger repeatedly while the phone is still.
 - [ ] App can be sent to the background and reopened without a blank WebGL canvas.
-- [ ] After the initial full load, enable Airplane mode and relaunch the app to verify the cached app shell and already-loaded game assets.
+- [ ] After the service worker is active, relaunch once while online so the dice-engine assets have passed through the worker.
+- [ ] Enable Airplane mode and relaunch to verify the app shell, generated bundles, and previously loaded game assets work offline.
 
 ## Offline and update behaviour
 
-The service worker precaches the app entry page, manifest, and SVG/PNG app icons. Content-hashed Vite JavaScript and CSS bundles use cache-first because a changed bundle receives a new URL. Other same-origin static resources—including the dice engine's stable files under `public/assets/dice-box/`—use network-first with a cached fallback. This means the next online launch refreshes stable game files instead of requiring a manual cache-version bump for every asset edit.
+The service worker precaches the app entry page, manifest, SVG/PNG app icons, and the JavaScript/CSS files emitted by the Vite production build. A Vite build plugin injects those generated bundle URLs into the service worker, so the install step does not depend on guessed or hard-coded hashes.
 
-Google Fonts are external and may fall back to system fonts offline. The first visit still requires an internet connection. Offline testing should be done only after a complete online launch has loaded the dice engine, its themes, and other assets that will be needed.
+Content-hashed Vite JavaScript and CSS bundles use cache-first because a changed bundle receives a new URL. Other same-origin static resources—including the dice engine's stable files under `public/assets/dice-box/`—use network-first with a cached fallback. This means an online launch refreshes stable game files instead of requiring a manual cache-version bump for every asset edit.
+
+Google Fonts are external and may fall back to system fonts offline. The first visit still requires an internet connection. The dice engine's public assets are cached as they are requested through the active service worker, so complete one controlled online launch before relying on offline use.
 
 Increment `CACHE_NAME` in `public/sw.js` when changing the service-worker cache strategy or the precache list. Activation removes older Fancy Dice PWA caches.
 

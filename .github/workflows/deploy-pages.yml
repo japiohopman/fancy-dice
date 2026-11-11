@@ -14,9 +14,11 @@ on:
 permissions:
   contents: read
 
+# Pull-request checks may cancel older checks for the same PR, but can never
+# cancel a Pages deployment. Deployments are serialized and never cancelled.
 concurrency:
-  group: github-pages
-  cancel-in-progress: true
+  group: github-pages-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -26,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
