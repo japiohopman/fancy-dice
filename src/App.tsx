@@ -239,7 +239,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#12100e] text-[#d4c3a1] flex flex-col font-serif select-none">
+    <div className="app-shell overflow-hidden bg-[#12100e] text-[#d4c3a1] flex flex-col font-serif select-none">
       {/* Primary navigation and always-visible dice notation controls. */}
       <TopNotationBar
         currentFormula={currentFormula}
