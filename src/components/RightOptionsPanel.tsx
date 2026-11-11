@@ -15,9 +15,11 @@ interface RightOptionsPanelProps {
   onSimulateShake: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  activeTab: 'theme' | 'color' | 'board' | 'settings';
+  onActiveTabChange: (tab: 'theme' | 'color' | 'board' | 'settings') => void;
 }
 
-// Convert HSL to HEX helper
+/** Converts hue, saturation, and lightness values into a hexadecimal CSS color. */
 function hslToHex(h: number, s: number, l: number): string {
   l /= 100;
   const a = (s * Math.min(l, 1 - l)) / 100;
@@ -29,7 +31,7 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${f(0)}${f(8)}${f(4)}`;
 }
 
-// Convert HEX to HSL helper
+/** Converts a hexadecimal CSS color into hue, saturation, and lightness values. */
 function hexToHsl(hex: string): { h: number; s: number; l: number } {
   hex = hex.replace(/^#/, '');
   if (hex.length === 3) {
@@ -60,6 +62,7 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
   };
 }
 
+/** Renders dice materials, custom colors, board surfaces, and device options. */
 export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   materialTheme,
   tableTheme,
@@ -73,8 +76,9 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   onSimulateShake,
   collapsed,
   onToggleCollapse,
+  activeTab,
+  onActiveTabChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<'theme' | 'color' | 'board' | 'settings'>('theme');
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
 
   // Local state for interactive Color Wheel
@@ -130,12 +134,14 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     { id: 'leather', name: 'Leather Felt', color: 'bg-[#451a03]' },
   ];
 
+  /** Requests device-motion permission and records the permission result for the UI. */
   const handleGrantPermission = async () => {
     const granted = await onRequestSensorPermission();
     setPermissionGranted(granted);
   };
 
   // Color picking handler on the Color Wheel conic gradient
+  /** Converts a pointer or touch position on the color wheel into the selected material color. */
   const handleColorPick = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
@@ -159,17 +165,20 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     onChangeMaterialTheme(hexColor);
   };
 
+  /** Begins a pointer drag on the custom color wheel and applies its initial color. */
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     isDraggingRef.current = true;
     handleColorPick(e);
   };
 
+  /** Updates the selected color while the pointer is being dragged across the wheel. */
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isDraggingRef.current) {
       handleColorPick(e);
     }
   };
 
+  /** Ends an active pointer drag on the color wheel. */
   const handleMouseUpOrLeave = () => {
     isDraggingRef.current = false;
   };
@@ -201,7 +210,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
           {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => onActiveTabChange(tab)}
               className={`py-1 text-[8.5px] font-title font-bold uppercase rounded transition-all cursor-pointer ${
                 activeTab === tab
                   ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
