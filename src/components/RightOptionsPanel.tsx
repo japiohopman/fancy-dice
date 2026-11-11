@@ -240,7 +240,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-[11px] no-scrollbar">
         {activeTab === 'theme' && (
           <div className="flex flex-col gap-2">
-            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
+            <span className="ui-section-label">
               3D Dice Skin:
             </span>
             <div className="grid grid-cols-1 gap-1.5">
@@ -248,11 +248,8 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onChangeDiceTheme(item.id)}
-                  className={`flex items-center justify-between p-2 rounded-xl border text-[10.5px] font-title font-semibold transition-all cursor-pointer ${
-                    diceTheme === item.id
-                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold shadow-sm'
-                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
-                  }`}
+                  data-selected={diceTheme === item.id}
+                  className="ui-choice-button"
                 >
                   <span className="truncate">{item.name}</span>
                   {diceTheme === item.id && <Check className="w-3.5 h-3.5 text-[#a38c5e] shrink-0" />}
@@ -260,7 +257,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
               ))}
             </div>
             <div className="mt-1 flex flex-col gap-2 border-t border-[#3d3329] pt-3">
-              <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
+              <span className="ui-section-label">
                 Table Felt:
               </span>
               <div className="grid grid-cols-1 gap-1.5">
@@ -268,11 +265,8 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                   <button
                     key={item.id}
                     onClick={() => onChangeTableTheme(item.id)}
-                    className={`flex items-center justify-between p-2 rounded-xl border text-[10.5px] font-title font-semibold transition-all cursor-pointer ${
-                      tableTheme === item.id
-                        ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold shadow-sm'
-                        : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
-                    }`}
+                    data-selected={tableTheme === item.id}
+                    className="ui-choice-button"
                   >
                     <div className="flex items-center gap-2 truncate">
                       <span className={`w-3 h-3 rounded-full ${item.color} border border-white/30 shrink-0 shadow-sm`} />
@@ -289,7 +283,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
         {activeTab === 'color' && (
           <div className="flex flex-col items-center gap-3">
             <div className="w-full">
-              <h3 className="text-[10px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
+              <h3 className="ui-section-label">
                 Custom Dice Color
               </h3>
               <p id="dice-color-help" className="mt-1 text-[10px] leading-relaxed text-[#d4c3a1]/65">
@@ -302,7 +296,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             <div
               role="group"
               aria-label={`Active dice color: ${activeColorLabel}, ${activeColorHex}`}
-              className="flex w-full items-center gap-3 rounded-xl border border-[#8c7851]/60 bg-[#12100e] p-3 shadow-inner"
+              className="ui-inset-surface flex w-full items-center gap-3 p-3"
             >
               <span
                 aria-hidden="true"
@@ -310,7 +304,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 style={{ backgroundColor: activeColorHex }}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-[9px] uppercase tracking-wider text-[#8c7851] font-title font-bold">
+                <p className="ui-section-label">
                   Active dice color
                 </p>
                 <code className="mt-0.5 block text-sm font-bold text-[#f4ead5]">{activeColorHex}</code>
@@ -367,11 +361,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                   onClick={() => onChangeMaterialTheme(item.id)}
                   aria-label={`Use ${item.name} dice color, ${item.hex}`}
                   aria-pressed={materialTheme === item.id}
-                  className={`flex min-h-11 items-center gap-2 rounded-lg border px-2 py-2 text-[10px] font-title font-semibold transition-all cursor-pointer ${
-                    materialTheme === item.id
-                      ? 'bg-[#8c7851]/25 border-[#d0b77e] text-[#fff4dc] shadow-sm'
-                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/60'
-                  }`}
+                  className="ui-choice-button"
                 >
                   <span
                     aria-hidden="true"
@@ -388,7 +378,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
         {activeTab === 'settings' && (
           <div className="flex flex-col gap-2">
-            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
+            <span className="ui-section-label">
               Device & Feedback
             </span>
 
@@ -396,7 +386,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             <div
               role="status"
               aria-live="polite"
-              className={`flex items-start gap-2 rounded-xl border p-2 shadow-inner ${sensorStatusClass}`}
+              className={`flex items-start gap-2 rounded-xl border p-2 ${sensorStatusClass}`}
             >
               {sensorStatus.state === 'warning'
                 ? <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -412,7 +402,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
               type="button"
               onClick={handleGrantPermission}
               disabled={!hasMotionSensor || !supportsMotionPermissionRequest || permissionGranted === true}
-              className="w-full py-1.5 px-2.5 rounded-xl bg-[#8c7851]/20 hover:bg-[#8c7851]/30 border border-[#a38c5e] text-[#f4ead5] text-[10px] font-title font-bold flex items-center justify-between transition-colors min-w-0 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+              className="ui-button ui-button--quiet w-full min-w-0 justify-between text-[10px] disabled:cursor-not-allowed"
             >
               <span className="truncate">
                 {!hasMotionSensor
@@ -427,7 +417,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             </button>
 
             {/* Shake Phone to Roll */}
-            <div className="flex items-center justify-between bg-[#12100e] p-2 rounded-xl border border-[#3d3329] shadow-inner">
+            <div className="ui-inset-surface flex items-center justify-between p-2">
               <span className="text-[10px] text-[#d4c3a1]/80 font-title font-medium truncate">Shake Roll</span>
               <input
                 type="checkbox"
@@ -439,7 +429,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             </div>
 
             {/* Sensitivity Slider */}
-            <div className="flex flex-col gap-1 bg-[#12100e] p-2 rounded-xl border border-[#3d3329] shadow-inner">
+            <div className="ui-inset-surface flex flex-col gap-1 p-2">
               <div className="flex justify-between items-center text-[10px] font-title">
                 <span className="text-[#d4c3a1]/70">Sensitivity:</span>
                 <span className="font-mono font-bold text-[#a38c5e]">{shakeSettings.sensitivity}</span>
@@ -492,7 +482,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 type="button"
                 onClick={onSimulateShake}
                 aria-label="Test simulated shake-to-roll"
-                className="w-full py-1.5 rounded-xl bg-[#241e1a] hover:bg-[#352c26] border border-[#3d3329] hover:border-[#a38c5e] text-[#f4ead5] font-title font-bold text-[10.5px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                className="ui-button ui-button--quiet w-full text-[10.5px]"
               >
                 <Smartphone className="w-3.5 h-3.5 text-[#a38c5e]" aria-hidden="true" />
                 <span>Test simulated shake</span>
