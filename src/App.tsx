@@ -21,6 +21,7 @@ export default function App() {
 
   // A single menu shell keeps navigation and section content in one predictable place.
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isMenuMounted, setIsMenuMounted] = useState<boolean>(false);
   const [activeMenuSection, setActiveMenuSection] = useState<MenuSection>('dice');
   const menuDialogRef = useRef<HTMLDivElement>(null);
   const lastFocusedTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -34,6 +35,7 @@ export default function App() {
     }
 
     lastFocusedTriggerRef.current = trigger;
+    setIsMenuMounted(true);
     setIsMenuOpen(true);
   };
 
@@ -264,7 +266,17 @@ export default function App() {
           )}
         </main>
 
-        <div hidden={!isMenuOpen} className="absolute inset-0 z-40 p-2 sm:p-3">
+        {isMenuMounted && (
+        <div
+          aria-hidden={!isMenuOpen}
+          inert={!isMenuOpen}
+          onAnimationEnd={(event) => {
+            if (event.target === event.currentTarget && event.animationName === 'menu-overlay-exit' && !isMenuOpen) {
+              setIsMenuMounted(false);
+            }
+          }}
+          className={`absolute inset-0 z-40 p-2 sm:p-3 ${isMenuOpen ? 'menu-overlay-enter' : 'menu-overlay-exit pointer-events-none'}`}
+        >
           <button
             type="button"
             aria-label="Close menu"
@@ -280,7 +292,7 @@ export default function App() {
             aria-modal="true"
             aria-label="Fantastic Dice menu"
             tabIndex={-1}
-            className="relative mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[#a38c5e]/50 bg-[#1a1613]/95 shadow-2xl backdrop-blur-xl"
+            className={`relative mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[#a38c5e]/50 bg-[#1a1613]/95 shadow-2xl backdrop-blur-xl ${isMenuOpen ? 'menu-panel-enter' : 'menu-panel-exit'}`}
           >
             <div className="flex shrink-0 items-center justify-between border-b border-[#3d3329] bg-[#14100e] px-3 py-2.5">
               <div className="flex items-center gap-2">
@@ -324,7 +336,7 @@ export default function App() {
             </nav>
 
             <div className="relative min-h-0 flex-1 overflow-hidden">
-              <div hidden={activeMenuSection !== 'dice' && activeMenuSection !== 'presets'} className="h-full overflow-y-auto p-2 sm:p-3">
+              <div hidden={activeMenuSection !== 'dice' && activeMenuSection !== 'presets'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'dice' ? 'menu-section-enter-dice' : activeMenuSection === 'presets' ? 'menu-section-enter-presets' : ''}`}>
                 <LeftOptionsPanel
                   onFormulaUpdate={setCurrentFormula}
                   currentFormula={currentFormula}
@@ -332,7 +344,7 @@ export default function App() {
                 />
               </div>
 
-              <div hidden={activeMenuSection !== 'themes' && activeMenuSection !== 'color' && activeMenuSection !== 'options'} className="h-full overflow-y-auto p-2 sm:p-3">
+              <div hidden={activeMenuSection !== 'themes' && activeMenuSection !== 'color' && activeMenuSection !== 'options'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'themes' ? 'menu-section-enter-themes' : activeMenuSection === 'color' ? 'menu-section-enter-color' : activeMenuSection === 'options' ? 'menu-section-enter-options' : ''}`}>
                 <RightOptionsPanel
                   materialTheme={materialTheme}
                   tableTheme={tableTheme}
@@ -348,7 +360,7 @@ export default function App() {
                 />
               </div>
 
-              <div hidden={activeMenuSection !== 'about'} className="h-full overflow-y-auto p-4 sm:p-6">
+              <div hidden={activeMenuSection !== 'about'} className={`h-full overflow-y-auto p-4 sm:p-6 ${activeMenuSection === 'about' ? 'menu-section-enter-about' : ''}`}>
                 <div className="mx-auto flex max-w-xl flex-col gap-3 rounded-xl border border-[#3d3329] bg-[#12100e] p-4 shadow-inner sm:p-5">
                   <div className="flex items-center gap-2 text-[#a38c5e]">
                     <Dices className="h-5 w-5" aria-hidden="true" />
@@ -365,6 +377,7 @@ export default function App() {
             </div>
           </div>
         </div>
+        )}
 
       </div>
 
