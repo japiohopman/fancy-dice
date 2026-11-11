@@ -519,7 +519,8 @@
     cursor: pointer;
   }
 
-  .ui-segment-button[data-selected="true"] {
+  .ui-segment-button[data-selected="true"],
+  .ui-segment-button[aria-pressed="true"] {
     border-color: #c5a66b;
     background: rgb(140 120 81 / 27%);
     color: #fff4dc;
