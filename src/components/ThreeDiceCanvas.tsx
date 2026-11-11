@@ -95,7 +95,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       theme: diceTheme,
       themeColor: getThemeColor(materialTheme),
       offscreen: false, // Run in main thread for reliable rendering
-      scale: 6,
+      scale: 7,
       enableShadows: true,
       shadowTransparency: 0.7,
       lightIntensity: 1.1,
