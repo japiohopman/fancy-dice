@@ -310,7 +310,7 @@ export default function App() {
                 type="button"
                 onClick={closeMenu}
                 aria-label="Close menu"
-                className="rounded-lg p-1.5 text-[#d4c3a1]/60 transition-colors hover:bg-[#241e1a] hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+                className="ui-icon-button focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -330,7 +330,7 @@ export default function App() {
                   type="button"
                   onClick={() => setActiveMenuSection(id)}
                   aria-current={activeMenuSection === id ? 'page' : undefined}
-                  className={`flex shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-[9px] font-title font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b] sm:px-3 sm:text-[10px] ${
+                  className={`ui-button flex shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-[10px] font-title font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b] sm:px-3 ${
                     activeMenuSection === id
                       ? 'gold-gradient-bg border-[#a38c5e]/60 text-white shadow-sm'
                       : 'border-transparent text-[#d4c3a1]/65 hover:border-[#8c7851]/50 hover:bg-[#241e1a] hover:text-[#f4ead5]'
@@ -369,7 +369,7 @@ export default function App() {
               </div>
 
               <div hidden={activeMenuSection !== 'about'} className={`h-full overflow-y-auto p-4 sm:p-6 ${activeMenuSection === 'about' ? 'menu-section-enter-about' : ''}`}>
-                <div className="mx-auto flex max-w-xl flex-col gap-3 rounded-xl border border-[#3d3329] bg-[#12100e] p-4 shadow-inner sm:p-5">
+                <div className="ui-inset-surface mx-auto flex max-w-xl flex-col gap-3 p-4 sm:p-5">
                   <div className="flex items-center gap-2 text-[#a38c5e]">
                     <Dices className="h-5 w-5" aria-hidden="true" />
                     <h3 className="font-display text-base font-bold tracking-wide text-[#f4ead5]">Fantastic Dice</h3>
