@@ -14,7 +14,8 @@ const ICON_URLS = [
 ];
 const SCOPE_PATH = new URL(self.registration.scope).pathname;
 const STATIC_ASSET_PATTERN = /\.(?:avif|css|gif|ico|jpe?g|js|json|png|svg|webp|wasm|woff2?)$/i;
-const HASHED_BUNDLE_PATTERN = /\.[a-f0-9]{8,}\.(?:css|js)$/i;
+// Vite names bundles like index-<hash>.js, not index.<hash>.js.
+const HASHED_BUNDLE_PATTERN = /[-.][a-z0-9_-]{8,}\.(?:css|js)$/i;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
