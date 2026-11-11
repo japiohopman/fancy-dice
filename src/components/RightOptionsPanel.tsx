@@ -15,6 +15,8 @@ interface RightOptionsPanelProps {
   onSimulateShake: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  activeTab: 'theme' | 'color' | 'board' | 'settings';
+  onActiveTabChange: (tab: 'theme' | 'color' | 'board' | 'settings') => void;
 }
 
 // Convert HSL to HEX helper
@@ -73,8 +75,9 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   onSimulateShake,
   collapsed,
   onToggleCollapse,
+  activeTab,
+  onActiveTabChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<'theme' | 'color' | 'board' | 'settings'>('theme');
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
 
   // Local state for interactive Color Wheel
@@ -201,7 +204,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
           {(['theme', 'color', 'board', 'settings'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => onActiveTabChange(tab)}
               className={`py-1 text-[8.5px] font-title font-bold uppercase rounded transition-all cursor-pointer ${
                 activeTab === tab
                   ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'

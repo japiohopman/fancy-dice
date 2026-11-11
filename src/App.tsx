@@ -18,6 +18,8 @@ export default function App() {
   // Layout Collapsed States for Mobile Side Panels
   const [leftCollapsed, setLeftCollapsed] = useState<boolean>(false);
   const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
+  const [activeLeftTab, setActiveLeftTab] = useState<'dice' | 'presets'>('dice');
+  const [activeRightTab, setActiveRightTab] = useState<'theme' | 'color' | 'board' | 'settings'>('theme');
 
   // Auto-collapse side panels on small screens (< 768px)
   useEffect(() => {
@@ -26,6 +28,32 @@ export default function App() {
       setRightCollapsed(true);
     }
   }, []);
+
+  // Primary navigation currently targets the existing side-panel sections.
+  // Issue #31 will move these surfaces into overlays without changing this navigation model.
+  const selectDiceSection = () => {
+    setActiveLeftTab('dice');
+    setLeftCollapsed(false);
+    setRightCollapsed(true);
+  };
+
+  const selectPresetsSection = () => {
+    setActiveLeftTab('presets');
+    setLeftCollapsed(false);
+    setRightCollapsed(true);
+  };
+
+  const selectAppearanceSection = () => {
+    setActiveRightTab('theme');
+    setRightCollapsed(false);
+    setLeftCollapsed(true);
+  };
+
+  const selectOptionsSection = () => {
+    setActiveRightTab('settings');
+    setRightCollapsed(false);
+    setLeftCollapsed(true);
+  };
 
   // Customization State
   const [materialTheme, setMaterialTheme] = useState<string>('emerald');
@@ -157,9 +185,10 @@ export default function App() {
         onFormulaChange={setCurrentFormula}
         onRoll={(f) => handleExecuteRoll(f)}
         isRolling={isRolling}
-        soundEnabled={shakeSettings.soundEnabled}
-        onToggleSound={() => handleUpdateShakeSettings({ ...shakeSettings, soundEnabled: !shakeSettings.soundEnabled })}
-        shakeEnabled={shakeSettings.enabled}
+        onSelectDice={selectDiceSection}
+        onSelectPresets={selectPresetsSection}
+        onSelectAppearance={selectAppearanceSection}
+        onSelectOptions={selectOptionsSection}
       />
 
       {/* 2. MIDDLE VIEWPORT (LEFT SIDEBAR (w-40) + CENTER 3D CANVAS + RIGHT SIDEBAR (w-40)) */}
@@ -170,6 +199,8 @@ export default function App() {
           collapsed={leftCollapsed}
           onToggleCollapse={() => setLeftCollapsed(!leftCollapsed)}
           currentFormula={currentFormula}
+          activeTab={activeLeftTab}
+          onActiveTabChange={setActiveLeftTab}
         />
 
         {/* Center Stage: 3D Physics Dice Box Canvas with Outcome Overlay */}
@@ -208,6 +239,8 @@ export default function App() {
           onSimulateShake={handleSimulateShake}
           collapsed={rightCollapsed}
           onToggleCollapse={() => setRightCollapsed(!rightCollapsed)}
+          activeTab={activeRightTab}
+          onActiveTabChange={setActiveRightTab}
         />
       </div>
 

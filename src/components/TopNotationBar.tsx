@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Dices, Volume2, VolumeX, Smartphone, Play, Sparkles } from 'lucide-react';
+import {
+  BookOpen,
+  Dices,
+  Palette,
+  Play,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react';
 
 interface TopNotationBarProps {
   currentFormula: string;
   onFormulaChange: (formula: string) => void;
   onRoll: (formula: string) => void;
   isRolling: boolean;
-  soundEnabled: boolean;
-  onToggleSound: () => void;
-  shakeEnabled: boolean;
+  onSelectDice: () => void;
+  onSelectPresets: () => void;
+  onSelectAppearance: () => void;
+  onSelectOptions: () => void;
 }
 
 export const TopNotationBar: React.FC<TopNotationBarProps> = ({
@@ -16,119 +24,96 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   onFormulaChange,
   onRoll,
   isRolling,
-  soundEnabled,
-  onToggleSound,
-  shakeEnabled,
+  onSelectDice,
+  onSelectPresets,
+  onSelectAppearance,
+  onSelectOptions,
 }) => {
   const [inputVal, setInputVal] = useState<string>(currentFormula || '1d20');
 
-  // Keep inputVal in sync with parent currentFormula updates
+  // Keep the editable value in sync with changes made elsewhere in the app.
   useEffect(() => {
     setInputVal(currentFormula);
   }, [currentFormula]);
 
-  // Quick notation presets
-  const quickNotations = [
-    { label: '1d20', formula: '1d20' },
-    { label: '4d4', formula: '4d4' },
-    { label: '1d20+10', formula: '1d20+10' },
-    { label: '4d6kh3', formula: '4d6kh3' },
-    { label: '2d10+2', formula: '2d10+2' },
-    { label: '8d6', formula: '8d6' },
-  ];
-
-  const handleSelectQuick = (f: string) => {
-    setInputVal(f);
-    onFormulaChange(f);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const finalFormula = inputVal.trim() || '1d20';
+    setInputVal(finalFormula);
     onFormulaChange(finalFormula);
     onRoll(finalFormula);
   };
 
+  const navigationItems = [
+    { label: 'Dice', Icon: Dices, onClick: onSelectDice },
+    { label: 'Presets', Icon: BookOpen, onClick: onSelectPresets },
+    { label: 'Appearance', Icon: Palette, onClick: onSelectAppearance },
+    { label: 'Options', Icon: SlidersHorizontal, onClick: onSelectOptions },
+  ];
+
   return (
-    <header className="w-full h-auto bg-[#1a1613] border-b border-[#3d3329] px-3 sm:px-5 py-2 flex flex-col gap-2 shadow-lg z-30 shrink-0 select-none">
-      {/* Top Row: Brand & Controls */}
-      <div className="flex items-center justify-between w-full">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-lg gold-gradient-bg border border-[#a38c5e]/50 flex items-center justify-center text-amber-100 shadow-md">
-            <Dices className="w-4 h-4 stroke-[2.5]" />
+    <header className="z-30 flex w-full shrink-0 select-none flex-col gap-1.5 border-b border-[#3d3329] bg-[#1a1613] px-3 py-1.5 shadow-lg sm:px-5">
+      {/* Primary navigation: identity and section entry points. */}
+      <div className="flex min-h-8 w-full items-center justify-between gap-2">
+        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#a38c5e]/50 gold-gradient-bg text-amber-100 shadow-md">
+            <Dices className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
           </div>
-          <div>
-            <h1 className="font-bold text-sm sm:text-base font-display tracking-wider leading-none text-shadow-gold gold-gradient-text">
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-[12px] font-bold leading-none tracking-wider text-shadow-gold gold-gradient-text sm:text-sm md:text-base">
               FANTASTIC DICE
             </h1>
-            <p className="text-[9px] uppercase tracking-widest text-[#8c7851] font-title mt-0.5">3D Mobile Roller</p>
+            <p className="mt-0.5 hidden font-title text-[9px] uppercase tracking-widest text-[#8c7851] sm:block">
+              3D Mobile Roller
+            </p>
           </div>
         </div>
 
-        {/* Audio & Motion Controls */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={onToggleSound}
-            className="p-1.5 rounded-lg bg-[#241e1a] hover:bg-[#352c26] text-[#d4c3a1] border border-[#3d3329] transition-all cursor-pointer shadow-sm"
-            title={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-3.5 h-3.5 text-[#a38c5e]" />
-            ) : (
-              <VolumeX className="w-3.5 h-3.5 opacity-40" />
-            )}
-          </button>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#8c7851]/15 border border-[#8c7851]/40 text-[#f4ead5] text-[10px] font-title font-medium shadow-sm">
-            <Smartphone className={`w-3.5 h-3.5 text-[#a38c5e] ${shakeEnabled ? 'animate-pulse' : 'opacity-40'}`} />
-            <span>{shakeEnabled ? 'Shake Active' : 'Shake Off'}</span>
-          </div>
-        </div>
+        <nav aria-label="Primary navigation" className="flex min-w-0 items-center justify-end gap-1 sm:gap-1.5">
+          {navigationItems.map(({ label, Icon, onClick }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={onClick}
+              aria-label={label}
+              title={label}
+              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-transparent px-2 text-[#b8a47f] transition-colors hover:border-[#8c7851]/60 hover:bg-[#8c7851]/15 hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b] sm:px-2.5 md:px-3"
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="hidden font-title text-[9px] font-bold uppercase tracking-wide sm:inline md:text-[10px]">
+                {label}
+              </span>
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Bottom Row: Formula Input, Quick Chips & Roll Button */}
-      <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
-        <div className="flex-1 flex items-center bg-[#12100e] border border-[#3d3329] focus-within:border-[#a38c5e] rounded-xl px-2.5 py-1.5 shadow-inner transition-colors">
-          <Sparkles className="w-3.5 h-3.5 text-[#a38c5e] mr-2 shrink-0" />
+      {/* Roll controls: notation and the primary action always stay together. */}
+      <form onSubmit={handleSubmit} className="flex w-full min-w-0 items-center gap-2">
+        <label className="flex h-9 min-w-0 flex-1 items-center rounded-xl border border-[#3d3329] bg-[#12100e] px-2.5 shadow-inner transition-colors focus-within:border-[#a38c5e]">
+          <Sparkles className="mr-2 h-3.5 w-3.5 shrink-0 text-[#a38c5e]" aria-hidden="true" />
           <input
             type="text"
             value={inputVal}
-            onChange={(e) => {
-              setInputVal(e.target.value);
-              onFormulaChange(e.target.value);
+            onChange={(event) => {
+              setInputVal(event.target.value);
+              onFormulaChange(event.target.value);
             }}
-            placeholder="e.g. 1d20+10 or 4d4"
-            className="w-full bg-transparent text-xs sm:text-sm font-mono font-bold text-[#f4ead5] focus:outline-none placeholder:text-[#d4c3a1]/30 tracking-wide"
+            aria-label="Dice notation"
+            placeholder="e.g. 1d20+5 or 4d6kh3"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full min-w-0 bg-transparent text-xs font-mono font-bold tracking-wide text-[#f4ead5] placeholder:text-[#d4c3a1]/30 focus:outline-none sm:text-sm"
           />
-        </div>
+        </label>
 
-        {/* Quick notation pill chips */}
-        <div className="hidden lg:flex items-center gap-1">
-          {quickNotations.slice(0, 5).map((item) => (
-            <button
-              key={item.formula}
-              type="button"
-              onClick={() => handleSelectQuick(item.formula)}
-              className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all cursor-pointer ${
-                inputVal === item.formula
-                  ? 'bg-[#8c7851] text-white border-[#a38c5e] shadow-sm'
-                  : 'bg-[#241e1a] text-[#d4c3a1] border-[#3d3329] hover:border-[#a38c5e]'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Big Roll Button */}
         <button
           type="submit"
           disabled={isRolling}
-          className="px-4 py-1.5 rounded-xl gold-gradient-bg hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-[#a38c5e]/50 transition-all disabled:opacity-50 shrink-0 font-title cursor-pointer"
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#a38c5e]/50 px-4 font-title text-xs font-bold uppercase tracking-wider text-white shadow-md transition-all gold-gradient-bg hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:text-sm"
         >
-          <Play className="w-3.5 h-3.5 fill-current text-amber-200" />
-          <span className="drop-shadow-sm">{isRolling ? 'Rolling...' : 'Roll'}</span>
+          <Play className="h-3.5 w-3.5 fill-current text-amber-200" aria-hidden="true" />
+          <span>{isRolling ? 'Rolling…' : 'Roll'}</span>
         </button>
       </form>
     </header>

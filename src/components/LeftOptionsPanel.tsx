@@ -7,15 +7,18 @@ interface LeftOptionsPanelProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   currentFormula: string;
+  activeTab: 'dice' | 'presets';
+  onActiveTabChange: (tab: 'dice' | 'presets') => void;
 }
 
 export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   onFormulaUpdate,
   collapsed,
   onToggleCollapse,
-  currentFormula
+  currentFormula,
+  activeTab,
+  onActiveTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState<'dice' | 'presets'>('dice');
 
   // Staged counts for each die type
   const [stagedDice, setStagedDice] = useState<Record<DieType, number>>({
@@ -107,13 +110,13 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
-          onClick={() => { onToggleCollapse(); setActiveTab('dice'); }}
+          onClick={() => { onToggleCollapse(); onActiveTabChange('dice'); }}
           className="p-1.5 rounded-lg text-[#d4c3a1]/70 hover:text-[#f4ead5] cursor-pointer"
         >
           <Dices className="w-4 h-4" />
         </button>
         <button
-          onClick={() => { onToggleCollapse(); setActiveTab('presets'); }}
+          onClick={() => { onToggleCollapse(); onActiveTabChange('presets'); }}
           className="p-1.5 rounded-lg text-[#d4c3a1]/70 hover:text-[#f4ead5] cursor-pointer"
         >
           <BookOpen className="w-4 h-4" />
@@ -128,7 +131,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
       <div className="flex items-center justify-between p-2 border-b border-[#3d3329] bg-[#14100e]">
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setActiveTab('dice')}
+            onClick={() => onActiveTabChange('dice')}
             className={`px-2 py-1 rounded-lg text-[10px] font-title font-bold flex items-center gap-1 transition-all cursor-pointer ${
               activeTab === 'dice'
                 ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
@@ -139,7 +142,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
             <span>Dice</span>
           </button>
           <button
-            onClick={() => setActiveTab('presets')}
+            onClick={() => onActiveTabChange('presets')}
             className={`px-2 py-1 rounded-lg text-[10px] font-title font-bold flex items-center gap-1 transition-all cursor-pointer ${
               activeTab === 'presets'
                 ? 'gold-gradient-bg text-white shadow-sm border border-[#a38c5e]/40'
