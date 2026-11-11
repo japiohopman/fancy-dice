@@ -29,6 +29,26 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${f(0)}${f(8)}${f(4)}`;
 }
 
+const MATERIAL_PRESET_COLORS: Record<string, string> = {
+  emerald: '#059669',
+  ruby: '#d97706',
+  gold: '#f59e0b',
+  cyber: '#06b6d4',
+  obsidian: '#1f2937',
+  ivory: '#fef3c7',
+  galaxy: '#7e22ce',
+};
+
+const MATERIAL_PRESET_LABELS: Record<string, string> = {
+  emerald: 'Emerald',
+  ruby: 'Ruby',
+  gold: 'Gold',
+  cyber: 'Cyber',
+  obsidian: 'Obsidian',
+  ivory: 'Ivory',
+  galaxy: 'Galaxy',
+};
+
 /** Converts a hexadecimal CSS color into hue, saturation, and lightness values. */
 function hexToHsl(hex: string): { h: number; s: number; l: number } {
   hex = hex.replace(/^#/, '');
@@ -118,32 +138,18 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       ? 'border-[#8c7851]/60 bg-[#8c7851]/10 text-[#d4c3a1]'
       : 'border-emerald-800/50 bg-emerald-950/20 text-emerald-200';
 
-  // Local state for interactive Color Wheel
+  // Keep the wheel position synchronized with preset and custom dice material colors.
   const [wheelH, setWheelH] = useState<number>(140);
   const [wheelS, setWheelS] = useState<number>(100);
-  const isDraggingRef = useRef<boolean>(false);
+  const activePointerIdRef = useRef<number | null>(null);
 
-  // Sync color presets or convert current materialTheme if it is a hex color
   useEffect(() => {
-    if (materialTheme.startsWith('#')) {
-      const hsl = hexToHsl(materialTheme);
-      setWheelH(hsl.h);
-      setWheelS(hsl.s);
-    } else {
-      const presetColors: Record<string, string> = {
-        emerald: '#059669',
-        ruby: '#d97706',
-        gold: '#f59e0b',
-        cyber: '#06b6d4',
-        obsidian: '#1f2937',
-        ivory: '#fef3c7',
-        galaxy: '#7e22ce',
-      };
-      const hex = presetColors[materialTheme] || '#8c7851';
-      const hsl = hexToHsl(hex);
-      setWheelH(hsl.h);
-      setWheelS(hsl.s);
-    }
+    const hex = materialTheme.startsWith('#')
+      ? materialTheme
+      : MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851';
+    const hsl = hexToHsl(hex);
+    setWheelH(hsl.h);
+    setWheelS(hsl.s);
   }, [materialTheme]);
 
   const diceThemeOptions = [
@@ -163,6 +169,13 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     { id: 'obsidian', name: 'Obsidian', hex: '#1f2937' },
   ];
 
+  const activeColorHex = materialTheme.startsWith('#')
+    ? materialTheme.toUpperCase()
+    : (MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851').toUpperCase();
+  const activeColorLabel = materialTheme.startsWith('#')
+    ? 'Custom color'
+    : MATERIAL_PRESET_LABELS[materialTheme] || 'Selected material';
+
   const tableOptions: { id: TableTheme; name: string; color: string }[] = [
     { id: 'green', name: 'Emerald Felt', color: 'bg-[#064e3b]' },
     { id: 'blue', name: 'Sapphire Felt', color: 'bg-[#1e3a8a]' },
@@ -176,53 +189,51 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     await onRequestSensorPermission();
   };
 
-  // Color picking handler on the Color Wheel conic gradient
-  /** Converts a pointer or touch position on the color wheel into the selected material color. */
-  const handleColorPick = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
+  /** Applies a color from a pointer position on the wheel's hue/saturation surface. */
+  const handleColorPick = (clientX: number, clientY: number, element: HTMLDivElement) => {
+    const rect = element.getBoundingClientRect();
     const x = clientX - (rect.left + rect.width / 2);
     const y = clientY - (rect.top + rect.height / 2);
 
-    let angle = Math.atan2(y, x);
-    let h = Math.round((angle * 180) / Math.PI);
-    if (h < 0) h += 360;
+    const angle = Math.atan2(y, x);
+    const hue = (Math.round((angle * 180) / Math.PI) + 360) % 360;
+    const distance = Math.sqrt(x * x + y * y);
+    const saturation = Math.min(100, Math.round((distance / (rect.width / 2)) * 100));
 
-    const dist = Math.sqrt(x * x + y * y);
-    const radius = rect.width / 2;
-    const s = Math.min(100, Math.round((dist / radius) * 100));
-
-    setWheelH(h);
-    setWheelS(s);
-
-    const hexColor = hslToHex(h, s, 50);
-    onChangeMaterialTheme(hexColor);
+    setWheelH(hue);
+    setWheelS(saturation);
+    onChangeMaterialTheme(hslToHex(hue, saturation, 50));
   };
 
-  /** Begins a pointer drag on the custom color wheel and applies its initial color. */
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    isDraggingRef.current = true;
-    handleColorPick(e);
+  /** Captures the active pointer so touch, pen and mouse drags continue outside the wheel. */
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (activePointerIdRef.current !== null) return;
+
+    activePointerIdRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    handleColorPick(event.clientX, event.clientY, event.currentTarget);
   };
 
-  /** Updates the selected color while the pointer is being dragged across the wheel. */
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isDraggingRef.current) {
-      handleColorPick(e);
+  /** Updates the color only for the pointer that started the current drag. */
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) return;
+    handleColorPick(event.clientX, event.clientY, event.currentTarget);
+  };
+
+  /** Applies the final pointer position and safely ends the drag. */
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) return;
+    handleColorPick(event.clientX, event.clientY, event.currentTarget);
+    activePointerIdRef.current = null;
+  };
+
+  /** Clears drag state when the browser cancels or releases pointer capture. */
+  const handlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerIdRef.current === event.pointerId) {
+      activePointerIdRef.current = null;
     }
   };
-
-  /** Ends an active pointer drag on the color wheel. */
-  const handleMouseUpOrLeave = () => {
-    isDraggingRef.current = false;
-  };
-
-  const angleRad = (wheelH * Math.PI) / 180;
-  const thumbDist = (wheelS / 100) * 44;
-  const thumbX = Math.round(Math.cos(angleRad) * thumbDist);
-  const thumbY = Math.round(Math.sin(angleRad) * thumbDist);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -276,63 +287,99 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
         )}
 
         {activeTab === 'color' && (
-          <div className="flex flex-col items-center gap-2.5">
-            <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider self-start">
-              Custom Color Picker:
-            </span>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-full">
+              <h3 className="text-[10px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
+                Custom Dice Color
+              </h3>
+              <p id="dice-color-help" className="mt-1 text-[10px] leading-relaxed text-[#d4c3a1]/65">
+                These controls change the dice material only. Change the table felt separately under Themes.
+                Your dice preview updates as soon as you choose a color.
+              </p>
+            </div>
 
-            {/* Interactive custom circular Color Wheel */}
+            {/* Active material color is explicit for both presets and arbitrary custom HEX values. */}
             <div
-              className="w-24 h-24 rounded-full relative cursor-crosshair border-2 border-[#a38c5e]/60 shadow-lg select-none shrink-0"
+              role="group"
+              aria-label={`Active dice color: ${activeColorLabel}, ${activeColorHex}`}
+              className="flex w-full items-center gap-3 rounded-xl border border-[#8c7851]/60 bg-[#12100e] p-3 shadow-inner"
+            >
+              <span
+                aria-hidden="true"
+                className="h-12 w-12 shrink-0 rounded-lg border border-white/25 shadow-md"
+                style={{ backgroundColor: activeColorHex }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] uppercase tracking-wider text-[#8c7851] font-title font-bold">
+                  Active dice color
+                </p>
+                <code className="mt-0.5 block text-sm font-bold text-[#f4ead5]">{activeColorHex}</code>
+                <p className="mt-0.5 text-[10px] text-[#d4c3a1]/65">{activeColorLabel}</p>
+              </div>
+              <label className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-[#a38c5e]/70 bg-[#8c7851]/15 px-2.5 text-[10px] font-title font-bold text-[#f4ead5] transition-colors hover:bg-[#8c7851]/25 focus-within:ring-2 focus-within:ring-[#c5a66b]">
+                <span>Choose</span>
+                <input
+                  type="color"
+                  value={activeColorHex}
+                  onChange={(event) => onChangeMaterialTheme(event.target.value)}
+                  aria-label="Choose a custom dice material color"
+                  className="h-7 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                />
+              </label>
+            </div>
+
+            {/* Hue and saturation wheel; native color input above is the keyboard-accessible alternative. */}
+            <div
+              role="group"
+              aria-label="Custom dice color wheel"
+              aria-describedby="dice-color-help"
+              className="w-32 h-32 rounded-full relative cursor-crosshair border-2 border-[#a38c5e]/70 shadow-lg select-none shrink-0 touch-none"
               style={{
                 background: 'conic-gradient(from 0deg, red, yellow, lime, cyan, blue, magenta, red)'
               }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
-              onTouchStart={handleColorPick}
-              onTouchMove={handleColorPick}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerEnd}
+              onLostPointerCapture={handlePointerEnd}
             >
               <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,white,transparent_100%)] opacity-70 pointer-events-none" />
               <div
+                aria-hidden="true"
                 className="absolute w-4 h-4 rounded-full border-2 border-white bg-black/70 shadow-md pointer-events-none transition-transform duration-75"
                 style={{
                   left: 'calc(50% - 8px)',
                   top: 'calc(50% - 8px)',
-                  transform: `translate(${thumbX}px, ${thumbY}px)`
+                  transform: `translate(${Math.round(Math.cos((wheelH * Math.PI) / 180) * (wheelS / 100) * 58)}px, ${Math.round(Math.sin((wheelH * Math.PI) / 180) * (wheelS / 100) * 58)}px)`
                 }}
               />
             </div>
 
-            {/* Active Hex Display */}
-            <div className="flex items-center gap-1 bg-[#12100e] px-2.5 py-1.5 rounded-xl border border-[#3d3329] w-full justify-between shadow-inner">
-              <span className="text-[9px] text-[#8c7851] uppercase font-mono font-bold">Picked:</span>
-              <span className="font-mono text-[10.5px] font-bold text-[#f4ead5]">
-                {materialTheme.startsWith('#') ? materialTheme.toUpperCase() : hslToHex(wheelH, wheelS, 50).toUpperCase()}
-              </span>
-              <span
-                className="w-4 h-4 rounded-md border border-white/20 shadow-sm"
-                style={{
-                  backgroundColor: materialTheme.startsWith('#') ? materialTheme : hslToHex(wheelH, wheelS, 50)
-                }}
-              />
-            </div>
-
-            {/* Solid material color presets */}
-            <div className="grid grid-cols-2 gap-1 w-full pt-1.5 border-t border-[#3d3329]">
+            {/* Material presets retain their live DiceBox preview and expose selected state to assistive technology. */}
+            <div className="grid grid-cols-2 gap-1.5 w-full border-t border-[#3d3329] pt-3">
+              <p className="col-span-2 text-[9px] uppercase font-title font-bold tracking-wider text-[#8c7851]">
+                Material presets
+              </p>
               {materialOptions.map((item) => (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => onChangeMaterialTheme(item.id)}
-                  className={`flex items-center gap-1.5 p-1.5 rounded-lg border text-[9.5px] font-title transition-all truncate cursor-pointer ${
+                  aria-label={`Use ${item.name} dice color, ${item.hex}`}
+                  aria-pressed={materialTheme === item.id}
+                  className={`flex min-h-11 items-center gap-2 rounded-lg border px-2 py-2 text-[10px] font-title font-semibold transition-all cursor-pointer ${
                     materialTheme === item.id
-                      ? 'bg-[#8c7851]/20 border-[#a38c5e] text-[#f4ead5] font-bold'
-                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/50'
+                      ? 'bg-[#8c7851]/25 border-[#d0b77e] text-[#fff4dc] shadow-sm'
+                      : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/80 hover:border-[#8c7851]/60'
                   }`}
                 >
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: item.hex }} />
-                  <span className="truncate">{item.name}</span>
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-4 rounded-full shrink-0 border border-white/25 shadow-sm"
+                    style={{ backgroundColor: item.hex }}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-left">{item.name}</span>
+                  {materialTheme === item.id && <Check className="h-3.5 w-3.5 shrink-0 text-[#e2c58d]" aria-hidden="true" />}
                 </button>
               ))}
             </div>
