@@ -59,7 +59,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
         <button
           type="submit"
           disabled={isRolling}
-          className="hidden h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#a38c5e]/50 px-4 font-title text-xs font-bold uppercase tracking-wider text-white shadow-md transition-all gold-gradient-bg hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
+          className="desktop-roll-button h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#a38c5e]/50 px-4 font-title text-xs font-bold uppercase tracking-wider text-white shadow-md transition-all gold-gradient-bg hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Play className="h-3.5 w-3.5 fill-current text-amber-200" aria-hidden="true" />
           <span>{isRolling ? 'Rolling…' : 'Roll'}</span>
