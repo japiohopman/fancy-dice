@@ -248,6 +248,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onChangeDiceTheme(item.id)}
+                  aria-pressed={diceTheme === item.id}
                   data-selected={diceTheme === item.id}
                   className="ui-choice-button"
                 >
@@ -265,6 +266,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                   <button
                     key={item.id}
                     onClick={() => onChangeTableTheme(item.id)}
+                    aria-pressed={tableTheme === item.id}
                     data-selected={tableTheme === item.id}
                     className="ui-choice-button"
                   >
@@ -449,11 +451,8 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => onUpdateShakeSettings({ ...shakeSettings, vibrationEnabled: !shakeSettings.vibrationEnabled })}
-                className={`p-1.5 rounded-xl border text-[9.5px] font-title font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  shakeSettings.vibrationEnabled
-                    ? 'bg-[#8c7851]/30 border-[#a38c5e] text-[#f4ead5]'
-                    : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/50'
-                }`}
+                data-selected={shakeSettings.vibrationEnabled}
+                className="ui-segment-button w-full"
                 title="Haptic vibration feedback"
                 aria-pressed={shakeSettings.vibrationEnabled}
               >
@@ -463,11 +462,8 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
 
               <button
                 onClick={() => onUpdateShakeSettings({ ...shakeSettings, soundEnabled: !shakeSettings.soundEnabled })}
-                className={`p-1.5 rounded-xl border text-[9.5px] font-title font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  shakeSettings.soundEnabled
-                    ? 'bg-[#8c7851]/30 border-[#a38c5e] text-[#f4ead5]'
-                    : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/50'
-                }`}
+                data-selected={shakeSettings.soundEnabled}
+                className="ui-segment-button w-full"
                 title="Roll audio feedback"
                 aria-pressed={shakeSettings.soundEnabled}
               >
