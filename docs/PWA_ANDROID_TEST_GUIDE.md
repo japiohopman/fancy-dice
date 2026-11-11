@@ -33,11 +33,11 @@ If Chrome does not offer installation, check that the page loaded over HTTPS, th
 
 ## Offline and update behaviour
 
-The service worker precaches the app entry page, manifest, and app icon. Same-origin JavaScript, CSS, JSON, image, font, and WebAssembly assets are cached on first use. Google Fonts are external and may fall back to system fonts offline.
+The service worker precaches the app entry page, manifest, and SVG/PNG app icons. Content-hashed Vite JavaScript and CSS bundles use cache-first because a changed bundle receives a new URL. Other same-origin static resources—including the dice engine's stable files under `public/assets/dice-box/`—use network-first with a cached fallback. This means the next online launch refreshes stable game files instead of requiring a manual cache-version bump for every asset edit.
 
-When a release changes a stable URL under `public/assets/`, increment `CACHE_NAME` in `public/sw.js` (for example, from `v1` to `v2`). The next activated service worker removes older Fancy Dice PWA caches.
+Google Fonts are external and may fall back to system fonts offline. The first visit still requires an internet connection. Offline testing should be done only after a complete online launch has loaded the dice engine, its themes, and other assets that will be needed.
 
-The first visit still requires an internet connection. Offline testing should be done only after a complete online launch has loaded the dice engine, its themes, and other assets that will be needed.
+Increment `CACHE_NAME` in `public/sw.js` when changing the service-worker cache strategy or the precache list. Activation removes older Fancy Dice PWA caches.
 
 ## Debugging
 

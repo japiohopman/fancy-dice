@@ -60,7 +60,7 @@ Fantastic Dice Roller is designed as a standalone mobile application that serves
 - **Frontend Framework**: React 19, TypeScript, Vite
 - **Styling**: Tailwind CSS, Lucide React Icons, Custom CSS Glows
 - **3D Physics & Graphics**: `@3d-dice/dice-box` (Three.js & Ammo.js WebAssembly)
-- **Audio Synthesis**: Web Audio API & HTML5 Audio
+- **Audio Synthesis**: Web Audio API & HTML5 audio
 - **Mobile Native Bridge**: Capacitor Core, Motion & Haptics (`@capacitor/android`)
 
 ---
@@ -102,9 +102,11 @@ Fantastic Dice Roller is designed as a standalone mobile application that serves
 
 Fancy Dice is published as an installable Progressive Web App. It runs directly in Chrome on Android and does not require an APK or a native Android project.
 
-**Live app:** <https://japiohopman.github.io/fancy-dice/>
+**GitHub Pages URL:** <https://japiohopman.github.io/fancy-dice/>
 
-1. Open the live app in Chrome on your Android phone.
+The latest changes from this pull request become available at that URL after the pull request is merged to `main` and the GitHub Pages deployment completes.
+
+1. Open the GitHub Pages URL in Chrome on your Android phone.
 2. Open Chrome's menu and choose **Install app** (or **Add to Home screen**).
 3. Launch **Fancy Dice** from the new home-screen icon. It opens in a standalone, app-like window.
 4. After the first successful load, the service worker keeps the app shell and same-origin game assets available for repeat/offline launches.
@@ -120,6 +122,7 @@ If Pages has not been enabled for this repository yet, open **Settings → Pages
 For the manual Android smoke-test checklist, see [`docs/PWA_ANDROID_TEST_GUIDE.md`](docs/PWA_ANDROID_TEST_GUIDE.md).
 
 ---
+
 ## 📚 Documentation
 
 For deeper architectural details, check out the documentation in `docs/`:
