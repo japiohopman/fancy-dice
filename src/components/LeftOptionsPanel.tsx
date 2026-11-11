@@ -180,6 +180,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-[#3d3329]">
                 <button
                   onClick={() => setAdvantage('none')}
+                  aria-pressed={advantage === 'none'}
                   data-selected={advantage === 'none'}
                   className="ui-segment-button flex-col"
                 >
@@ -187,6 +188,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 </button>
                 <button
                   onClick={() => setAdvantage('advantage')}
+                  aria-pressed={advantage === 'advantage'}
                   data-selected={advantage === 'advantage'}
                   className="ui-segment-button flex-col"
                   title="Advantage"
@@ -202,6 +204,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 </button>
                 <button
                   onClick={() => setAdvantage('disadvantage')}
+                  aria-pressed={advantage === 'disadvantage'}
                   data-selected={advantage === 'disadvantage'}
                   className="ui-segment-button flex-col"
                   title="Disadvantage"
