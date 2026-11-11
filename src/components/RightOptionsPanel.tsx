@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MaterialTheme, ShakeSettings, TableTheme } from '../types';
-import { Check, Vibrate, Volume2, VolumeX, Smartphone } from 'lucide-react';
+import { AlertTriangle, Check, Vibrate, Volume2, VolumeX, Smartphone } from 'lucide-react';
 
 interface RightOptionsPanelProps {
   materialTheme: MaterialTheme | string;
@@ -12,6 +12,7 @@ interface RightOptionsPanelProps {
   shakeSettings: ShakeSettings;
   onUpdateShakeSettings: (settings: ShakeSettings) => void;
   onRequestSensorPermission: () => Promise<boolean>;
+  sensorPermissionGranted: boolean | null;
   onSimulateShake: () => void;
   activeTab: 'theme' | 'color' | 'settings';
 }
@@ -70,10 +71,52 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   shakeSettings,
   onUpdateShakeSettings,
   onRequestSensorPermission,
+  sensorPermissionGranted: permissionGranted,
   onSimulateShake,
   activeTab,
 }) => {
-  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const hasMotionSensor = typeof window !== 'undefined' && 'DeviceMotionEvent' in window;
+  const supportsMotionPermissionRequest =
+    typeof DeviceMotionEvent !== 'undefined' &&
+    typeof (DeviceMotionEvent as unknown as {
+      requestPermission?: () => Promise<'granted' | 'denied'>;
+    }).requestPermission === 'function';
+
+  const sensorStatus = !hasMotionSensor
+    ? {
+        title: 'Motion sensors unavailable',
+        description: 'This browser does not expose device-motion data. The simulated shake test below is still available.',
+        state: 'warning' as const,
+      }
+    : permissionGranted === false
+      ? {
+          title: 'Motion access denied',
+          description: 'Allow motion access in your browser or device settings, then try again.',
+          state: 'warning' as const,
+        }
+      : permissionGranted === true
+        ? {
+            title: 'Motion access granted',
+            description: 'Shake-to-roll can listen for movement from this device.',
+            state: 'success' as const,
+          }
+        : supportsMotionPermissionRequest
+          ? {
+              title: 'Motion permission needed',
+              description: 'Grant motion access once to enable shake-to-roll on this device.',
+              state: 'pending' as const,
+            }
+          : {
+              title: 'Motion sensor detected',
+              description: 'This browser does not require a separate motion permission prompt.',
+              state: 'success' as const,
+            };
+
+  const sensorStatusClass = sensorStatus.state === 'warning'
+    ? 'border-amber-700/50 bg-amber-950/30 text-amber-200'
+    : sensorStatus.state === 'pending'
+      ? 'border-[#8c7851]/60 bg-[#8c7851]/10 text-[#d4c3a1]'
+      : 'border-emerald-800/50 bg-emerald-950/20 text-emerald-200';
 
   // Local state for interactive Color Wheel
   const [wheelH, setWheelH] = useState<number>(140);
@@ -128,10 +171,9 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     { id: 'leather', name: 'Leather Felt', color: 'bg-[#451a03]' },
   ];
 
-  /** Requests device-motion permission and records the permission result for the UI. */
+  /** Requests device-motion permission through App, which retains the result across menu unmounts. */
   const handleGrantPermission = async () => {
-    const granted = await onRequestSensorPermission();
-    setPermissionGranted(granted);
+    await onRequestSensorPermission();
   };
 
   // Color picking handler on the Color Wheel conic gradient
@@ -300,15 +342,40 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
         {activeTab === 'settings' && (
           <div className="flex flex-col gap-2">
             <span className="text-[9.5px] uppercase font-title font-bold text-[#8c7851] tracking-wider">
-              Settings & Haptics:
+              Device & Feedback
             </span>
 
-            {/* Permission button */}
-            <button
-              onClick={handleGrantPermission}
-              className="w-full py-1.5 px-2.5 rounded-xl bg-[#8c7851]/20 hover:bg-[#8c7851]/30 border border-[#a38c5e] text-[#f4ead5] text-[10px] font-title font-bold flex items-center justify-between transition-colors min-w-0 cursor-pointer shadow-sm"
+            {/* Sensor availability and permission state are explicit; simulation remains usable without hardware support. */}
+            <div
+              role="status"
+              aria-live="polite"
+              className={`flex items-start gap-2 rounded-xl border p-2 shadow-inner ${sensorStatusClass}`}
             >
-              <span className="truncate">Calibrate Sensors</span>
+              {sensorStatus.state === 'warning'
+                ? <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                : <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+              <div className="min-w-0">
+                <p className="text-[10px] font-title font-bold">{sensorStatus.title}</p>
+                <p className="mt-0.5 text-[9px] leading-relaxed opacity-80">{sensorStatus.description}</p>
+              </div>
+            </div>
+
+            {/* Permission request is available only when the browser exposes DeviceMotionEvent. */}
+            <button
+              type="button"
+              onClick={handleGrantPermission}
+              disabled={!hasMotionSensor || !supportsMotionPermissionRequest || permissionGranted === true}
+              className="w-full py-1.5 px-2.5 rounded-xl bg-[#8c7851]/20 hover:bg-[#8c7851]/30 border border-[#a38c5e] text-[#f4ead5] text-[10px] font-title font-bold flex items-center justify-between transition-colors min-w-0 cursor-pointer shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <span className="truncate">
+                {!hasMotionSensor
+                  ? 'Motion access unavailable'
+                  : !supportsMotionPermissionRequest
+                    ? 'No permission required'
+                    : permissionGranted
+                      ? 'Motion access enabled'
+                      : 'Allow motion access'}
+              </span>
               {permissionGranted && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
             </button>
 
@@ -319,6 +386,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 type="checkbox"
                 checked={shakeSettings.enabled}
                 onChange={(e) => onUpdateShakeSettings({ ...shakeSettings, enabled: e.target.checked })}
+                aria-label="Enable shake-to-roll"
                 className="w-4 h-4 accent-[#a38c5e] rounded cursor-pointer shrink-0"
               />
             </div>
@@ -335,6 +403,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 max="10"
                 value={shakeSettings.sensitivity}
                 onChange={(e) => onUpdateShakeSettings({ ...shakeSettings, sensitivity: parseInt(e.target.value) })}
+                aria-label="Shake sensitivity"
                 className="w-full accent-[#a38c5e] cursor-pointer"
               />
             </div>
@@ -349,6 +418,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                     : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/50'
                 }`}
                 title="Haptic vibration feedback"
+                aria-pressed={shakeSettings.vibrationEnabled}
               >
                 <Vibrate className="w-3 h-3" />
                 <span>Haptic</span>
@@ -362,20 +432,28 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                     : 'bg-[#12100e] border-[#3d3329] text-[#d4c3a1]/50'
                 }`}
                 title="Roll audio feedback"
+                aria-pressed={shakeSettings.soundEnabled}
               >
                 {shakeSettings.soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
                 <span>Sound</span>
               </button>
             </div>
 
-            {/* Simulate Roll */}
-            <button
-              onClick={onSimulateShake}
-              className="w-full py-1.5 rounded-xl bg-[#241e1a] hover:bg-[#352c26] border border-[#3d3329] hover:border-[#a38c5e] text-[#f4ead5] font-title font-bold text-[10.5px] flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-1 shadow-sm"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-[#a38c5e]" />
-              <span>Simulate Roll</span>
-            </button>
+            {/* Manual test is independent of hardware sensor availability. */}
+            <div className="mt-1 flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={onSimulateShake}
+                aria-label="Test simulated shake-to-roll"
+                className="w-full py-1.5 rounded-xl bg-[#241e1a] hover:bg-[#352c26] border border-[#3d3329] hover:border-[#a38c5e] text-[#f4ead5] font-title font-bold text-[10.5px] flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-[#a38c5e]" aria-hidden="true" />
+                <span>Test simulated shake</span>
+              </button>
+              <p className="text-center text-[9px] leading-relaxed text-[#d4c3a1]/55">
+                Plays the shake feedback and starts a roll without moving your device.
+              </p>
+            </div>
           </div>
         )}
       </div>
