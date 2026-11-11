@@ -36,10 +36,10 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   };
 
   return (
-    <header className="z-30 flex w-full shrink-0 select-none items-center gap-2 border-b border-[#3d3329] bg-[#1a1613] px-3 py-2 shadow-lg sm:gap-3 sm:px-5">
+    <header className="ui-chrome-bar z-30 flex w-full shrink-0 select-none items-center gap-2 border-b px-3 py-2 shadow-md sm:gap-3 sm:px-5">
       {/* The notation field now occupies the old brand/logo position. */}
       <form onSubmit={handleSubmit} className="flex min-w-0 flex-1 items-center gap-2">
-        <label className="flex h-10 min-w-0 flex-1 items-center rounded-xl border border-[#3d3329] bg-[#12100e] px-2.5 shadow-inner transition-colors focus-within:border-[#a38c5e] sm:px-3">
+        <label className="ui-field min-w-0 flex-1 px-3">
           <Sparkles className="mr-2 h-3.5 w-3.5 shrink-0 text-[#a38c5e]" aria-hidden="true" />
           <input
             type="text"
@@ -59,7 +59,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
         <button
           type="submit"
           disabled={isRolling}
-          className="desktop-roll-button h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#a38c5e]/50 px-4 font-title text-xs font-bold uppercase tracking-wider text-white shadow-md transition-all gold-gradient-bg hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          className="desktop-roll-button ui-button ui-button--primary shrink-0 px-4 uppercase tracking-wider"
         >
           <Play className="h-3.5 w-3.5 fill-current text-amber-200" aria-hidden="true" />
           <span>{isRolling ? 'Rolling…' : 'Roll'}</span>
@@ -73,10 +73,10 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
         aria-expanded={menuOpen}
         aria-controls="main-menu"
         title="Menu"
-        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#8c7851]/50 bg-[#241e1a] px-3 text-[#d4c3a1] transition-colors hover:border-[#a38c5e] hover:bg-[#8c7851]/20 hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+        className="ui-button ui-button--quiet shrink-0 px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
       >
         {menuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
-        <span className="font-title text-[9px] font-bold uppercase tracking-wider sm:text-[10px]">Menu</span>
+        <span className="font-title text-[10px] font-bold uppercase tracking-wider">Menu</span>
       </button>
     </header>
   );
