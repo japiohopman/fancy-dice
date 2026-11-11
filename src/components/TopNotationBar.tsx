@@ -1,36 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import {
-  BookOpen,
-  Dices,
-  Palette,
-  Play,
-  SlidersHorizontal,
-  Sparkles,
-} from 'lucide-react';
+import { Dices, Menu, Play, Sparkles, X } from 'lucide-react';
 
 interface TopNotationBarProps {
   currentFormula: string;
   onFormulaChange: (formula: string) => void;
   onRoll: (formula: string) => void;
   isRolling: boolean;
-  onSelectDice: (trigger: HTMLButtonElement) => void;
-  onSelectPresets: (trigger: HTMLButtonElement) => void;
-  onSelectAppearance: (trigger: HTMLButtonElement) => void;
-  onSelectOptions: (trigger: HTMLButtonElement) => void;
-  activeOverlay: 'dice' | 'presets' | 'appearance' | 'options' | null;
+  onToggleMenu: (trigger: HTMLButtonElement) => void;
+  menuOpen: boolean;
 }
 
-/** Renders the primary navigation row and the always-visible notation/Roll controls. */
+/** Keeps the main menu trigger and always-visible notation/Roll controls in the app header. */
 export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   currentFormula,
   onFormulaChange,
   onRoll,
   isRolling,
-  onSelectDice,
-  onSelectPresets,
-  onSelectAppearance,
-  onSelectOptions,
-  activeOverlay,
+  onToggleMenu,
+  menuOpen,
 }) => {
   const [inputVal, setInputVal] = useState<string>(currentFormula || '1d20');
 
@@ -48,16 +35,9 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
     onRoll(finalFormula);
   };
 
-  const navigationItems = [
-    { id: 'dice', label: 'Dice', Icon: Dices, onClick: onSelectDice },
-    { id: 'presets', label: 'Presets', Icon: BookOpen, onClick: onSelectPresets },
-    { id: 'appearance', label: 'Appearance', Icon: Palette, onClick: onSelectAppearance },
-    { id: 'options', label: 'Options', Icon: SlidersHorizontal, onClick: onSelectOptions },
-  ] as const;
-
   return (
     <header className="z-30 flex w-full shrink-0 select-none flex-col gap-1.5 border-b border-[#3d3329] bg-[#1a1613] px-3 py-1.5 shadow-lg sm:px-5">
-      {/* Primary navigation: identity and section entry points. */}
+      {/* One menu entry point; all other controls live inside the unified menu. */}
       <div className="flex min-h-8 w-full items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#a38c5e]/50 gold-gradient-bg text-amber-100 shadow-md">
@@ -73,25 +53,18 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
           </div>
         </div>
 
-        <nav aria-label="Primary navigation" className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-1.5">
-          {navigationItems.map(({ id, label, Icon, onClick }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={(event) => onClick(event.currentTarget)}
-              aria-label={label}
-              aria-expanded={activeOverlay === id}
-              aria-controls={id === 'dice' || id === 'presets' ? 'dice-overlay' : 'appearance-overlay'}
-              title={label}
-              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-transparent px-2 text-[#b8a47f] transition-colors hover:border-[#8c7851]/60 hover:bg-[#8c7851]/15 hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b] sm:px-2.5 md:px-3"
-            >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="hidden font-title text-[9px] font-bold uppercase tracking-wide sm:inline md:text-[10px]">
-                {label}
-              </span>
-            </button>
-          ))}
-        </nav>
+        <button
+          type="button"
+          onClick={(event) => onToggleMenu(event.currentTarget)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          aria-controls="main-menu"
+          title="Menu"
+          className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#8c7851]/50 bg-[#241e1a] px-3 text-[#d4c3a1] transition-colors hover:border-[#a38c5e] hover:bg-[#8c7851]/20 hover:text-[#f4ead5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+        >
+          {menuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
+          <span className="font-title text-[9px] font-bold uppercase tracking-wider sm:text-[10px]">Menu</span>
+        </button>
       </div>
 
       {/* Roll controls: notation and the primary action always stay together. */}
