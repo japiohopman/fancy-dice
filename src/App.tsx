@@ -75,11 +75,20 @@ export default function App() {
       ? leftOverlayRef.current
       : rightOverlayRef.current;
 
-    const getFocusableElements = () => panel
-      ? Array.from(panel.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )).filter(element => !element.hasAttribute('hidden'))
-      : [];
+    const getFocusableElements = (): HTMLElement[] => {
+      if (!panel) return [];
+
+      const focusableElements: HTMLElement[] = [];
+      panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ).forEach(element => {
+        if (!element.hasAttribute('hidden')) {
+          focusableElements.push(element);
+        }
+      });
+
+      return focusableElements;
+    };
 
     getFocusableElements()[0]?.focus();
 
