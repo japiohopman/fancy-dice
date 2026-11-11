@@ -271,7 +271,7 @@ export default function App() {
           aria-hidden={!isMenuOpen}
           inert={!isMenuOpen}
           onAnimationEnd={(event) => {
-            if (event.target === event.currentTarget && event.animationName === 'menu-overlay-exit' && !isMenuOpen) {
+            if (event.target === event.currentTarget && event.animationName === 'menu-overlay-fade-out' && !isMenuOpen) {
               setIsMenuMounted(false);
             }
           }}
