@@ -208,6 +208,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   /** Captures the active pointer so touch, pen and mouse drags continue outside the wheel. */
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (activePointerIdRef.current !== null) return;
 
     activePointerIdRef.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
