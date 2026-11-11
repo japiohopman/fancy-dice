@@ -183,7 +183,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   const thumbY = Math.round(Math.sin(angleRad) * thumbDist);
 
   return (
-    <div className="h-full min-h-0">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 p-2 flex flex-col justify-between overflow-y-auto gap-2 text-[11px] no-scrollbar">
         {activeTab === 'theme' && (
           <div className="flex flex-col gap-2">
