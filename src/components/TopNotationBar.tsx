@@ -52,7 +52,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
             placeholder="e.g. 1d20+5 or 4d6kh3"
             autoComplete="off"
             spellCheck={false}
-            className="w-full min-w-0 bg-transparent text-xs font-mono font-bold tracking-wide text-[#f4ead5] placeholder:text-[#d4c3a1]/30 focus:outline-none sm:text-sm"
+            className="w-full min-w-0 bg-transparent text-sm font-mono font-bold tracking-wide text-[#f4ead5] placeholder:text-[#d4c3a1]/30 focus:outline-none"
           />
         </label>
 
