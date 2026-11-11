@@ -56,9 +56,15 @@ export default function App() {
     const getFocusableElements = (): HTMLElement[] => {
       if (!dialog) return [];
 
-      return Array.from(dialog.querySelectorAll<HTMLElement>(
+      const focusableElements: HTMLElement[] = [];
+      dialog.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )).filter(element => !element.closest('[hidden]'));
+      ).forEach((element: HTMLElement) => {
+        if (!element.closest('[hidden]')) {
+          focusableElements.push(element);
+        }
+      });
+      return focusableElements;
     };
 
     getFocusableElements()[0]?.focus();
