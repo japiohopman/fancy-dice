@@ -123,3 +123,96 @@
     display: inline-flex;
   }
 }
+
+/* Restrained motion for the unified menu; these layers never affect DiceBox layout. */
+.menu-overlay-enter {
+  animation: menu-overlay-fade-in 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.menu-overlay-exit {
+  animation: menu-overlay-fade-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}
+
+.menu-panel-enter {
+  animation: menu-panel-fade-in 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.menu-panel-exit {
+  animation: menu-panel-fade-out 150ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.menu-section-enter-dice,
+.menu-section-enter-presets,
+.menu-section-enter-themes,
+.menu-section-enter-color,
+.menu-section-enter-options,
+.menu-section-enter-about {
+  animation: menu-section-fade-in 150ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes menu-overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes menu-overlay-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes menu-panel-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menu-panel-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(3px) scale(0.995);
+  }
+}
+
+@keyframes menu-section-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the exit lifecycle event, but remove movement and make the fade negligible. */
+  .menu-overlay-enter {
+    animation-duration: 1ms;
+  }
+
+  .menu-overlay-exit {
+    animation-duration: 1ms;
+  }
+
+  .menu-panel-enter,
+  .menu-panel-exit,
+  .menu-section-enter-dice,
+  .menu-section-enter-presets,
+  .menu-section-enter-themes,
+  .menu-section-enter-color,
+  .menu-section-enter-options,
+  .menu-section-enter-about {
+    animation: none;
+  }
+}
+
