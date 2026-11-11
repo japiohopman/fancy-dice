@@ -60,7 +60,7 @@ Fantastic Dice Roller is designed as a standalone mobile application that serves
 - **Frontend Framework**: React 19, TypeScript, Vite
 - **Styling**: Tailwind CSS, Lucide React Icons, Custom CSS Glows
 - **3D Physics & Graphics**: `@3d-dice/dice-box` (Three.js & Ammo.js WebAssembly)
-- **Audio Synthesis**: Web Audio API & HTML5 Audio
+- **Audio Synthesis**: Web Audio API & HTML5 audio
 - **Mobile Native Bridge**: Capacitor Core, Motion & Haptics (`@capacitor/android`)
 
 ---
@@ -98,19 +98,28 @@ Fantastic Dice Roller is designed as a standalone mobile application that serves
 
 ---
 
-## 📱 Mobile & Android Deployment
+## 📱 Install on Android (PWA)
 
-The project includes pre-configured Capacitor setup for Android builds.
+Fancy Dice is published as an installable Progressive Web App. It runs directly in Chrome on Android and does not require an APK or a native Android project.
 
-```bash
-# Sync web build to Capacitor Android
-npm run cap:sync
+**GitHub Pages URL:** <https://japiohopman.github.io/fancy-dice/>
 
-# Build debug Android APK
-npm run cap:build:apk
-```
+The latest changes from this pull request become available at that URL after the pull request is merged to `main` and the GitHub Pages deployment completes.
 
-Output APK path: `android/app/build/outputs/apk/debug/app-debug.apk`
+1. Open the GitHub Pages URL in Chrome on your Android phone.
+2. Open Chrome's menu and choose **Install app** (or **Add to Home screen**).
+3. Launch **Fancy Dice** from the new home-screen icon. It opens in a standalone, app-like window.
+4. After the first successful load, the service worker keeps the app shell and same-origin game assets available for repeat/offline launches.
+
+The first load requires an internet connection. Google Fonts are loaded from Google Fonts, so typography may fall back to system fonts while offline. Device motion, vibration, audio, and WebGL behaviour still need to be checked on the physical Android device.
+
+### GitHub Pages deployment
+
+Every pull request runs the TypeScript check and production build. Merging to `main` publishes `dist/` through GitHub Actions.
+
+If Pages has not been enabled for this repository yet, open **Settings → Pages** and select **GitHub Actions** as the build and deployment source.
+
+For the manual Android smoke-test checklist, see [`docs/PWA_ANDROID_TEST_GUIDE.md`](docs/PWA_ANDROID_TEST_GUIDE.md).
 
 ---
 
