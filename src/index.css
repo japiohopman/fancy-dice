@@ -111,3 +111,15 @@
     animation: none;
   }
 }
+
+
+/* The explicit Roll action is for desktop pointer devices, not touch-only phones. */
+.desktop-roll-button {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
+  .desktop-roll-button {
+    display: inline-flex;
+  }
+}
