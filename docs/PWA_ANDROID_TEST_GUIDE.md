@@ -18,9 +18,27 @@ The app is served from the repository subpath `/fancy-dice/`. Vite sets that bas
 
 If Chrome does not offer installation, check that the page loaded over HTTPS, the manifest is available, and the service worker is active. A first deployment can take a short time to become available after the workflow finishes.
 
+## Responsive orientation and viewport test
+
+The PWA manifest intentionally does not request a fixed orientation. Test both orientations; do not treat landscape as the required/default phone layout.
+
+| Viewport | Purpose |
+| --- | --- |
+| 1440×900 | Desktop |
+| 1044×504 | Wide/short reference layout |
+| 800×360 | Compact mobile landscape |
+| 390×844 | Narrow mobile portrait |
+| Physical Android phone | Portrait and landscape, installed PWA |
+
+For each viewport, verify that the dice table remains the main focus, the notation and Menu controls remain reachable, menu content can scroll inside its overlay, and the history strip stays visible without causing page scrolling. Open and close the menu in both orientations and rotate while the app is open.
+
+On the physical phone, include the OS status bar (time, battery and system icons), navigation area, camera/notch cutouts and safe-area spacing in the check. Confirm that content is not hidden behind system UI. Record the device model, Android version and Chrome version with the result. Browser emulation is useful, but does not replace this physical-device check.
+
 ## Functional smoke test
 
-- [ ] App opens in standalone mode and uses the expected landscape layout.
+- [ ] App opens in standalone mode and follows the device's current orientation (portrait or landscape).
+- [ ] Rotate the physical phone in both directions; the app reflows without clipping or remounting the dice stage.
+- [ ] Time, battery, status icons and system navigation remain in their normal OS orientation and are not covered by app content.
 - [ ] A single d20 roll completes and the result matches the visible die.
 - [ ] Mixed and multiple dice (for example `4d6 + 1d20`) roll and settle correctly.
 - [ ] Dice skins and table themes can be changed.

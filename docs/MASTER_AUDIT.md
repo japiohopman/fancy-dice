@@ -19,7 +19,7 @@ This external documentation serves as the authoritative reference for the underl
 
 ## A. EXECUTIVE SUMMARY
 
-Fancy Dice is a mobile-first, static-landscape 3D tabletop dice rolling application. Its core capabilities—realistic 3D polyhedral dice physics powered by Three.js and Ammo.js (`@3d-dice/dice-box`), custom TRPG notation parsing (`1d20+5`, `4d6kh3`, `4dF`), device shake/motion controls, Web Audio sound synthesis, felt table customizations, and collapsible sidebar panels—are functionally implemented and operational `[Verified]`.
+Fancy Dice is a mobile-first, orientation-neutral 3D tabletop dice rolling PWA that adapts to portrait and landscape viewports. Its core capabilities—realistic 3D polyhedral dice physics powered by Three.js and Ammo.js (`@3d-dice/dice-box`), custom TRPG notation parsing (`1d20+5`, `4d6kh3`, `4dF`), device shake/motion controls, Web Audio sound synthesis, felt table customizations, and collapsible sidebar panels—are functionally implemented and operational `[Verified]`.
 
 However, a technical audit reveals that while the application is functional as a web prototype, **it is not yet ready for release as a premium native Android application**.
 

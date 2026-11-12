@@ -1,13 +1,13 @@
 # Fantastic 3D Dice Roller — Project Architecture & Vision
 
 ## 1. Overview & Vision
-Fantastic 3D Dice Roller is a high-performance, mobile-first 3D physics dice rolling application designed primarily for landscape tablet/mobile layouts. It features realistic 3D polyhedral dice physics powered by `@3d-dice/dice-box` and Three.js / Ammo.js, native motion-sensor gesture controls (shake-to-roll), sound and haptic feedback, customizable felt table surfaces, and a full DnD 5e / TRPG notation engine.
+Fantastic 3D Dice Roller is a high-performance, mobile-first 3D physics dice rolling application with a responsive layout for portrait and landscape phone/tablet viewports. The installable PWA does not request a fixed orientation; its app shell uses the live viewport size and safe-area insets. It features realistic 3D polyhedral dice physics powered by `@3d-dice/dice-box` and Three.js / Ammo.js, native motion-sensor gesture controls (shake-to-roll), sound and haptic feedback, customizable felt table surfaces, and a full DnD 5e / TRPG notation engine.
 
 ---
 
 ## 2. Core Functional Requirements
 
-### 📱 Static Landscape UI (No Scrollbars)
+### 📱 Responsive App Shell (No Page Scrollbars)
 - **Top Bar (`TopNotationBar.tsx`)**: Prominent current dice notation input (e.g., `1d20+10`, `4d4`), quick preset chips, roll trigger button, sound mute toggle, and shake sensor status indicator.
 - **Center Canvas Stage (`ThreeDiceCanvas.tsx`)**: Fullscreen 3D WebGL viewport running Ammo.js rigid body collision physics for d4, d6, d8, d10, d12, d20, d100, and Fate dice.
 - **Center Outcome Overlay (`RollOutcomeOverlay.tsx`)**: Non-blocking auto-fading result modal directly over the dice box that displays total, natural crits, fumbles, individual roll breakdowns, and confetti particle bursts before smoothly fading out.
