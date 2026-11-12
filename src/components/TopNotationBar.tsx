@@ -8,6 +8,7 @@ interface TopNotationBarProps {
   isRolling: boolean;
   onToggleMenu: (trigger: HTMLButtonElement) => void;
   menuOpen: boolean;
+  formulaError?: string | null;
 }
 
 /** Places dice notation in the primary header; the visible Roll action is desktop-only. */
@@ -18,6 +19,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   isRolling,
   onToggleMenu,
   menuOpen,
+  formulaError,
 }) => {
   const [inputVal, setInputVal] = useState<string>(currentFormula || '1d20');
 
@@ -29,7 +31,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
   /** Normalizes the entered notation and submits it to the roll handler. */
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const finalFormula = inputVal.trim() || '1d20';
+    const finalFormula = inputVal.trim();
     setInputVal(finalFormula);
     onFormulaChange(finalFormula);
     onRoll(finalFormula);
@@ -39,7 +41,8 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
     <header className="ui-chrome-bar z-30 flex w-full shrink-0 select-none items-center gap-2 border-b px-3 py-2 shadow-md sm:gap-3 sm:px-5">
       {/* The notation field now occupies the old brand/logo position. */}
       <form onSubmit={handleSubmit} className="flex min-w-0 flex-1 items-center gap-2">
-        <label className="ui-field min-w-0 flex-1 px-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <label className="ui-field min-w-0 flex-1 px-3">
           <Sparkles className="mr-2 h-3.5 w-3.5 shrink-0 text-[#a38c5e]" aria-hidden="true" />
           <input
             type="text"
@@ -49,12 +52,20 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
               onFormulaChange(event.target.value);
             }}
             aria-label="Dice notation"
+            aria-invalid={Boolean(formulaError)}
+            aria-describedby={formulaError ? 'dice-notation-error' : undefined}
             placeholder="e.g. 1d20+5 or 4d6kh3"
             autoComplete="off"
             spellCheck={false}
             className="w-full min-w-0 bg-transparent text-sm font-mono font-bold tracking-wide text-[#f4ead5] placeholder:text-[#d4c3a1]/30 focus:outline-none"
           />
-        </label>
+          </label>
+          {formulaError && (
+            <span id="dice-notation-error" role="alert" className="px-1 text-[10px] leading-tight text-rose-300">
+              {formulaError}
+            </span>
+          )}
+        </div>
 
         <button
           type="submit"
