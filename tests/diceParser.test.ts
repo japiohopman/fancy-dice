@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DiceFormulaError, parseAndRollFormula } from '../src/lib/diceParser';
+import { DiceFormulaError, getPendingExplosionRolls, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from '../src/lib/diceParser';
 
 function withRandomSequence<T>(values: number[], run: () => T): T {
   const originalRandom = Math.random;
@@ -72,15 +72,56 @@ test('supports keep-low and drop-high operators', () => {
   assert.equal(dropHigh.diceGroupResults[0].droppedCount, 2);
 });
 
-test('supports exploding dice and respects an explicit explosion limit', () => {
-  const result = withRandomSequence(
-    [0.99, 0.1, 0.99, 0.1, 0.2, 0.1],
-    () => parseAndRollFormula('1d6!2')
-  );
+test('chains exploding dice from physical landed results only', () => {
+  const parsed = withRandomSequence([0, 0], () => parseAndRollFormula('1d6!2'));
+  assert.equal(parsed.diceGroupResults[0].rolls.length, 1);
+  assert.equal(parsed.diceGroupResults[0].explosionLimit, 2);
 
-  assert.deepEqual(result.diceGroupResults[0].rolls.map((roll) => roll.value), [6, 6, 2]);
-  assert.equal(result.total, 14);
-  assert.equal(result.diceGroupResults[0].rolls[1].exploded, true);
+  const firstWave = updateParsedResultWithPhysicalRolls(parsed, [
+    { rolls: [{ dieType: 'd6', sides: 6, value: 6 }] },
+  ]);
+  assert.deepEqual(getPendingExplosionRolls(firstWave), ['1d6']);
+  assert.equal(firstWave.total, 6);
+
+  const secondWave = updateParsedResultWithPhysicalRolls(firstWave, [
+    { rolls: [{ dieType: 'd6', sides: 6, value: 6 }] },
+  ]);
+  assert.deepEqual(getPendingExplosionRolls(secondWave), ['1d6']);
+  assert.equal(secondWave.total, 12);
+
+  const finalWave = updateParsedResultWithPhysicalRolls(secondWave, [
+    { rolls: [{ dieType: 'd6', sides: 6, value: 2 }] },
+  ]);
+  assert.deepEqual(getPendingExplosionRolls(finalWave), []);
+  assert.equal(finalWave.total, 14);
+  assert.deepEqual(finalWave.diceGroupResults[0].rolls.map((roll) => roll.value), [6, 6, 2]);
+  assert.equal(finalWave.diceGroupResults[0].rolls[1].exploded, true);
+});
+
+test('does not keep a simulated explosion when the physical die did not explode', () => {
+  const parsed = withRandomSequence([0, 0], () => parseAndRollFormula('1d6!2'));
+  const finalResult = updateParsedResultWithPhysicalRolls(parsed, [
+    { rolls: [{ dieType: 'd6', sides: 6, value: 3 }] },
+  ]);
+
+  assert.deepEqual(getPendingExplosionRolls(finalResult), []);
+  assert.equal(finalResult.total, 3);
+  assert.equal(finalResult.diceGroupResults[0].rolls.length, 1);
+});
+
+test('an exploding d20 records a natural 1 on its follow-up physical roll', () => {
+  const parsed = withRandomSequence([0, 0], () => parseAndRollFormula('1d20!1'));
+  const firstWave = updateParsedResultWithPhysicalRolls(parsed, [
+    { rolls: [{ dieType: 'd20', sides: 20, value: 20 }] },
+  ]);
+  const finalWave = updateParsedResultWithPhysicalRolls(firstWave, [
+    { rolls: [{ dieType: 'd20', sides: 20, value: 1 }] },
+  ]);
+
+  assert.equal(finalWave.total, 21);
+  assert.equal(finalWave.isCrit, true);
+  assert.equal(finalWave.isFumble, true);
+  assert.equal(finalWave.diceGroupResults[0].rolls[1].isFumble, true);
 });
 
 test('supports Fate dice notation', () => {
@@ -112,6 +153,9 @@ test('rejects partial matches, malformed operators and unsupported dice', () => 
     '1d20--5',
     '1d20+-5',
     '1d20 1d6',
+    '1d2 0',
+    '1 d20',
+    '1d20 + 1 d6',
     '1d2',
     '1d20khx',
     '1d20!6',
