@@ -249,6 +249,9 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
 
   const diceTotal = diceGroupResults.reduce((total, group) => total + group.sum, 0);
   const finalTotal = diceTotal + modifierTotal;
+  if (!Number.isSafeInteger(finalTotal)) {
+    throw new DiceFormulaError('The final roll total is outside the supported numeric range.', 'limit');
+  }
 
   return {
     rawFormula: cleanFormula,
