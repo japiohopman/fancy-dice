@@ -13,6 +13,12 @@ export interface SingleDieResult {
   exploded?: boolean;
   isCrit?: boolean;
   isFumble?: boolean;
+  /** True after this value has come back from a physical DiceBox roll. */
+  physical?: boolean;
+  /** True while waiting for a chained physical explosion roll. */
+  pending?: boolean;
+  /** Number of explosion links from the original die (base die = 0). */
+  explosionDepth?: number;
 }
 
 export interface RollParsedResult {
@@ -24,6 +30,9 @@ export interface RollParsedResult {
     sum: number;
     droppedCount?: number;
     keepType?: 'kh' | 'kl';
+    keepCount?: number;
+    explosionLimit?: number;
+    sign?: 1 | -1;
   }[];
   modifier: number;
   total: number;
