@@ -399,6 +399,13 @@ export function updateParsedResultWithPhysicalRolls(
       });
     }
 
+    normalizedRolls.forEach((roll) => {
+      if (roll.physical && !roll.pending) {
+        overallIsCrit ||= Boolean(roll.isCrit);
+        overallIsFumble ||= Boolean(roll.isFumble);
+      }
+    });
+
     const sign = group.sign ?? (group.sum < 0 ? -1 : 1);
     const sum = normalizedRolls.reduce(
       (total, roll) => total + (roll.physical && !roll.pending && !roll.dropped ? roll.value : 0),
