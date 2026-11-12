@@ -152,10 +152,14 @@ test('rejects negative and excessive numeric counts where a count is expected', 
   assert.throws(() => parseAndRollFormula('50d6!5'), DiceFormulaError);
 });
 
-test('rejects exploding Fate dice and formulas with unsafe modifiers', () => {
+test('rejects exploding Fate dice and formulas with unsafe modifiers or totals', () => {
   assert.throws(() => parseAndRollFormula('1dF!'), DiceFormulaError);
   assert.throws(
     () => parseAndRollFormula('1d20+999999999999999999999999999999999'),
+    DiceFormulaError
+  );
+  assert.throws(
+    () => withRandomSequence([0, 0.1], () => parseAndRollFormula('1d20+9007199254740991')),
     DiceFormulaError
   );
 });
