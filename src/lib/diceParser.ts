@@ -35,25 +35,56 @@ function parseSafeInteger(raw: string, fallback: number, description: string): n
   return value;
 }
 
+function getPhysicalDieType(raw: any): string | null {
+  if (typeof raw?.dieType === 'string' && raw.dieType.length > 0) {
+    return raw.dieType.toLowerCase();
+  }
+  if (Number.isFinite(raw?.sides)) {
+    return 'd' + raw.sides;
+  }
+  return null;
+}
+
+function getRollFlags(dieType: DieType, value: number): { isCrit: boolean; isFumble: boolean; text: string } {
+  const maxSides = getDieSides(dieType);
+  const isCrit = dieType === 'd20' ? value === 20 : dieType !== 'dfate' && value === maxSides;
+  const isFumble = dieType === 'd20' && value === 1;
+  const text = dieType === 'dfate'
+    ? value === 1 ? '+' : value === -1 ? '-' : '0'
+    : String(value);
+
+  return { isCrit, isFumble, text };
+}
+
 /**
  * Validates and evaluates a complete dice expression.
  *
  * Supported syntax: d4/d6/d8/d10/d12/d20/d100, dF/dFate,
  * signed dice groups and numeric modifiers, kh/kl/dh/dl, and
  * exploding dice with an optional 1–5 explosion cap (default 5).
+ * Exploding dice are chained from the actual landed face in DiceBox.
  */
 export function parseAndRollFormula(formula: string): RollParsedResult {
-  const cleanFormula = typeof formula === 'string'
-    ? formula.trim().toLowerCase().replace(/\s+/g, '')
-    : '';
+  const trimmedFormula = typeof formula === 'string' ? formula.trim().toLowerCase() : '';
 
-  if (!cleanFormula) {
+  if (!trimmedFormula) {
     throw new DiceFormulaError('Enter a dice formula, for example 1d20.', 'empty');
   }
-  if (cleanFormula.length > MAX_FORMULA_LENGTH) {
+  if (trimmedFormula.length > MAX_FORMULA_LENGTH) {
     throw new DiceFormulaError('The dice formula is too long. Use at most ' + MAX_FORMULA_LENGTH + ' characters.', 'limit');
   }
 
+  // Whitespace is allowed around + / - separators, but never inside a token.
+  for (const match of trimmedFormula.matchAll(/\s+/g)) {
+    const before = trimmedFormula[match.index! - 1];
+    const after = trimmedFormula[match.index! + match[0].length];
+    const touchesOperator = before === '+' || before === '-' || after === '+' || after === '-';
+    if (!touchesOperator) {
+      throw new DiceFormulaError('Spaces are only allowed around "+" or "-" operators. Check the dice notation.');
+    }
+  }
+
+  const cleanFormula = trimmedFormula.replace(/\s+/g, '');
   const timestamp = new Date();
   const diceGroupResults: RollParsedResult['diceGroupResults'] = [];
   let modifierTotal = 0;
@@ -63,11 +94,12 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
   let termCount = 0;
   let totalBaseDice = 0;
   let maximumExpandedRolls = 0;
+  let maximumAbsoluteDiceTotal = 0;
 
   const dicePattern = /^(\d*)d(100|12|10|20|8|6|4|fate|f)(?:(kh|kl|dh|dl)(\d*)|!(\d*))?/i;
 
   while (index < cleanFormula.length) {
-    let sign = 1;
+    let sign: 1 | -1 = 1;
     const current = cleanFormula[index];
 
     if (current === '+' || current === '-') {
@@ -110,7 +142,7 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
 
       let keepType: 'kh' | 'kl' | undefined;
       let keepCount: number | undefined;
-      let maxExplosions = 0;
+      let explosionLimit = 0;
 
       if (modifierKind === 'kh' || modifierKind === 'kl') {
         keepType = modifierKind;
@@ -129,13 +161,13 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
         if (dieType === 'dfate') {
           throw new DiceFormulaError('Exploding dice are not supported for Fate dice.', 'unsupported');
         }
-        maxExplosions = parseSafeInteger(explosionAmount, MAX_EXPLOSIONS_PER_DIE, 'Explosion limit');
-        if (maxExplosions < 1 || maxExplosions > MAX_EXPLOSIONS_PER_DIE) {
+        explosionLimit = parseSafeInteger(explosionAmount, MAX_EXPLOSIONS_PER_DIE, 'Explosion limit');
+        if (explosionLimit < 1 || explosionLimit > MAX_EXPLOSIONS_PER_DIE) {
           throw new DiceFormulaError('Explosion limit must be between 1 and ' + MAX_EXPLOSIONS_PER_DIE + '.', 'limit');
         }
       }
 
-      maximumExpandedRolls += count * (1 + maxExplosions);
+      maximumExpandedRolls += count * (1 + explosionLimit);
       if (maximumExpandedRolls > MAX_EXPANDED_ROLLS) {
         throw new DiceFormulaError(
           'This formula could generate more than ' + MAX_EXPANDED_ROLLS + ' dice results. Reduce the dice count or explosion limit.',
@@ -143,63 +175,29 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
         );
       }
 
-      index += diceMatch[0].length;
       const maxSides = getDieSides(dieType);
+      const maxDieValue = dieType === 'dfate' ? 1 : maxSides;
+      maximumAbsoluteDiceTotal += count * maxDieValue * (1 + explosionLimit);
+
+      index += diceMatch[0].length;
       const rolls: SingleDieResult[] = [];
 
+      // These are preview values only. Actual dice and any chained explosions
+      // are resolved from DiceBox's physical completion callbacks.
       for (let i = 0; i < count; i++) {
         const value = rollSingleDie(dieType);
-        let isCrit = false;
-        let isFumble = false;
-
-        if (dieType === 'd20') {
-          if (value === 20) {
-            isCrit = true;
-            overallIsCrit = true;
-          }
-          if (value === 1) {
-            isFumble = true;
-            overallIsFumble = true;
-          }
-        } else if (dieType !== 'dfate' && value === maxSides) {
-          isCrit = true;
-          overallIsCrit = true;
-        }
-
-        const text = dieType === 'dfate'
-          ? value === 1 ? '+' : value === -1 ? '-' : '0'
-          : String(value);
+        const flags = getRollFlags(dieType, value);
+        overallIsCrit ||= flags.isCrit;
+        overallIsFumble ||= flags.isFumble;
 
         rolls.push({
           id: dieType + '-' + i + '-' + Math.random().toString(36).substring(2, 7),
           type: dieType,
           value,
-          text,
-          isCrit,
-          isFumble,
+          text: flags.text,
+          isCrit: flags.isCrit,
+          isFumble: flags.isFumble,
         });
-
-        if (maxExplosions > 0 && value === maxSides) {
-          let explosions = 0;
-          let explosionValue = value;
-
-          while (explosionValue === maxSides && explosions < maxExplosions) {
-            explosions += 1;
-            explosionValue = rollSingleDie(dieType);
-            const explodedIsCrit = explosionValue === maxSides;
-            if (explodedIsCrit) overallIsCrit = true;
-
-            rolls.push({
-              id: dieType + '-explode-' + i + '-' + explosions + '-' + Math.random().toString(36).substring(2, 7),
-              type: dieType,
-              value: explosionValue,
-              text: String(explosionValue) + '!',
-              exploded: true,
-              isCrit: explodedIsCrit,
-              isFumble: dieType === 'd20' && explosionValue === 1,
-            });
-          }
-        }
       }
 
       if (keepType && keepCount !== undefined && keepCount < rolls.length) {
@@ -225,6 +223,9 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
         sum,
         droppedCount: rolls.filter(roll => roll.dropped).length,
         keepType,
+        keepCount,
+        explosionLimit,
+        sign,
       });
     } else {
       const numberMatch = /^\d+/.exec(remaining);
@@ -247,11 +248,13 @@ export function parseAndRollFormula(formula: string): RollParsedResult {
     throw new DiceFormulaError('A formula must contain at least one dice group, for example 1d20.', 'invalid');
   }
 
+  // Conservative bounds cover every possible physical face and all explosion chains.
+  if (Math.abs(modifierTotal) + maximumAbsoluteDiceTotal > Number.MAX_SAFE_INTEGER) {
+    throw new DiceFormulaError('The possible roll total is outside the supported numeric range.', 'limit');
+  }
+
   const diceTotal = diceGroupResults.reduce((total, group) => total + group.sum, 0);
   const finalTotal = diceTotal + modifierTotal;
-  if (!Number.isSafeInteger(finalTotal)) {
-    throw new DiceFormulaError('The final roll total is outside the supported numeric range.', 'limit');
-  }
 
   return {
     rawFormula: cleanFormula,
@@ -291,22 +294,36 @@ export function getDieSides(dieType: DieType): number {
   }
 }
 
+export function getPendingExplosionRolls(parsed: RollParsedResult): string[] {
+  const pendingByType = new Map<DieType, number>();
+
+  parsed.diceGroupResults.forEach((group) => {
+    const pendingCount = group.rolls.filter((roll) => roll.pending).length;
+    if (pendingCount > 0) {
+      pendingByType.set(group.dieType, (pendingByType.get(group.dieType) ?? 0) + pendingCount);
+    }
+  });
+
+  return Array.from(pendingByType.entries()).map(([dieType, count]) => {
+    const physicalType = dieType === 'dfate' ? 'd6' : dieType;
+    return count + physicalType;
+  });
+}
+
 export function updateParsedResultWithPhysicalRolls(
   parsed: RollParsedResult,
   physicalResults: any
 ): RollParsedResult {
-  // Create a map/list of physical values for each die type
   const physicalValuesByType: Record<string, number[]> = {};
 
   if (Array.isArray(physicalResults)) {
     physicalResults.forEach((group: any) => {
       if (group && Array.isArray(group.rolls)) {
-        group.rolls.forEach((r: any) => {
-          const type = r.dieType || `d${r.sides}`;
-          if (!physicalValuesByType[type]) {
-            physicalValuesByType[type] = [];
-          }
-          physicalValuesByType[type].push(r.value);
+        group.rolls.forEach((roll: any) => {
+          const type = getPhysicalDieType(roll);
+          if (!type || !Number.isFinite(roll.value)) return;
+          if (!physicalValuesByType[type]) physicalValuesByType[type] = [];
+          physicalValuesByType[type].push(roll.value);
         });
       }
     });
@@ -315,55 +332,92 @@ export function updateParsedResultWithPhysicalRolls(
   let overallIsCrit = false;
   let overallIsFumble = false;
 
-  const updatedDiceGroupResults = parsed.diceGroupResults.map(group => {
-    const updatedRolls = group.rolls.map(die => {
-      const physicalVals = physicalValuesByType[die.type];
-      let val = die.value; // Keep original if no physical roll found (fallback)
-      if (physicalVals && physicalVals.length > 0) {
-        val = physicalVals.shift()!;
+  const updatedDiceGroupResults = parsed.diceGroupResults.map((group) => {
+    const physicalValues = physicalValuesByType[group.dieType] ?? [];
+    const updatedRolls: SingleDieResult[] = [];
+
+    group.rolls.forEach((roll) => {
+      if (roll.physical || physicalValues.length === 0) {
+        updatedRolls.push(roll);
+        return;
       }
 
-      const maxSides = getDieSides(die.type);
-      let isCrit = false;
-      let isFumble = false;
-
-      if (die.type === 'd20') {
-        if (val === 20) { isCrit = true; overallIsCrit = true; }
-        if (val === 1) { isFumble = true; overallIsFumble = true; }
-      } else if (die.type !== 'dfate') {
-        if (val === maxSides) isCrit = true;
-      }
-
-      let text = String(val);
-      if (die.type === 'dfate') {
-        text = val === 1 ? '+' : val === -1 ? '-' : '0';
-      } else if (die.exploded) {
-        text = `${val}!`;
-      }
-
-      return {
-        ...die,
-        value: val,
-        text,
-        isCrit,
-        isFumble
+      const value = physicalValues.shift()!;
+      const flags = getRollFlags(group.dieType, value);
+      const explosionDepth = roll.explosionDepth ?? 0;
+      const updatedRoll: SingleDieResult = {
+        ...roll,
+        value,
+        text: explosionDepth > 0 ? flags.text + '!' : flags.text,
+        isCrit: flags.isCrit,
+        isFumble: flags.isFumble,
+        physical: true,
+        pending: false,
+        exploded: explosionDepth > 0,
       };
+
+      updatedRolls.push(updatedRoll);
+      overallIsCrit ||= flags.isCrit;
+      overallIsFumble ||= flags.isFumble;
+
+      if (
+        group.explosionLimit &&
+        value === getDieSides(group.dieType) &&
+        explosionDepth < group.explosionLimit
+      ) {
+        const nextDepth = explosionDepth + 1;
+        updatedRolls.push({
+          id: group.dieType + '-explode-' + roll.id + '-' + nextDepth,
+          type: group.dieType,
+          value: 0,
+          text: '…',
+          physical: false,
+          pending: true,
+          exploded: true,
+          explosionDepth: nextDepth,
+        });
+      }
     });
 
-    const originalKeptRollsSum = group.rolls.reduce((acc, r) => acc + (r.dropped ? 0 : r.value), 0);
-    const sign = originalKeptRollsSum === 0 ? (group.sum < 0 ? -1 : 1) : (group.sum / originalKeptRollsSum < 0 ? -1 : 1);
-    const sum = updatedRolls.reduce((acc, r) => acc + (r.dropped ? 0 : r.value), 0) * sign;
+    // Re-evaluate keep/drop using the landed values, not parser preview values.
+    const eligibleIndices = updatedRolls
+      .map((roll, index) => ({ roll, index }))
+      .filter(({ roll }) => roll.physical && !roll.pending);
+    const normalizedRolls = updatedRolls.map((roll) => ({ ...roll, dropped: undefined }));
+
+    if (group.keepType && group.keepCount !== undefined && group.keepCount < eligibleIndices.length) {
+      const sorted = eligibleIndices
+        .map(({ roll, index }) => ({ index, value: roll.value }))
+        .sort((left, right) => group.keepType === 'kh'
+          ? right.value - left.value
+          : left.value - right.value);
+      const keptIndices = new Set(sorted.slice(0, group.keepCount).map((item) => item.index));
+      eligibleIndices.forEach(({ index }) => {
+        if (!keptIndices.has(index)) {
+          normalizedRolls[index] = { ...normalizedRolls[index], dropped: true };
+        }
+      });
+    }
+
+    const sign = group.sign ?? (group.sum < 0 ? -1 : 1);
+    const sum = normalizedRolls.reduce(
+      (total, roll) => total + (roll.physical && !roll.pending && !roll.dropped ? roll.value : 0),
+      0
+    ) * sign;
 
     return {
       ...group,
-      rolls: updatedRolls,
-      sum
+      rolls: normalizedRolls,
+      sum,
+      droppedCount: normalizedRolls.filter((roll) => roll.physical && roll.dropped).length,
     };
   });
 
-  // Calculate final total
-  const diceTotal = updatedDiceGroupResults.reduce((acc, grp) => acc + grp.sum, 0);
+  const diceTotal = updatedDiceGroupResults.reduce((total, group) => total + group.sum, 0);
   const finalTotal = diceTotal + parsed.modifier;
+  if (!Number.isSafeInteger(finalTotal)) {
+    throw new DiceFormulaError('The physical roll total is outside the supported numeric range.', 'limit');
+  }
 
   return {
     ...parsed,
@@ -371,6 +425,6 @@ export function updateParsedResultWithPhysicalRolls(
     total: finalTotal,
     isCrit: overallIsCrit,
     isFumble: overallIsFumble,
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 }
