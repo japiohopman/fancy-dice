@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
-import { parseAndRollFormula, updateParsedResultWithPhysicalRolls } from './lib/diceParser';
+import { getPendingExplosionRolls, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from './lib/diceParser';
 import { audioManager } from './lib/audioManager';
 import { ShakeDetector } from './lib/shakeDetector';
 import { ThreeDiceCanvas } from './components/ThreeDiceCanvas';
@@ -161,35 +161,39 @@ export default function App() {
     setCurrentResult(result);
   };
 
-  /** Maps landed physical dice values into the parsed result and records the completed roll. */
-  const handleRollComplete = (physicalResults: any) => {
-    if (!isRolling || !activeResultRef.current) return;
+  /** Reconciles each physical roll wave and queues real dice for any triggered explosions. */
+  const handleRollComplete = (physicalResults: any): string[] => {
+    if (!isRolling || !activeResultRef.current) return [];
 
-    // Map the actual physical rolling results back into our parsed structure
-    const finalizedResult = updateParsedResultWithPhysicalRolls(activeResultRef.current, physicalResults);
+    const updatedResult = updateParsedResultWithPhysicalRolls(activeResultRef.current, physicalResults);
+    activeResultRef.current = updatedResult;
 
-    // Update state to render the visual outcomes and finish rolling
-    setCurrentResult(finalizedResult);
+    // A natural maximum starts a new physical DiceBox wave. Do not finalize or
+    // record the result until every chained explosion has physically landed.
+    const followUpRolls = getPendingExplosionRolls(updatedResult);
+    if (followUpRolls.length > 0) {
+      return followUpRolls;
+    }
+
+    setCurrentResult(updatedResult);
     setIsRolling(false);
 
-    // Play victory chime or fumble thud based on the actual physical roll result
-    if (finalizedResult.isCrit) {
+    if (updatedResult.isCrit) {
       audioManager.playCritSound();
-    } else if (finalizedResult.isFumble) {
+    } else if (updatedResult.isFumble) {
       audioManager.playFumbleSound();
     }
 
-    // Record to history using the actual physical roll result
     const newEntry: RollHistoryEntry = {
       id: `history-${Date.now()}`,
-      result: finalizedResult,
+      result: updatedResult,
       presetName: activePresetNameRef.current
     };
     setHistory(prev => [newEntry, ...prev].slice(0, 50));
 
-    // Clear active ref
     activeResultRef.current = null;
     activePresetNameRef.current = undefined;
+    return [];
   };
 
   // Initialize Shake Motion Detector
