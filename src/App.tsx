@@ -15,6 +15,7 @@ type MenuSection = 'dice' | 'presets' | 'themes' | 'color' | 'options' | 'about'
 /** Owns dice-roll state, navigation state, themes, sensor settings, and history for the app. */
 export default function App() {
   const [currentFormula, setCurrentFormula] = useState<string>('1d20');
+  const [formulaError, setFormulaError] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
@@ -131,25 +132,32 @@ export default function App() {
   }, [shakeSettings.soundEnabled]);
 
   // Execute Roll Logic
-  /** Parses the requested formula and starts its physical DiceBox roll. */
+  /** Validates the formula before audio, state changes, or a physical DiceBox roll begin. */
   const handleExecuteRoll = (formulaToRoll?: string, presetName?: string) => {
     if (isRolling) return;
 
-    const formula = formulaToRoll || currentFormula || '1d20';
+    const formula = (formulaToRoll ?? currentFormula).trim();
+    let result: RollParsedResult;
+
+    try {
+      result = parseAndRollFormula(formula);
+    } catch (error) {
+      setFormulaError(error instanceof Error ? error.message : 'Invalid dice formula.');
+      return;
+    }
+
+    setFormulaError(null);
     setCurrentFormula(formula);
     setIsRolling(true);
 
-    // Play dice bounce sounds
+    // Play dice bounce sounds only after the formula has passed validation.
     audioManager.playDiceRollSound(4);
 
-    // Evaluate roll formula layout using Fantastic Notation Parser
-    const result = parseAndRollFormula(formula);
-
-    // Store active context to map physical results when they land
+    // Store active context to map physical results when they land.
     activeResultRef.current = result;
     activePresetNameRef.current = presetName;
 
-    // Trigger visual roll of correct dice structure
+    // Trigger visual roll of the validated dice structure.
     setCurrentResult(result);
   };
 
@@ -243,11 +251,15 @@ export default function App() {
       {/* Primary navigation and always-visible dice notation controls. */}
       <TopNotationBar
         currentFormula={currentFormula}
-        onFormulaChange={setCurrentFormula}
+        onFormulaChange={(formula) => {
+          setCurrentFormula(formula);
+          setFormulaError(null);
+        }}
         onRoll={(f) => handleExecuteRoll(f)}
         isRolling={isRolling}
         onToggleMenu={toggleMenu}
         menuOpen={isMenuOpen}
+        formulaError={formulaError}
       />
 
       {/* The menu floats above the full-width 3D table without resizing it. */}
@@ -345,7 +357,10 @@ export default function App() {
             <div className="relative min-h-0 flex-1 overflow-hidden">
               <div hidden={activeMenuSection !== 'dice' && activeMenuSection !== 'presets'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'dice' ? 'menu-section-enter-dice' : activeMenuSection === 'presets' ? 'menu-section-enter-presets' : ''}`}>
                 <LeftOptionsPanel
-                  onFormulaUpdate={setCurrentFormula}
+                  onFormulaUpdate={(formula) => {
+                    setCurrentFormula(formula);
+                    setFormulaError(null);
+                  }}
                   currentFormula={currentFormula}
                   activeTab={activeMenuSection === 'presets' ? 'presets' : 'dice'}
                 />
