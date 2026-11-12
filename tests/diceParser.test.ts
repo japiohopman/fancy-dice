@@ -124,11 +124,15 @@ test('an exploding d20 records a natural 1 on its follow-up physical roll', () =
   assert.equal(finalWave.diceGroupResults[0].rolls[1].isFumble, true);
 });
 
-test('supports Fate dice notation', () => {
-  const result = withRandomSequence(
-    [0, 0.1, 0.5, 0.1, 0.99, 0.1],
-    () => parseAndRollFormula('3dFate')
-  );
+test('maps physical d6 face values to Fate dice results', () => {
+  const parsed = withRandomSequence([0, 0, 0, 0, 0, 0], () => parseAndRollFormula('3dFate'));
+  const result = updateParsedResultWithPhysicalRolls(parsed, [
+    { rolls: [
+      { dieType: 'd6', sides: 6, value: 1 },
+      { dieType: 'd6', sides: 6, value: 4 },
+      { dieType: 'd6', sides: 6, value: 6 },
+    ] },
+  ]);
 
   assert.deepEqual(result.diceGroupResults[0].rolls.map((roll) => roll.value), [-1, 0, 1]);
   assert.deepEqual(result.diceGroupResults[0].rolls.map((roll) => roll.text), ['-', '0', '+']);
