@@ -9,7 +9,7 @@ interface ThreeDiceCanvasProps {
   materialTheme: string;
   tableTheme: TableTheme;
   diceTheme: string;
-  onRollComplete?: (results: any) => void;
+  onRollComplete?: (results: any) => string[];
 }
 
 export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
@@ -108,7 +108,16 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       isInitializingRef.current = false;
 
       box.onRollComplete = (results: any) => {
-        if (onRollCompleteRef.current) onRollCompleteRef.current(results);
+        const followUpRolls = onRollCompleteRef.current?.(results) ?? [];
+        if (followUpRolls.length > 0) {
+          try {
+            // Exploding dice are rolled in chained physical waves, not simulated
+            // in the parser, so every value shown in the result has a landed die.
+            box.roll(followUpRolls);
+          } catch (error) {
+            console.error('Failed to trigger chained explosion roll:', error);
+          }
+        }
       };
 
       // Execute any roll that came in while initializing
