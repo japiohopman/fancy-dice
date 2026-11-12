@@ -333,7 +333,9 @@ export function updateParsedResultWithPhysicalRolls(
   let overallIsFumble = false;
 
   const updatedDiceGroupResults = parsed.diceGroupResults.map((group) => {
-    const physicalValues = physicalValuesByType[group.dieType] ?? [];
+    // Fate dice are represented by physical d6 models in DiceBox.
+    const physicalType = group.dieType === 'dfate' ? 'd6' : group.dieType;
+    const physicalValues = physicalValuesByType[physicalType] ?? physicalValuesByType[group.dieType] ?? [];
     const updatedRolls: SingleDieResult[] = [];
 
     group.rolls.forEach((roll) => {
@@ -342,7 +344,11 @@ export function updateParsedResultWithPhysicalRolls(
         return;
       }
 
-      const value = physicalValues.shift()!;
+      const physicalValue = physicalValues.shift()!;
+      // Standard d6 faces map to the two minus, two blank, and two plus Fate faces.
+      const value = group.dieType === 'dfate'
+        ? physicalValue <= 2 ? -1 : physicalValue <= 4 ? 0 : 1
+        : physicalValue;
       const flags = getRollFlags(group.dieType, value);
       const explosionDepth = roll.explosionDepth ?? 0;
       const updatedRoll: SingleDieResult = {
