@@ -12,7 +12,7 @@ function pwaPrecachePlugin(): Plugin {
       const outputDir = outputOptions.dir ?? 'dist';
       const serviceWorkerPath = path.resolve(outputDir, 'sw.js');
       const outputChunks = Object.values(bundle).filter((output) => output.type === 'chunk');
-      const chunksByFileName = new Map(outputChunks.map((chunk) => [chunk.fileName, chunk]));
+      const chunksByFileName = new Map(outputChunks.map((chunk) => [chunk.fileName, chunk] as const));
       const initialChunkFiles = new Set<string>();
 
       // Precache only the static import graph of the app entry. Dynamic imports
@@ -36,6 +36,10 @@ function pwaPrecachePlugin(): Plugin {
           .filter((output) => output.type === 'asset' && /\.css$/i.test(output.fileName))
           .map((output) => output.fileName),
       ].sort();
+
+      console.log(
+        `[fancy-dice-pwa-precache] ${initialChunkFiles.size} initial chunks; ${outputChunks.length - initialChunkFiles.size} deferred chunks cached on demand.`,
+      );
 
       const source = readFileSync(serviceWorkerPath, 'utf8');
       const placeholder = 'const BUILD_ASSET_FILES = [];';
