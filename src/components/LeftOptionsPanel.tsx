@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { DieType } from '../types';
+import {
+  buildDiceFormulaFromBuilderState,
+  createDefaultDiceBuilderState,
+  createEmptyDiceBuilderState,
+  DiceBuilderAdvantage,
+  DiceBuilderState,
+  parseDiceBuilderFormula,
+} from '../lib/diceBuilderModel';
 import { Dices, RotateCcw, Shield, Flame, Sword, Sparkles } from 'lucide-react';
 
 interface LeftOptionsPanelProps {
@@ -15,12 +23,33 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   activeTab
 }) => {
 
-  // Staged counts for each die type
-  const [stagedDice, setStagedDice] = useState<Record<DieType, number>>({
-    d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0, dfate: 0
-  });
-  const [modifier, setModifier] = useState<number>(0);
-  const [advantage, setAdvantage] = useState<'none' | 'advantage' | 'disadvantage'>('none');
+  // The canonical formula is owned by App; the picker is a synchronized projection of it.
+  const [builderState, setBuilderState] = useState<DiceBuilderState>(
+    () => parseDiceBuilderFormula(currentFormula) ?? createEmptyDiceBuilderState()
+  );
+  const [isCustomFormula, setIsCustomFormula] = useState<boolean>(
+    () => parseDiceBuilderFormula(currentFormula) === null
+  );
+  const { stagedDice, modifier, advantage } = builderState;
+  const totalStagedDice = Object.values(stagedDice).reduce((total, count) => total + count, 0);
+
+  useEffect(() => {
+    const nextState = parseDiceBuilderFormula(currentFormula);
+    setBuilderState(nextState ?? createEmptyDiceBuilderState());
+    setIsCustomFormula(nextState === null);
+  }, [currentFormula]);
+
+  /** Publishes one complete builder state to the canonical formula owner. */
+  const commitBuilderState = (nextState: DiceBuilderState) => {
+    setBuilderState(nextState);
+    setIsCustomFormula(false);
+    onFormulaUpdate(buildDiceFormulaFromBuilderState(nextState));
+  };
+
+  /** A deliberate builder action may replace custom notation, but merely opening the panel never does. */
+  const getEditableBuilderState = () => (
+    isCustomFormula ? createEmptyDiceBuilderState() : builderState
+  );
 
   const diceList: { type: DieType; label: string }[] = [
     { type: 'd4', label: 'd4' },
@@ -44,42 +73,63 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     { name: 'Fate (4dF)', formula: '4dF', icon: Dices, color: 'text-purple-400' },
   ];
 
-  // Sync staged dice changes to top notation bar formula in real-time
-  useEffect(() => {
-    const parts: string[] = [];
-
-    if (stagedDice.d20 > 0 && advantage !== 'none') {
-      if (advantage === 'advantage') parts.push('2d20kh1');
-      else parts.push('2d20kl1');
-    } else if (stagedDice.d20 > 0) {
-      parts.push(`${stagedDice.d20}d20`);
-    }
-
-    (Object.keys(stagedDice) as DieType[]).forEach(type => {
-      if (type === 'd20') return;
-      const cnt = stagedDice[type];
-      if (cnt > 0) parts.push(`${cnt}${type}`);
-    });
-
-    if (parts.length === 0) {
-      return;
-    }
-
-    let formula = parts.join('+');
-    if (modifier > 0) formula += `+${modifier}`;
-    if (modifier < 0) formula += `${modifier}`;
-
-    onFormulaUpdate(formula);
-  }, [stagedDice, modifier, advantage]);
-
-  /** Increases the staged count for the selected die type. */
+  /** Adds a die, starting a fresh builder formula when custom notation is active. */
   const handleIncrement = (type: DieType) => {
-    setStagedDice(prev => ({ ...prev, [type]: prev[type] + 1 }));
+    const nextState = getEditableBuilderState();
+    const totalDice = Object.values(nextState.stagedDice).reduce((total, count) => total + count, 0);
+    if (totalDice >= 100) return;
+
+    const next: DiceBuilderState = {
+      ...nextState,
+      stagedDice: { ...nextState.stagedDice },
+    };
+    if (type === 'd20' && next.advantage !== 'none') next.advantage = 'none';
+    next.stagedDice[type] += 1;
+    commitBuilderState(next);
   };
 
-  /** Decreases the staged count for the selected die type without going below zero. */
+  /** Removes a die; removing the final die explicitly clears the active formula. */
   const handleDecrement = (type: DieType) => {
-    setStagedDice(prev => ({ ...prev, [type]: Math.max(0, prev[type] - 1) }));
+    if (isCustomFormula || stagedDice[type] === 0) return;
+    const next: DiceBuilderState = {
+      ...builderState,
+      stagedDice: { ...stagedDice, [type]: Math.max(0, stagedDice[type] - 1) },
+    };
+    if (type === 'd20' && next.stagedDice.d20 < 2) next.advantage = 'none';
+    commitBuilderState(next);
+  };
+
+  /** Modifier controls start from the default d20 when no builder dice are selected. */
+  const handleModifierChange = (amount: number) => {
+    const baseState = isCustomFormula ? createDefaultDiceBuilderState() : builderState;
+    const nextState = {
+      ...baseState,
+      stagedDice: { ...baseState.stagedDice },
+      modifier: baseState.modifier + amount,
+    };
+    if (Object.values(nextState.stagedDice).every((count) => count === 0)) {
+      nextState.stagedDice.d20 = 1;
+    }
+    if (!Number.isSafeInteger(nextState.modifier)) return;
+    commitBuilderState(nextState);
+  };
+
+  /** Advantage and disadvantage are represented by the exact two-d20 keep formula. */
+  const handleAdvantageChange = (nextAdvantage: DiceBuilderAdvantage) => {
+    const baseState = getEditableBuilderState();
+    const nextState: DiceBuilderState = {
+      ...baseState,
+      stagedDice: { ...baseState.stagedDice },
+      advantage: nextAdvantage,
+    };
+
+    if (nextAdvantage === 'none') {
+      if (baseState.advantage === 'none') return;
+      nextState.stagedDice.d20 = 1;
+    } else {
+      nextState.stagedDice.d20 = 2;
+    }
+    commitBuilderState(nextState);
   };
 
   /** Builds the base-aware asset URL for the matching die icon. */
@@ -90,12 +140,9 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     return `${cleanBase}assets/icons/dice/${iconName}.svg`;
   };
 
-  /** Resets staged dice, modifiers, advantage state, and the active formula. */
+  /** Resets the picker and canonical formula to the matching default one-d20 state. */
   const handleClear = () => {
-    setStagedDice({ d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0, dfate: 0 });
-    setModifier(0);
-    setAdvantage('none');
-    onFormulaUpdate('1d20');
+    commitBuilderState(createDefaultDiceBuilderState());
   };
 
   return (
@@ -103,6 +150,12 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
       <div className="flex-1 p-2 flex flex-col min-h-0 overflow-y-auto gap-2 text-xs no-scrollbar">
         {activeTab === 'dice' ? (
           <>
+            {isCustomFormula && (
+              <div role="status" className="rounded-lg border border-[#8c7851]/50 bg-[#8c7851]/10 px-2.5 py-2 text-[10px] leading-relaxed text-[#d4c3a1]/85">
+                Custom formula active: <code className="font-mono text-[#f4ead5]">{currentFormula || '(empty)'}</code>.
+                Selecting a die or modifier starts a new builder formula; opening this panel leaves custom notation unchanged.
+              </div>
+            )}
             {/* Grid of Die Selectors with SVGs */}
             <div className="grid grid-cols-2 gap-1.5 pr-0.5 shrink-0">
               {diceList.map((die) => (
@@ -137,7 +190,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                   <div className="flex items-center justify-between w-full gap-1 pt-1 border-t border-[#3d3329]/60">
                     <button
                       onClick={() => handleDecrement(die.type)}
-                      disabled={stagedDice[die.type] === 0}
+                      disabled={isCustomFormula || stagedDice[die.type] === 0}
                       className="ui-stepper-button flex-1"
                     >
                       -
@@ -159,7 +212,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                 <span className="text-[#d4c3a1]/80 font-title font-semibold">Modifier:</span>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setModifier(prev => prev - 1)}
+                    onClick={() => handleModifierChange(-1)}
                     className="ui-stepper-button h-10 w-10"
                   >
                     -
@@ -168,7 +221,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                     {modifier >= 0 ? `+${modifier}` : modifier}
                   </span>
                   <button
-                    onClick={() => setModifier(prev => prev + 1)}
+                    onClick={() => handleModifierChange(1)}
                     className="ui-stepper-button h-10 w-10"
                   >
                     +
@@ -179,7 +232,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               {/* Advantage Radio Chips */}
               <div className="grid grid-cols-3 gap-1 pt-1.5 border-t border-[#3d3329]">
                 <button
-                  onClick={() => setAdvantage('none')}
+                  onClick={() => handleAdvantageChange('none')}
                   aria-pressed={advantage === 'none'}
                   data-selected={advantage === 'none'}
                   className="ui-segment-button flex-col"
@@ -187,7 +240,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                   <span>NORM</span>
                 </button>
                 <button
-                  onClick={() => setAdvantage('advantage')}
+                  onClick={() => handleAdvantageChange('advantage')}
                   aria-pressed={advantage === 'advantage'}
                   data-selected={advantage === 'advantage'}
                   className="ui-segment-button flex-col"
@@ -203,7 +256,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                   <span>ADV</span>
                 </button>
                 <button
-                  onClick={() => setAdvantage('disadvantage')}
+                  onClick={() => handleAdvantageChange('disadvantage')}
                   aria-pressed={advantage === 'disadvantage'}
                   data-selected={advantage === 'disadvantage'}
                   className="ui-segment-button flex-col"
@@ -226,7 +279,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               <button
                 onClick={handleClear}
                 className="ui-button ui-button--quiet w-full"
-                title="Reset staged dice"
+                title="Reset picker to the default 1d20 formula"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Reset Picker</span>
