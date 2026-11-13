@@ -48,6 +48,8 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   const hasMarkedDiceBoxReadyRef = useRef(false);
   const materialThemeRef = useRef(materialTheme);
   materialThemeRef.current = materialTheme;
+  const diceThemeRef = useRef(diceTheme);
+  diceThemeRef.current = diceTheme;
 
   // Keep callbacks current without recreating the DiceBox instance.
   const onRollCompleteRef = useRef<typeof onRollComplete>(onRollComplete);
@@ -286,7 +288,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
           box = new DiceBox({
             container: '#dice-canvas-box',
             assetPath: resolvedAssetPath,
-            theme: diceTheme,
+            theme: diceThemeRef.current,
             themeColor: getThemeColor(materialThemeRef.current),
             offscreen: false,
             scale: 7,
@@ -310,6 +312,11 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
               initializationAttemptRef.current !== initializationAttempt
             ) return;
             clearInitializationTimeout();
+            // Theme controls may change while the lazy module or WASM is loading.
+            box.updateConfig({
+              theme: diceThemeRef.current,
+              themeColor: getThemeColor(materialThemeRef.current),
+            });
             isInitializedRef.current = true;
             isInitializingRef.current = false;
 
