@@ -41,6 +41,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
   const pendingRollRef = useRef<string[] | null>(null);
   const activeRollCollectorRef = useRef<DiceBoxRollCollector | null>(null);
+  const activeRollResultsRef = useRef<DiceBoxRollResults | null>(null);
   const initializationTimeoutRef = useRef<number | null>(null);
   const rollTimeoutRef = useRef<number | null>(null);
   const materialThemeRef = useRef(materialTheme);
@@ -119,6 +120,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     clearInitializationTimeout();
     clearRollTimeout();
     activeRollCollectorRef.current = null;
+    activeRollResultsRef.current = null;
     pendingRollRef.current = null;
     diceBoxRef.current = null;
     isInitializedRef.current = false;
@@ -152,17 +154,36 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
     try {
       const physicalResults = collector.add(die);
-      if (!physicalResults) return;
-
-      clearRollTimeout();
-      activeRollCollectorRef.current = null;
-      const followUpRolls = onRollCompleteRef.current?.(physicalResults) ?? [];
-      if (followUpRolls.length > 0) {
-        // Explosions are new physical collections with their own distinct roll IDs.
-        rollDice(box, followUpRolls);
+      if (physicalResults) {
+        // Keep the batch pending until DiceBox confirms that every physical body is asleep.
+        activeRollResultsRef.current = physicalResults;
       }
     } catch (error) {
       reportRollError(error, box);
+    }
+  };
+
+  /** DiceBox's world-level completion callback is the final barrier after all die events. */
+  const handleRollWaveComplete = (box: DiceBoxInstance) => {
+    if (!isMountedRef.current || diceBoxRef.current !== box) return;
+    if (!activeRollCollectorRef.current) return;
+
+    const physicalResults = activeRollResultsRef.current;
+    if (!physicalResults) {
+      reportRollError(
+        new Error('DiceBox finished the animation without returning every distinct die result. Please try again.'),
+        box
+      );
+      return;
+    }
+
+    clearRollTimeout();
+    activeRollCollectorRef.current = null;
+    activeRollResultsRef.current = null;
+    const followUpRolls = onRollCompleteRef.current?.(physicalResults) ?? [];
+    if (followUpRolls.length > 0) {
+      // Start chained explosions only after every callback from this physical wave has settled.
+      rollDice(box, followUpRolls);
     }
   };
 
@@ -253,6 +274,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
           isInitializedRef.current = true;
           isInitializingRef.current = false;
           box.onDieComplete = (die: DiceBoxDieCompleteResult) => handleDieComplete(box, die);
+          box.onRollComplete = () => handleRollWaveComplete(box);
 
           const pendingRoll = pendingRollRef.current;
           pendingRollRef.current = null;
