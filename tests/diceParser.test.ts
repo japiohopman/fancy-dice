@@ -254,3 +254,37 @@ test('rejects invalid physical die faces instead of recording a successful resul
     /invalid physical die value/
   );
 });
+
+
+test('waits for late physical dice after the world-complete callback', () => {
+  const collector = new DiceBoxRollCollector(3);
+
+  // The non-WebGL renderer can announce world completion before all die timers fire.
+  assert.equal(collector.markWorldComplete(), null);
+  assert.equal(collector.isWorldComplete, true);
+  assert.equal(collector.add({ rollId: 21, dieType: 'd6', sides: 6, value: 2 }), null);
+  assert.equal(collector.add({ rollId: 22, dieType: 'd6', sides: 6, value: 4 }), null);
+
+  const finalResults = collector.add({ rollId: 23, dieType: 'd20', sides: 20, value: 17 });
+  assert.deepEqual(finalResults, [
+    { dieType: 'd6', sides: 6, value: 2 },
+    { dieType: 'd6', sides: 6, value: 4 },
+    { dieType: 'd20', sides: 20, value: 17 },
+  ]);
+  assert.equal(collector.isWorldComplete, true);
+});
+
+test('waits for world completion when all physical dice arrive first', () => {
+  const collector = new DiceBoxRollCollector(2);
+
+  assert.equal(collector.add({ rollId: 31, dieType: 'd6', sides: 6, value: 3 }), null);
+  const completedResults = collector.add({ rollId: 32, dieType: 'd8', sides: 8, value: 7 });
+  assert.deepEqual(completedResults, [
+    { dieType: 'd6', sides: 6, value: 3 },
+    { dieType: 'd8', sides: 8, value: 7 },
+  ]);
+  assert.equal(collector.isWorldComplete, false);
+
+  assert.deepEqual(collector.markWorldComplete(), completedResults);
+  assert.equal(collector.isWorldComplete, true);
+});
