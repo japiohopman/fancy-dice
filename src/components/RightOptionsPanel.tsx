@@ -138,44 +138,6 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       ? 'border-[#8c7851]/60 bg-[#8c7851]/10 text-[#d4c3a1]'
       : 'border-emerald-800/50 bg-emerald-950/20 text-emerald-200';
 
-  // Keep the wheel position synchronized with preset and custom dice material colors.
-  const [wheelH, setWheelH] = useState<number>(140);
-  const [wheelS, setWheelS] = useState<number>(100);
-  const activePointerIdRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const hex = materialTheme.startsWith('#')
-      ? materialTheme
-      : MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851';
-    const hsl = hexToHsl(hex);
-    setWheelH(hsl.h);
-    setWheelS(hsl.s);
-  }, [materialTheme]);
-
-  const diceThemeOptions = [
-    { id: 'default', name: 'Classic' },
-    { id: 'smooth', name: 'Plastic' },
-    { id: 'wooden', name: 'Wooden' },
-    { id: 'rust', name: 'Rusted' },
-    { id: 'rock', name: 'Stone' },
-    { id: 'gemstone', name: 'Gemstone' },
-  ];
-
-  const materialOptions = [
-    { id: 'emerald', name: 'Emerald', hex: '#059669' },
-    { id: 'ruby', name: 'Ruby', hex: '#d97706' },
-    { id: 'gold', name: 'Gold', hex: '#f59e0b' },
-    { id: 'cyber', name: 'Cyber', hex: '#06b6d4' },
-    { id: 'obsidian', name: 'Obsidian', hex: '#1f2937' },
-  ];
-
-  const activeColorHex = materialTheme.startsWith('#')
-    ? materialTheme.toUpperCase()
-    : (MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851').toUpperCase();
-  const activeColorLabel = materialTheme.startsWith('#')
-    ? 'Custom color'
-    : MATERIAL_PRESET_LABELS[materialTheme] || 'Selected material';
-
   const tableOptions: { id: TableTheme; name: string; color: string }[] = [
     { id: 'green', name: 'Emerald Felt', color: 'bg-[#064e3b]' },
     { id: 'blue', name: 'Sapphire Felt', color: 'bg-[#1e3a8a]' },
@@ -189,50 +151,69 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
     await onRequestSensorPermission();
   };
 
-  /** Applies a color from a pointer position on the wheel's hue/saturation surface. */
-  const handleColorPick = (clientX: number, clientY: number, element: HTMLDivElement) => {
-    const rect = element.getBoundingClientRect();
+  /** Converts a pointer position into the latest pending hue/saturation sample. */
+  const handleColorPick = (clientX: number, clientY: number) => {
+    const rect = wheelRectRef.current;
+    if (!rect) return;
+
     const x = clientX - (rect.left + rect.width / 2);
     const y = clientY - (rect.top + rect.height / 2);
-
     const angle = Math.atan2(y, x);
     const hue = (Math.round((angle * 180) / Math.PI) + 360) % 360;
     const distance = Math.sqrt(x * x + y * y);
     const saturation = Math.min(100, Math.round((distance / (rect.width / 2)) * 100));
 
-    setWheelH(hue);
-    setWheelS(saturation);
-    onChangeMaterialTheme(hslToHex(hue, saturation, 50));
+    pendingWheelColorRef.current = { hue, saturation, queuedAt: performance.now() };
+    if (wheelFrameRef.current === null) {
+      wheelFrameRef.current = requestAnimationFrame(() => {
+        wheelFrameRef.current = null;
+        flushPendingWheelColor();
+      });
+    }
   };
 
-  /** Captures the active pointer so touch, pen and mouse drags continue outside the wheel. */
+  /** Captures the active pointer and measures the wheel once for the whole drag. */
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
     if (activePointerIdRef.current !== null) return;
 
     activePointerIdRef.current = event.pointerId;
+    wheelRectRef.current = event.currentTarget.getBoundingClientRect();
     event.currentTarget.setPointerCapture(event.pointerId);
-    handleColorPick(event.clientX, event.clientY, event.currentTarget);
+    handleColorPick(event.clientX, event.clientY);
   };
 
-  /** Updates the color only for the pointer that started the current drag. */
+  /** Only the pointer that started the drag may update the pending color. */
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
-    handleColorPick(event.clientX, event.clientY, event.currentTarget);
+    handleColorPick(event.clientX, event.clientY);
   };
 
-  /** Applies the final pointer position and safely ends the drag. */
+  /** Commits the exact final color immediately, even inside the 30 Hz preview window. */
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
-    handleColorPick(event.clientX, event.clientY, event.currentTarget);
+    handleColorPick(event.clientX, event.clientY);
+
+    if (wheelFrameRef.current !== null) {
+      cancelAnimationFrame(wheelFrameRef.current);
+      wheelFrameRef.current = null;
+    }
+    flushPendingWheelColor(true);
     activePointerIdRef.current = null;
+    wheelRectRef.current = null;
   };
 
-  /** Clears drag state when the browser cancels or releases pointer capture. */
+  /** Flushes the last valid pointer sample if the browser cancels pointer capture. */
   const handlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (activePointerIdRef.current === event.pointerId) {
-      activePointerIdRef.current = null;
+    if (activePointerIdRef.current !== event.pointerId) return;
+
+    if (wheelFrameRef.current !== null) {
+      cancelAnimationFrame(wheelFrameRef.current);
+      wheelFrameRef.current = null;
     }
+    flushPendingWheelColor(true);
+    activePointerIdRef.current = null;
+    wheelRectRef.current = null;
   };
 
   return (
@@ -317,7 +298,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
                 <input
                   type="color"
                   value={activeColorHex}
-                  onChange={(event) => onChangeMaterialTheme(event.target.value)}
+                  onChange={(event) => onChangeMaterialTheme(event.target.value.toUpperCase())}
                   aria-label="Choose a custom dice material color"
                   className="h-7 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
                 />
