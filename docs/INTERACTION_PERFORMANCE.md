@@ -35,7 +35,8 @@ console.table(
   performance
     .getEntriesByType('measure')
     .filter(({ name }) => name.startsWith('fancy-dice:audio-') ||
-                          name.startsWith('fancy-dice:color-wheel-'))
+                          name.startsWith('fancy-dice:color-wheel-') ||
+                          name.startsWith('fancy-dice:dice-color-'))
     .map(({ name, duration }) => ({
       measurement: name,
       milliseconds: Math.round(duration * 1000) / 1000,
@@ -43,7 +44,7 @@ console.table(
 );
 ```
 
-The audio measures capture JavaScript time spent scheduling audio nodes. They do not measure the physical speaker's output latency or audible quality. The color-wheel measure begins at the most recent pointer sample and includes waiting for the coalesced commit.
+The audio measures capture JavaScript time spent scheduling audio nodes. They do not measure the physical speaker's output latency or audible quality. The color-wheel measure begins at the most recent pointer sample and includes waiting for the coalesced commit. The `fancy-dice:dice-color-config` measure records how long the asynchronous DiceBox material-color update takes to settle.
 
 ## Repeatable desktop and Android comparison
 
