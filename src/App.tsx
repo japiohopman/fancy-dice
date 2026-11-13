@@ -123,6 +123,20 @@ export default function App() {
 
   const [history, setHistory] = useState<RollHistoryEntry[]>([]);
   const shakeDetectorRef = useRef<ShakeDetector | null>(null);
+  const hasMarkedAppReadyRef = useRef(false);
+  const firstRollRequestedRef = useRef(false);
+  const firstRollCompletedRef = useRef(false);
+
+  // Expose repeatable browser Performance entries for startup and first-roll comparisons.
+  useEffect(() => {
+    if (hasMarkedAppReadyRef.current) return;
+    hasMarkedAppReadyRef.current = true;
+    performance.mark('fancy-dice:app-ready');
+    performance.measure('fancy-dice:app-startup', {
+      start: 'fancy-dice:app-entry',
+      end: 'fancy-dice:app-ready',
+    });
+  }, []);
 
   // Refs to capture active roll state for physical evaluation
   const activePresetNameRef = useRef<string | undefined>(undefined);
@@ -150,6 +164,10 @@ export default function App() {
     }
 
     setFormulaError(null);
+    if (!firstRollRequestedRef.current && !firstRollCompletedRef.current) {
+      firstRollRequestedRef.current = true;
+      performance.mark('fancy-dice:first-roll-request');
+    }
     setCurrentFormula(formula);
     isRollingRef.current = true;
     setIsRolling(true);
@@ -171,6 +189,10 @@ export default function App() {
 
   /** Release all active roll state after DiceBox reports a failed or invalid roll. */
   const handleRollError = (error: Error) => {
+    if (firstRollRequestedRef.current && !firstRollCompletedRef.current) {
+      performance.clearMarks('fancy-dice:first-roll-request');
+      firstRollRequestedRef.current = false;
+    }
     console.error('Dice roll failed:', error);
     activeResultRef.current = null;
     activePresetNameRef.current = undefined;
@@ -198,6 +220,16 @@ export default function App() {
     const followUpRolls = getPendingExplosionRolls(updatedResult);
     if (followUpRolls.length > 0) {
       return followUpRolls;
+    }
+
+    if (firstRollRequestedRef.current && !firstRollCompletedRef.current) {
+      firstRollCompletedRef.current = true;
+      performance.mark('fancy-dice:first-roll-complete');
+      performance.measure(
+        'fancy-dice:first-roll',
+        'fancy-dice:first-roll-request',
+        'fancy-dice:first-roll-complete'
+      );
     }
 
     setCurrentResult(updatedResult);
