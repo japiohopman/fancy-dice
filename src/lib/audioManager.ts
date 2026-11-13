@@ -2,11 +2,20 @@ export class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private shakeNoiseBuffer: AudioBuffer | null = null;
+  private activeSources = new Set<AudioScheduledSourceNode>();
   private isMuted = false;
   private hasVisibilityListener = false;
 
   private handleVisibilityChange = () => {
     if (!this.ctx || typeof document === 'undefined' || !document.hidden) return;
+    const now = this.ctx.currentTime;
+    this.activeSources.forEach((source) => {
+      try {
+        source.stop(now);
+      } catch {
+        // A source that has already ended no longer needs cancellation.
+      }
+    });
     if (this.ctx.state === 'running') {
       void this.ctx.suspend().catch(() => {
         // A context may already be closing when the page becomes hidden.
@@ -82,7 +91,9 @@ export class AudioManager {
     source: AudioScheduledSourceNode,
     nodes: AudioNode[]
   ) {
+    this.activeSources.add(source);
     source.onended = () => {
+      this.activeSources.delete(source);
       source.disconnect();
       nodes.forEach((node) => node.disconnect());
     };
