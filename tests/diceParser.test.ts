@@ -215,7 +215,7 @@ test('rejects exploding Fate dice and formulas with unsafe modifiers or totals',
 test('counts physical dice in DiceBox notation batches', () => {
   assert.equal(getExpectedPhysicalDiceCount(['1d100', '1d6']), 2);
   assert.equal(getExpectedPhysicalDiceCount(['4d6', '1d20']), 5);
-  assert.throws(() => getExpectedPhysicalDiceCount(['invalid']), /unsupported DiceBox notation/);
+  assert.throws(() => getExpectedPhysicalDiceCount(['invalid']), /unsupported notation/);
 
   const parsed = withRandomSequence([0], () => parseAndRollFormula('1d20'));
   assert.throws(
