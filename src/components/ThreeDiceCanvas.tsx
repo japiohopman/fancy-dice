@@ -226,7 +226,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     }
   };
 
-  // Initialize once, then retry initialization when a later roll arrives after failure.
+  // Create the initializer on mount, but defer downloading DiceBox until the first roll.
   useEffect(() => {
     isMountedRef.current = true;
     let isDisposed = false;
@@ -355,7 +355,6 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     };
 
     initializeDiceBoxRef.current = initialize;
-    initialize();
 
     return () => {
       isDisposed = true;
