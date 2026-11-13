@@ -74,6 +74,7 @@ export type DiceBoxRollResults = DiceBoxPhysicalDieResult[];
 /** Minimal runtime surface used from the DiceBox package. */
 export interface DiceBoxInstance {
   onDieComplete: (result: DiceBoxDieCompleteResult) => void;
+  onRollComplete: (results: unknown) => void;
   init(): Promise<unknown>;
   roll(notation: string | string[], options?: { themeColor?: string }): Promise<unknown>;
   clear(): void;
