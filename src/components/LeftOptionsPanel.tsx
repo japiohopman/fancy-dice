@@ -31,7 +31,6 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     () => parseDiceBuilderFormula(currentFormula) === null
   );
   const { stagedDice, modifier, advantage } = builderState;
-  const totalStagedDice = Object.values(stagedDice).reduce((total, count) => total + count, 0);
 
   useEffect(() => {
     const nextState = parseDiceBuilderFormula(currentFormula);
