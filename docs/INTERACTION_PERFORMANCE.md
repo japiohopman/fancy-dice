@@ -19,7 +19,7 @@ These are structural counts, not measured CPU or frame-time results. No real-dev
 - Generate the short shake-noise buffer once per AudioContext and reuse it for later rattle sources.
 - Schedule the entire dice-bounce sequence on the Web Audio clock in one synchronous pass; remove the per-bounce JavaScript timers.
 - Route sound through one master gain so mute applies consistently to already-scheduled sound.
-- Suspend the AudioContext when the page becomes hidden, and resume it on the next active-page sound request. Keep one context; do not repeatedly create/close contexts during mute toggles.
+- Stop any outstanding one-shot sounds and suspend the AudioContext when the page becomes hidden; resume on the next active-page sound request. Keep one context; do not repeatedly create/close contexts during mute toggles.
 - Disconnect one-shot source/effect nodes after their envelopes finish.
 - Read the color-wheel bounds once on pointer-down; reuse that rectangle for the complete pointer-captured drag.
 - Coalesce wheel pointer input with `requestAnimationFrame`, keep the wheel marker responsive each frame, and limit expensive parent/DiceBox color previews to approximately 30 updates per second.
@@ -58,4 +58,4 @@ Use the same browser/device, viewport, sound volume, and test conditions before 
 
 ## Automated coverage
 
-`tests/audioManager.test.ts` verifies noise-buffer reuse, scheduling the maximum bounce sequence without JavaScript timers, master-gain mute control, and background AudioContext suspension. The regular test command runs these tests with the dice notation suite.
+`tests/audioManager.test.ts` verifies noise-buffer reuse, scheduling the maximum bounce sequence without JavaScript timers, master-gain mute control, cancellation of pending sounds when backgrounded, and AudioContext suspension. The regular test command runs these tests with the dice notation suite.
