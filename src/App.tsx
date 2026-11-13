@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
+import { DiceBoxRollResults, RollHistoryEntry, RollParsedResult, ShakeSettings, TableTheme } from './types';
 import { getPendingExplosionRolls, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from './lib/diceParser';
 import { audioManager } from './lib/audioManager';
 import { ShakeDetector } from './lib/shakeDetector';
@@ -18,6 +18,8 @@ export default function App() {
   const [formulaError, setFormulaError] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
+  const isRollingRef = useRef<boolean>(false);
+  const [rollError, setRollError] = useState<string | null>(null);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
 
   // A single menu shell keeps navigation and section content in one predictable place.
@@ -134,8 +136,9 @@ export default function App() {
   // Execute Roll Logic
   /** Validates the formula before audio, state changes, or a physical DiceBox roll begin. */
   const handleExecuteRoll = (formulaToRoll?: string, presetName?: string) => {
-    if (isRolling) return;
+    if (isRollingRef.current) return;
 
+    setRollError(null);
     const formula = (formulaToRoll ?? currentFormula).trim();
     let result: RollParsedResult;
 
@@ -148,6 +151,7 @@ export default function App() {
 
     setFormulaError(null);
     setCurrentFormula(formula);
+    isRollingRef.current = true;
     setIsRolling(true);
 
     // Play dice bounce sounds only after the formula has passed validation.
@@ -161,11 +165,32 @@ export default function App() {
     setCurrentResult(result);
   };
 
-  /** Reconciles each physical roll wave and queues real dice for any triggered explosions. */
-  const handleRollComplete = (physicalResults: any): string[] => {
-    if (!isRolling || !activeResultRef.current) return [];
+  // Shake callbacks always call the latest handler without restarting the motion listener.
+  const handleExecuteRollRef = useRef(handleExecuteRoll);
+  handleExecuteRollRef.current = handleExecuteRoll;
 
-    const updatedResult = updateParsedResultWithPhysicalRolls(activeResultRef.current, physicalResults);
+  /** Release all active roll state after DiceBox reports a failed or invalid roll. */
+  const handleRollError = (error: Error) => {
+    console.error('Dice roll failed:', error);
+    activeResultRef.current = null;
+    activePresetNameRef.current = undefined;
+    isRollingRef.current = false;
+    setIsRolling(false);
+    setCurrentResult(null);
+    setRollError(error.message || 'The dice could not complete this roll. Please try again.');
+  };
+
+  /** Reconciles only the physical dice returned by the current DiceBox roll collection. */
+  const handleRollComplete = (physicalResults: DiceBoxRollResults): string[] => {
+    if (!isRollingRef.current || !activeResultRef.current) return [];
+
+    let updatedResult: RollParsedResult;
+    try {
+      updatedResult = updateParsedResultWithPhysicalRolls(activeResultRef.current, physicalResults);
+    } catch (error) {
+      handleRollError(error instanceof Error ? error : new Error('The physical dice result was invalid.'));
+      return [];
+    }
     activeResultRef.current = updatedResult;
 
     // A natural maximum starts a new physical DiceBox wave. Do not finalize or
@@ -176,6 +201,7 @@ export default function App() {
     }
 
     setCurrentResult(updatedResult);
+    isRollingRef.current = false;
     setIsRolling(false);
 
     if (updatedResult.isCrit) {
@@ -203,7 +229,7 @@ export default function App() {
 
     detector.setCallbacks(
       () => {
-        handleExecuteRoll();
+        handleExecuteRollRef.current();
       },
       (shakingState: boolean) => {
         setIsCupShaking(shakingState);
@@ -217,7 +243,7 @@ export default function App() {
     return () => {
       detector.stop();
     };
-  }, [shakeSettings, currentFormula]);
+  }, [shakeSettings]);
 
   /** Stores updated sensor, haptic, and audio preferences and syncs the active detector. */
   const handleUpdateShakeSettings = (newSettings: ShakeSettings) => {
@@ -258,12 +284,13 @@ export default function App() {
         onFormulaChange={(formula) => {
           setCurrentFormula(formula);
           setFormulaError(null);
+          setRollError(null);
         }}
         onRoll={(f) => handleExecuteRoll(f)}
         isRolling={isRolling}
         onToggleMenu={toggleMenu}
         menuOpen={isMenuOpen}
-        formulaError={formulaError}
+        formulaError={formulaError ?? rollError}
       />
 
       {/* The menu floats above the full-width 3D table without resizing it. */}
@@ -276,6 +303,7 @@ export default function App() {
             tableTheme={tableTheme}
             diceTheme={diceTheme}
             onRollComplete={handleRollComplete}
+            onRollError={handleRollError}
           />
 
           {/* Cup shaking feedback remains attached to the table, beneath the drawer layer. */}
@@ -364,6 +392,7 @@ export default function App() {
                   onFormulaUpdate={(formula) => {
                     setCurrentFormula(formula);
                     setFormulaError(null);
+                    setRollError(null);
                   }}
                   currentFormula={currentFormula}
                   activeTab={activeMenuSection === 'presets' ? 'presets' : 'dice'}
