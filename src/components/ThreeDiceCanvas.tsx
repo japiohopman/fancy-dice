@@ -264,8 +264,8 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       const base = (import.meta as any).env.BASE_URL || '/';
       const resolvedAssetPath = `${base.endsWith('/') ? base : base + '/'}assets/dice-box/`;
 
-      // Keep the physics engine out of the initial app bundle. It is fetched only
-      // when the first roll needs the 3D table, then retained by the PWA runtime cache.
+      // Keep the physics engine out of the initial app bundle. Fetch it asynchronously
+      // after the first render, then retain it through the existing PWA cache strategy.
       void import('@3d-dice/dice-box').then(({ default: DiceBox }) => {
         if (
           isDisposed ||
