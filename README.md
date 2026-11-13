@@ -109,7 +109,7 @@ The latest changes from this pull request become available at that URL after the
 1. Open the GitHub Pages URL in Chrome on your Android phone.
 2. Open Chrome's menu and choose **Install app** (or **Add to Home screen**).
 3. Launch **Fancy Dice** from the new home-screen icon. It opens in a standalone, app-like window.
-4. After the first successful load, the service worker keeps the app shell available for repeat/offline launches. The 3D dice engine is loaded on the first roll and its code and requested game assets are cached as they are used. Before relying on offline rolls, open the app and complete at least one roll while online.
+4. After the first successful load, the service worker keeps the app shell and same-origin game assets available for repeat/offline launches.
 
 The first load requires an internet connection. Google Fonts are loaded from Google Fonts, so typography may fall back to system fonts while offline. Device motion, vibration, audio, and WebGL behaviour still need to be checked on the physical Android device.
 
