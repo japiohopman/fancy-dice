@@ -63,11 +63,17 @@ export interface DiceBoxPhysicalDieResult {
   value: number;
 }
 
-/** DiceBox.roll() resolves with only the dice from that roll collection. */
+/** Individual die completion event emitted by DiceBox, keyed by its stable roll ID. */
+export interface DiceBoxDieCompleteResult extends DiceBoxPhysicalDieResult {
+  rollId: number | string;
+}
+
+/** Normalized physical results from one completed roll collection. */
 export type DiceBoxRollResults = DiceBoxPhysicalDieResult[];
 
 /** Minimal runtime surface used from the DiceBox package. */
 export interface DiceBoxInstance {
+  onDieComplete: (result: DiceBoxDieCompleteResult) => void;
   init(): Promise<unknown>;
   roll(notation: string | string[], options?: { themeColor?: string }): Promise<unknown>;
   clear(): void;

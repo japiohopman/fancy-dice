@@ -44,22 +44,14 @@ function getPhysicalDieType(raw: DiceBoxPhysicalDieResult): string | null {
 }
 
 function getPhysicalDieSides(raw: DiceBoxPhysicalDieResult): number | null {
-  const declaredSides = Number(raw.sides);
-  if (Number.isSafeInteger(declaredSides) && declaredSides > 0) return declaredSides;
-  const dieType = raw.dieType?.toLowerCase() ?? '';
-  const match = /^d(\d+)$/.exec(dieType);
-  return match ? Number(match[1]) : null;
-}
+  // DiceBox may return contradictory metadata for composite percentile dice.
+  // The resolved die type is the source of truth for its allowed face range.
+  const dieType = getPhysicalDieType(raw);
+  const match = /^d(\d+)$/.exec(dieType ?? '');
+  if (match) return Number(match[1]);
 
-/** Validates DiceBox's per-collection roll result before it enters app state. */
-export function isDiceBoxRollResults(value: unknown): value is DiceBoxRollResults {
-  return Array.isArray(value) && value.every((candidate) => {
-    if (typeof candidate !== 'object' || candidate === null) return false;
-    const die = candidate as Record<string, unknown>;
-    const hasDieType = typeof die.dieType === 'string' && die.dieType.trim().length > 0;
-    const hasSides = typeof die.sides === 'number' || typeof die.sides === 'string';
-    return typeof die.value === 'number' && (hasDieType || hasSides);
-  });
+  const declaredSides = Number(raw.sides);
+  return Number.isSafeInteger(declaredSides) && declaredSides > 0 ? declaredSides : null;
 }
 
 function getRollFlags(dieType: DieType, value: number): { isCrit: boolean; isFumble: boolean; text: string } {

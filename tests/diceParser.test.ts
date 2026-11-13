@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DiceFormulaError, getPendingExplosionRolls, isDiceBoxRollResults, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from '../src/lib/diceParser';
+import { DiceFormulaError, getPendingExplosionRolls, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from '../src/lib/diceParser';
+import { DiceBoxRollCollector, getExpectedPhysicalDiceCount } from '../src/lib/diceBoxRollCollector';
 
 function withRandomSequence<T>(values: number[], run: () => T): T {
   const originalRandom = Math.random;
@@ -211,10 +212,10 @@ test('rejects exploding Fate dice and formulas with unsafe modifiers or totals',
 });
 
 
-test('validates DiceBox result payloads and rejects incomplete physical collections', () => {
-  const validResults = [{ dieType: 'd20', sides: 20, value: 14 }];
-  assert.equal(isDiceBoxRollResults(validResults), true);
-  assert.equal(isDiceBoxRollResults([{ dieType: 'd20', sides: 20 }]), false);
+test('counts physical dice in DiceBox notation batches', () => {
+  assert.equal(getExpectedPhysicalDiceCount(['1d100', '1d6']), 2);
+  assert.equal(getExpectedPhysicalDiceCount(['4d6', '1d20']), 5);
+  assert.throws(() => getExpectedPhysicalDiceCount(['invalid']), /unsupported DiceBox notation/);
 
   const parsed = withRandomSequence([0], () => parseAndRollFormula('1d20'));
   assert.throws(
@@ -223,11 +224,26 @@ test('validates DiceBox result payloads and rejects incomplete physical collecti
   );
 });
 
+test('deduplicates percentile die completion events by stable roll ID', () => {
+  const collector = new DiceBoxRollCollector(2);
+
+  assert.equal(collector.add({ rollId: 12, dieType: 'd100', sides: 100, value: 47 }), null);
+  // DiceBox 1.1.4 can report the same percentile die when either paired body sleeps.
+  assert.equal(collector.add({ rollId: 12, dieType: 'd100', sides: 100, value: 47 }), null);
+
+  const results = collector.add({ rollId: 13, dieType: 'd6', sides: 6, value: 4 });
+  assert.deepEqual(results, [
+    { dieType: 'd100', sides: 100, value: 47 },
+    { dieType: 'd6', sides: 6, value: 4 },
+  ]);
+  assert.equal(collector.add({ rollId: 12, dieType: 'd100', sides: 100, value: 47 }), null);
+});
+
 test('rejects invalid physical die faces instead of recording a successful result', () => {
   const parsed = withRandomSequence([0], () => parseAndRollFormula('1d6'));
   assert.throws(
     () => updateParsedResultWithPhysicalRolls(parsed, [
-      { dieType: 'd6', sides: 6, value: 7 },
+      { dieType: 'd6', sides: 20, value: 7 },
     ]),
     /invalid physical die value/
   );

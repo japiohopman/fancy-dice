@@ -1,7 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import DiceBox from '@3d-dice/dice-box';
-import { DiceBoxInstance, DiceBoxRollResults, RollParsedResult, TableTheme } from '../types';
-import { isDiceBoxRollResults } from '../lib/diceParser';
+import {
+  DiceBoxDieCompleteResult,
+  DiceBoxInstance,
+  DiceBoxRollResults,
+  RollParsedResult,
+  TableTheme,
+} from '../types';
+import { DiceBoxRollCollector, getExpectedPhysicalDiceCount } from '../lib/diceBoxRollCollector';
 import { RollOutcomeOverlay } from './RollOutcomeOverlay';
 
 interface ThreeDiceCanvasProps {
@@ -13,6 +19,9 @@ interface ThreeDiceCanvasProps {
   onRollComplete?: (results: DiceBoxRollResults) => string[];
   onRollError?: (error: Error) => void;
 }
+
+const DICEBOX_INIT_TIMEOUT_MS = 20_000;
+const DICEBOX_ROLL_TIMEOUT_MS = 20_000;
 
 export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   rollResult,
@@ -31,6 +40,9 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   const initializeDiceBoxRef = useRef<(() => void) | null>(null);
 
   const pendingRollRef = useRef<string[] | null>(null);
+  const activeRollCollectorRef = useRef<DiceBoxRollCollector | null>(null);
+  const initializationTimeoutRef = useRef<number | null>(null);
+  const rollTimeoutRef = useRef<number | null>(null);
   const materialThemeRef = useRef(materialTheme);
   materialThemeRef.current = materialTheme;
 
@@ -85,10 +97,46 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     return notations.length > 0 ? notations : ['1d20'];
   };
 
-  /** Reports asynchronous and synchronous DiceBox failures through one recoverable path. */
-  const reportRollError = (error: unknown) => {
-    if (!isMountedRef.current) return;
+  const clearInitializationTimeout = () => {
+    if (initializationTimeoutRef.current !== null) {
+      window.clearTimeout(initializationTimeoutRef.current);
+      initializationTimeoutRef.current = null;
+    }
+  };
+
+  const clearRollTimeout = () => {
+    if (rollTimeoutRef.current !== null) {
+      window.clearTimeout(rollTimeoutRef.current);
+      rollTimeoutRef.current = null;
+    }
+  };
+
+  /** Discards a failed DiceBox instance so the next user roll can create a fresh engine. */
+  const invalidateDiceBox = (box?: DiceBoxInstance): boolean => {
+    if (box && diceBoxRef.current !== box) return false;
+
+    const currentBox = diceBoxRef.current;
+    clearInitializationTimeout();
+    clearRollTimeout();
+    activeRollCollectorRef.current = null;
     pendingRollRef.current = null;
+    diceBoxRef.current = null;
+    isInitializedRef.current = false;
+    isInitializingRef.current = false;
+
+    if (currentBox) {
+      try {
+        currentBox.clear();
+      } catch {
+        // Keep the original engine error; this instance is no longer reusable.
+      }
+    }
+    return true;
+  };
+
+  /** Reports asynchronous and synchronous DiceBox failures through one recoverable path. */
+  const reportRollError = (error: unknown, box?: DiceBoxInstance) => {
+    if (!isMountedRef.current || !invalidateDiceBox(box)) return;
     const normalizedError = error instanceof Error
       ? error
       : new Error(typeof error === 'string' ? error : 'The dice engine could not complete the roll.');
@@ -96,30 +144,59 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     onRollErrorRef.current?.(normalizedError);
   };
 
-  /** Starts one DiceBox collection and processes only the physical dice returned by it. */
+  /** Collects one completion per distinct DiceBox roll ID, including percentile dice. */
+  const handleDieComplete = (box: DiceBoxInstance, die: DiceBoxDieCompleteResult) => {
+    if (!isMountedRef.current || diceBoxRef.current !== box) return;
+    const collector = activeRollCollectorRef.current;
+    if (!collector) return;
+
+    try {
+      const physicalResults = collector.add(die);
+      if (!physicalResults) return;
+
+      clearRollTimeout();
+      activeRollCollectorRef.current = null;
+      const followUpRolls = onRollCompleteRef.current?.(physicalResults) ?? [];
+      if (followUpRolls.length > 0) {
+        // Explosions are new physical collections with their own distinct roll IDs.
+        rollDice(box, followUpRolls);
+      }
+    } catch (error) {
+      reportRollError(error, box);
+    }
+  };
+
+  /** Starts one physical wave and waits for every requested die to complete once. */
   const rollDice = (
     box: DiceBoxInstance,
     notations: string[],
     options?: { themeColor?: string }
   ) => {
     try {
-      void box.roll(notations, options).then((results: unknown) => {
-        if (!isMountedRef.current || diceBoxRef.current !== box) return;
-        if (!isDiceBoxRollResults(results)) {
-          throw new Error('DiceBox returned an invalid physical roll result. Please try again.');
+      const collector = new DiceBoxRollCollector(getExpectedPhysicalDiceCount(notations));
+      activeRollCollectorRef.current = collector;
+
+      clearRollTimeout();
+      rollTimeoutRef.current = window.setTimeout(() => {
+        if (activeRollCollectorRef.current === collector) {
+          reportRollError(
+            new Error('DiceBox did not return every physical die. Please try the roll again.'),
+            box
+          );
         }
-        const followUpRolls = onRollCompleteRef.current?.(results) ?? [];
-        if (followUpRolls.length > 0) {
-          // Each follow-up is its own DiceBox collection and returns only its own landed dice.
-          rollDice(box, followUpRolls);
-        }
-      }).catch(reportRollError);
+      }, DICEBOX_ROLL_TIMEOUT_MS);
+
+      // DiceBox 1.1.4 can resolve this Promise early for percentile dice. The
+      // distinct onDieComplete events above are the actual completion barrier.
+      void Promise.resolve(box.roll(notations, options)).catch((error: unknown) => {
+        if (activeRollCollectorRef.current === collector) reportRollError(error, box);
+      });
     } catch (error) {
-      reportRollError(error);
+      reportRollError(error, box);
     }
   };
 
-  // Initialize once, then retry initialization when a later roll arrives after an init failure.
+  // Initialize once, then retry initialization when a later roll arrives after failure.
   useEffect(() => {
     isMountedRef.current = true;
     let isDisposed = false;
@@ -161,11 +238,21 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       }
 
       diceBoxRef.current = box;
+      initializationTimeoutRef.current = window.setTimeout(() => {
+        if (isDisposed || diceBoxRef.current !== box) return;
+        reportRollError(
+          new Error('The dice engine did not finish initializing. Check your connection and try again.'),
+          box
+        );
+      }, DICEBOX_INIT_TIMEOUT_MS);
+
       try {
         void box.init().then(() => {
           if (isDisposed || diceBoxRef.current !== box) return;
+          clearInitializationTimeout();
           isInitializedRef.current = true;
           isInitializingRef.current = false;
+          box.onDieComplete = (die: DiceBoxDieCompleteResult) => handleDieComplete(box, die);
 
           const pendingRoll = pendingRollRef.current;
           pendingRollRef.current = null;
@@ -174,22 +261,10 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
           }
         }).catch((error: unknown) => {
           if (isDisposed || diceBoxRef.current !== box) return;
-          isInitializedRef.current = false;
-          isInitializingRef.current = false;
-          pendingRollRef.current = null;
-          try {
-            box.clear();
-          } catch {
-            // Preserve the original initialization error.
-          }
-          diceBoxRef.current = null;
-          reportRollError(error);
+          reportRollError(error, box);
         });
       } catch (error) {
-        if (diceBoxRef.current === box) diceBoxRef.current = null;
-        isInitializingRef.current = false;
-        pendingRollRef.current = null;
-        reportRollError(error);
+        reportRollError(error, box);
       }
     };
 
@@ -201,6 +276,9 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       isMountedRef.current = false;
       initializeDiceBoxRef.current = null;
       pendingRollRef.current = null;
+      clearInitializationTimeout();
+      clearRollTimeout();
+      activeRollCollectorRef.current = null;
       if (diceBoxRef.current) {
         try {
           diceBoxRef.current.clear();
@@ -254,11 +332,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
         className="w-full h-full [&>canvas]:w-full [&>canvas]:h-full [&>canvas]:block cursor-grab active:cursor-grabbing"
       />
 
-      {/* Auto-Fading Roll Outcome Overlay in the Middle */}
-      <RollOutcomeOverlay
-        result={rollResult}
-        isRolling={isRolling}
-      />
+      <RollOutcomeOverlay result={rollResult} isRolling={isRolling} />
     </div>
   );
 };
