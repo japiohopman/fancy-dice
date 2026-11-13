@@ -75,7 +75,10 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   /** Adds a die, starting a fresh builder formula when custom notation is active. */
   const handleIncrement = (type: DieType) => {
     const nextState = getEditableBuilderState();
-    const totalDice = Object.values(nextState.stagedDice).reduce((total, count) => total + count, 0);
+    const totalDice = (Object.keys(nextState.stagedDice) as DieType[]).reduce(
+      (total, dieType) => total + nextState.stagedDice[dieType],
+      0
+    );
     if (totalDice >= 100) return;
 
     const next: DiceBuilderState = {
