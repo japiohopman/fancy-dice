@@ -7,6 +7,7 @@ import {
   DiceBuilderAdvantage,
   DiceBuilderState,
   parseDiceBuilderFormula,
+  withDiceBuilderAdvantage,
 } from '../lib/diceBuilderModel';
 import { Dices, RotateCcw, Shield, Flame, Sword, Sparkles } from 'lucide-react';
 
@@ -119,18 +120,8 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   /** Advantage and disadvantage are represented by the exact two-d20 keep formula. */
   const handleAdvantageChange = (nextAdvantage: DiceBuilderAdvantage) => {
     const baseState = getEditableBuilderState();
-    const nextState: DiceBuilderState = {
-      ...baseState,
-      stagedDice: { ...baseState.stagedDice },
-      advantage: nextAdvantage,
-    };
-
-    if (nextAdvantage === 'none') {
-      if (baseState.advantage === 'none') return;
-      nextState.stagedDice.d20 = 1;
-    } else {
-      nextState.stagedDice.d20 = 2;
-    }
+    const nextState = withDiceBuilderAdvantage(baseState, nextAdvantage);
+    if (!nextState) return;
     commitBuilderState(nextState);
   };
 
