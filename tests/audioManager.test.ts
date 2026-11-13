@@ -235,6 +235,7 @@ test('routes mute changes through the master gain and suspends audio in the back
     environment.listeners.get('visibilitychange')?.();
     await Promise.resolve();
 
+    assert.equal(context.sources[0].stopTimes.length, 1);
     assert.equal(context.suspendCount, 1);
     assert.equal(context.state, 'suspended');
   } finally {
