@@ -155,7 +155,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
             {isCustomFormula && (
               <div role="status" className="rounded-lg border border-[#8c7851]/50 bg-[#8c7851]/10 px-2.5 py-2 text-[10px] leading-relaxed text-[#d4c3a1]/85">
                 Custom formula active: <code className="font-mono text-[#f4ead5]">{currentFormula || '(empty)'}</code>.
-                Selecting a die or modifier starts a new builder formula; opening this panel leaves custom notation unchanged.
+                Adjusting the picker starts a new builder formula; simply opening this panel never changes custom notation.
               </div>
             )}
             {/* Grid of Die Selectors with SVGs */}
