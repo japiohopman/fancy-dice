@@ -144,13 +144,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     onRollErrorRef.current?.(normalizedError);
   };
 
-  /** Collects one completion per distinct DiceBox roll ID, including percentile dice. */
-  const handleDieComplete = (box: DiceBoxInstance, die: DiceBoxDieCompleteResult) => {
-    if (!isMountedRef.current || diceBoxRef.current !== box) return;
-    const collector = activeRollCollectorRef.current;
-    if (!collector) return;
-
-  /** Finishes a wave only after both world completion and every unique die result have arrived. */
+  /** Finishes a wave only after world completion and every unique die result have arrived. */
   const finishRollWave = (
     box: DiceBoxInstance,
     collector: DiceBoxRollCollector,
@@ -167,6 +161,12 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       rollDice(box, followUpRolls);
     }
   };
+
+  /** Collects one completion per distinct DiceBox roll ID, including percentile dice. */
+  const handleDieComplete = (box: DiceBoxInstance, die: DiceBoxDieCompleteResult) => {
+    if (!isMountedRef.current || diceBoxRef.current !== box) return;
+    const collector = activeRollCollectorRef.current;
+    if (!collector) return;
 
     try {
       const physicalResults = collector.add(die);
