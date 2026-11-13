@@ -41,7 +41,6 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
   const pendingRollRef = useRef<string[] | null>(null);
   const activeRollCollectorRef = useRef<DiceBoxRollCollector | null>(null);
-  const activeRollResultsRef = useRef<DiceBoxRollResults | null>(null);
   const initializationTimeoutRef = useRef<number | null>(null);
   const rollTimeoutRef = useRef<number | null>(null);
   const materialThemeRef = useRef(materialTheme);
@@ -120,7 +119,6 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     clearInitializationTimeout();
     clearRollTimeout();
     activeRollCollectorRef.current = null;
-    activeRollResultsRef.current = null;
     pendingRollRef.current = null;
     diceBoxRef.current = null;
     isInitializedRef.current = false;
@@ -152,39 +150,46 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     const collector = activeRollCollectorRef.current;
     if (!collector) return;
 
+  /** Finishes a wave only after both world completion and every unique die result have arrived. */
+  const finishRollWave = (
+    box: DiceBoxInstance,
+    collector: DiceBoxRollCollector,
+    physicalResults: DiceBoxRollResults
+  ) => {
+    if (!isMountedRef.current || diceBoxRef.current !== box) return;
+    if (activeRollCollectorRef.current !== collector) return;
+
+    clearRollTimeout();
+    activeRollCollectorRef.current = null;
+    const followUpRolls = onRollCompleteRef.current?.(physicalResults) ?? [];
+    if (followUpRolls.length > 0) {
+      // Start chained explosions only after every callback from this physical wave has settled.
+      rollDice(box, followUpRolls);
+    }
+  };
+
     try {
       const physicalResults = collector.add(die);
-      if (physicalResults) {
-        // Keep the batch pending until DiceBox confirms that every physical body is asleep.
-        activeRollResultsRef.current = physicalResults;
+      if (physicalResults && collector.isWorldComplete) {
+        finishRollWave(box, collector, physicalResults);
       }
     } catch (error) {
       reportRollError(error, box);
     }
   };
 
-  /** DiceBox's world-level completion callback is the final barrier after all die events. */
+  /** DiceBox's world callback can precede die callbacks in the non-WebGL renderer. */
   const handleRollWaveComplete = (box: DiceBoxInstance) => {
     if (!isMountedRef.current || diceBoxRef.current !== box) return;
-    if (!activeRollCollectorRef.current) return;
+    const collector = activeRollCollectorRef.current;
+    if (!collector) return;
 
-    const physicalResults = activeRollResultsRef.current;
-    if (!physicalResults) {
-      reportRollError(
-        new Error('DiceBox finished the animation without returning every distinct die result. Please try again.'),
-        box
-      );
-      return;
-    }
+    // If physical results are still arriving, the collector completes the wave
+    // when its final distinct die event arrives. The roll timeout remains active.
+    const physicalResults = collector.markWorldComplete();
+    if (!physicalResults) return;
 
-    clearRollTimeout();
-    activeRollCollectorRef.current = null;
-    activeRollResultsRef.current = null;
-    const followUpRolls = onRollCompleteRef.current?.(physicalResults) ?? [];
-    if (followUpRolls.length > 0) {
-      // Start chained explosions only after every callback from this physical wave has settled.
-      rollDice(box, followUpRolls);
-    }
+    finishRollWave(box, collector, physicalResults);
   };
 
   /** Starts one physical wave and waits for every requested die to complete once. */
