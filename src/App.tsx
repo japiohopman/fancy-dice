@@ -133,7 +133,7 @@ export default function App() {
     hasMarkedAppReadyRef.current = true;
     performance.mark('fancy-dice:app-ready');
     performance.measure('fancy-dice:app-startup', {
-      start: 'fancy-dice:app-entry',
+      start: 0,
       end: 'fancy-dice:app-ready',
     });
   }, []);
