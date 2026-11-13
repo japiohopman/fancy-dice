@@ -138,6 +138,80 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       ? 'border-[#8c7851]/60 bg-[#8c7851]/10 text-[#d4c3a1]'
       : 'border-emerald-800/50 bg-emerald-950/20 text-emerald-200';
 
+  const activeColorHex = materialTheme.startsWith('#')
+    ? materialTheme.toUpperCase()
+    : (MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851').toUpperCase();
+  const activeColorLabel = materialTheme.startsWith('#')
+    ? 'Custom color'
+    : MATERIAL_PRESET_LABELS[materialTheme] || 'Selected material';
+
+  // Keep the wheel marker responsive while coalescing expensive parent/DiceBox updates.
+  const COLOR_PREVIEW_INTERVAL_MS = 32;
+  const [wheelH, setWheelH] = useState<number>(140);
+  const [wheelS, setWheelS] = useState<number>(100);
+  const activePointerIdRef = useRef<number | null>(null);
+  const wheelRectRef = useRef<DOMRect | null>(null);
+  const pendingWheelColorRef = useRef<{ hue: number; saturation: number; queuedAt: number } | null>(null);
+  const wheelFrameRef = useRef<number | null>(null);
+  const lastAppliedColorRef = useRef(activeColorHex);
+  const lastDiceColorCommitAtRef = useRef(0);
+
+  const flushPendingWheelColor = (force = false, updateLocalState = true) => {
+    const pending = pendingWheelColorRef.current;
+    if (!pending) return;
+
+    pendingWheelColorRef.current = null;
+    const nextColor = hslToHex(pending.hue, pending.saturation, 50).toUpperCase();
+    const now = performance.now();
+
+    if (updateLocalState) {
+      setWheelH(pending.hue);
+      setWheelS(pending.saturation);
+    }
+
+    // Preview the dice at most ~30 times per second while dragging; pointer-up
+    // always commits the exact final value immediately.
+    if (
+      nextColor !== lastAppliedColorRef.current &&
+      (force || now - lastDiceColorCommitAtRef.current >= COLOR_PREVIEW_INTERVAL_MS)
+    ) {
+      lastAppliedColorRef.current = nextColor;
+      lastDiceColorCommitAtRef.current = now;
+      onChangeMaterialTheme(nextColor);
+    }
+
+    performance.measure('fancy-dice:color-wheel-commit', {
+      start: pending.queuedAt,
+      end: performance.now(),
+    });
+  };
+
+  const flushPendingWheelColorRef = useRef(flushPendingWheelColor);
+  flushPendingWheelColorRef.current = flushPendingWheelColor;
+
+  useEffect(() => {
+    const hex = materialTheme.startsWith('#')
+      ? materialTheme
+      : MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851';
+    const normalizedHex = hex.toUpperCase();
+    const hsl = hexToHsl(hex);
+    setWheelH(hsl.h);
+    setWheelS(hsl.s);
+    lastAppliedColorRef.current = normalizedHex;
+  }, [materialTheme]);
+
+  // A menu can close while a pointer frame is queued. Commit its last value
+  // instead of silently discarding the user's final color selection.
+  useEffect(() => {
+    return () => {
+      if (wheelFrameRef.current !== null) {
+        cancelAnimationFrame(wheelFrameRef.current);
+        wheelFrameRef.current = null;
+      }
+      flushPendingWheelColorRef.current(true, false);
+    };
+  }, []);
+
   const tableOptions: { id: TableTheme; name: string; color: string }[] = [
     { id: 'green', name: 'Emerald Felt', color: 'bg-[#064e3b]' },
     { id: 'blue', name: 'Sapphire Felt', color: 'bg-[#1e3a8a]' },
