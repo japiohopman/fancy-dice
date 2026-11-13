@@ -11,35 +11,14 @@ function pwaPrecachePlugin(): Plugin {
     writeBundle(outputOptions, bundle) {
       const outputDir = outputOptions.dir ?? 'dist';
       const serviceWorkerPath = path.resolve(outputDir, 'sw.js');
-      const outputChunks = Object.values(bundle).filter((output) => output.type === 'chunk');
-      const chunksByFileName = new Map(outputChunks.map((chunk) => [chunk.fileName, chunk] as const));
-      const initialChunkFiles = new Set<string>();
-
-      // Precache only the static import graph of the app entry. Dynamic imports
-      // (including DiceBox and its physics chunks) are cached by the service
-      // worker when the user first opens the dice table.
-      const visitStaticImports = (fileName: string) => {
-        const chunk = chunksByFileName.get(fileName);
-        if (!chunk || initialChunkFiles.has(fileName)) return;
-
-        initialChunkFiles.add(fileName);
-        chunk.imports.forEach(visitStaticImports);
-      };
-
-      outputChunks
-        .filter((chunk) => chunk.isEntry)
-        .forEach((chunk) => visitStaticImports(chunk.fileName));
-
-      const buildAssetFiles = [
-        ...initialChunkFiles,
-        ...Object.values(bundle)
-          .filter((output) => output.type === 'asset' && /\.css$/i.test(output.fileName))
-          .map((output) => output.fileName),
-      ].sort();
-
-      console.log(
-        `[fancy-dice-pwa-precache] ${initialChunkFiles.size} initial chunks; ${outputChunks.length - initialChunkFiles.size} deferred chunks cached on demand.`,
-      );
+      const buildAssetFiles = Object.values(bundle)
+        .filter(
+          (output) =>
+            output.type === 'chunk' ||
+            (output.type === 'asset' && /\.css$/i.test(output.fileName)),
+        )
+        .map((output) => output.fileName)
+        .sort();
 
       const source = readFileSync(serviceWorkerPath, 'utf8');
       const placeholder = 'const BUILD_ASSET_FILES = [];';
