@@ -409,12 +409,18 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     };
   }, []);
 
-  // Update theme color when materialTheme changes
+  // Update theme color when materialTheme changes and expose the async cost for profiling.
   useEffect(() => {
     const box = diceBoxRef.current;
     if (box && isInitializedRef.current) {
       const hexColor = getThemeColor(materialTheme);
-      void box.updateConfig({ themeColor: hexColor }).catch((error: unknown) => {
+      const startedAt = performance.now();
+      void box.updateConfig({ themeColor: hexColor }).then(() => {
+        performance.measure('fancy-dice:dice-color-config', {
+          start: startedAt,
+          end: performance.now(),
+        });
+      }).catch((error: unknown) => {
         reportRollError(error, box);
       });
     }
