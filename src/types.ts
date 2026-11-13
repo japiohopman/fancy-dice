@@ -56,6 +56,24 @@ export interface RollHistoryEntry {
   presetName?: string;
 }
 
+/** One physical die returned by DiceBox.roll() after its collection has settled. */
+export interface DiceBoxPhysicalDieResult {
+  dieType?: string;
+  sides?: number | string;
+  value: number;
+}
+
+/** DiceBox.roll() resolves with only the dice from that roll collection. */
+export type DiceBoxRollResults = DiceBoxPhysicalDieResult[];
+
+/** Minimal runtime surface used from the DiceBox package. */
+export interface DiceBoxInstance {
+  init(): Promise<unknown>;
+  roll(notation: string | string[], options?: { themeColor?: string }): Promise<unknown>;
+  clear(): void;
+  updateConfig(options: { themeColor?: string; theme?: string }): void;
+}
+
 export interface ShakeSettings {
   enabled: boolean;
   sensitivity: number; // 1 (low force) to 10 (gentle shake)

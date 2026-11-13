@@ -1,4 +1,4 @@
-import { DieType, RollParsedResult, SingleDieResult } from '../types';
+import { DiceBoxPhysicalDieResult, DiceBoxRollResults, DieType, RollParsedResult, SingleDieResult } from '../types';
 
 export type DiceFormulaErrorCode = 'empty' | 'invalid' | 'unsupported' | 'limit';
 
@@ -35,14 +35,31 @@ function parseSafeInteger(raw: string, fallback: number, description: string): n
   return value;
 }
 
-function getPhysicalDieType(raw: any): string | null {
-  if (typeof raw?.dieType === 'string' && raw.dieType.length > 0) {
+function getPhysicalDieType(raw: DiceBoxPhysicalDieResult): string | null {
+  if (typeof raw.dieType === 'string' && raw.dieType.trim().length > 0) {
     return raw.dieType.toLowerCase();
   }
-  if (Number.isFinite(raw?.sides)) {
-    return 'd' + raw.sides;
-  }
-  return null;
+  const sides = Number(raw.sides);
+  return Number.isSafeInteger(sides) && sides > 0 ? 'd' + sides : null;
+}
+
+function getPhysicalDieSides(raw: DiceBoxPhysicalDieResult): number | null {
+  const declaredSides = Number(raw.sides);
+  if (Number.isSafeInteger(declaredSides) && declaredSides > 0) return declaredSides;
+  const dieType = raw.dieType?.toLowerCase() ?? '';
+  const match = /^d(\d+)$/.exec(dieType);
+  return match ? Number(match[1]) : null;
+}
+
+/** Validates DiceBox's per-collection roll result before it enters app state. */
+export function isDiceBoxRollResults(value: unknown): value is DiceBoxRollResults {
+  return Array.isArray(value) && value.every((candidate) => {
+    if (typeof candidate !== 'object' || candidate === null) return false;
+    const die = candidate as Record<string, unknown>;
+    const hasDieType = typeof die.dieType === 'string' && die.dieType.trim().length > 0;
+    const hasSides = typeof die.sides === 'number' || typeof die.sides === 'string';
+    return typeof die.value === 'number' && (hasDieType || hasSides);
+  });
 }
 
 function getRollFlags(dieType: DieType, value: number): { isCrit: boolean; isFumble: boolean; text: string } {
@@ -312,21 +329,42 @@ export function getPendingExplosionRolls(parsed: RollParsedResult): string[] {
 
 export function updateParsedResultWithPhysicalRolls(
   parsed: RollParsedResult,
-  physicalResults: any
+  physicalResults: DiceBoxRollResults
 ): RollParsedResult {
   const physicalValuesByType: Record<string, number[]> = {};
 
-  if (Array.isArray(physicalResults)) {
-    physicalResults.forEach((group: any) => {
-      if (group && Array.isArray(group.rolls)) {
-        group.rolls.forEach((roll: any) => {
-          const type = getPhysicalDieType(roll);
-          if (!type || !Number.isFinite(roll.value)) return;
-          if (!physicalValuesByType[type]) physicalValuesByType[type] = [];
-          physicalValuesByType[type].push(roll.value);
-        });
-      }
-    });
+  physicalResults.forEach((roll) => {
+    const type = getPhysicalDieType(roll);
+    const sides = getPhysicalDieSides(roll);
+    const value = roll.value;
+    const isPercentileZero = type === 'd100' && value === 0;
+
+    if (!type || !Number.isSafeInteger(value) || value < (isPercentileZero ? 0 : 1) ||
+        (sides !== null && value > sides)) {
+      throw new Error('DiceBox returned an invalid physical die value. Please try the roll again.');
+    }
+    if (!physicalValuesByType[type]) physicalValuesByType[type] = [];
+    physicalValuesByType[type].push(value);
+  });
+
+  // Every unlanded parser entry must have exactly one die in this roll collection.
+  // DiceBox.roll() resolves with the current collection only, not the full table.
+  const expectedCountsByType: Record<string, number> = {};
+  parsed.diceGroupResults.forEach((group) => {
+    const physicalType = group.dieType === 'dfate' ? 'd6' : group.dieType;
+    const pendingCount = group.rolls.filter((roll) => !roll.physical).length;
+    if (pendingCount > 0) {
+      expectedCountsByType[physicalType] = (expectedCountsByType[physicalType] ?? 0) + pendingCount;
+    }
+  });
+
+  const allTypes = new Set([...Object.keys(expectedCountsByType), ...Object.keys(physicalValuesByType)]);
+  for (const type of allTypes) {
+    const expected = expectedCountsByType[type] ?? 0;
+    const received = physicalValuesByType[type]?.length ?? 0;
+    if (expected !== received) {
+      throw new Error('DiceBox returned an incomplete physical roll. Please try the roll again.');
+    }
   }
 
   let overallIsCrit = false;
@@ -339,12 +377,15 @@ export function updateParsedResultWithPhysicalRolls(
     const updatedRolls: SingleDieResult[] = [];
 
     group.rolls.forEach((roll) => {
-      if (roll.physical || physicalValues.length === 0) {
+      if (roll.physical) {
         updatedRolls.push(roll);
         return;
       }
 
-      const physicalValue = physicalValues.shift()!;
+      const physicalValue = physicalValues.shift();
+      if (physicalValue === undefined) {
+        throw new Error('DiceBox did not return a value for every pending die. Please try again.');
+      }
       // Standard d6 faces map to the two minus, two blank, and two plus Fate faces.
       const value = group.dieType === 'dfate'
         ? physicalValue <= 2 ? -1 : physicalValue <= 4 ? 0 : 1

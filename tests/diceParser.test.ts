@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DiceFormulaError, getPendingExplosionRolls, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from '../src/lib/diceParser';
+import { DiceFormulaError, getPendingExplosionRolls, isDiceBoxRollResults, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from '../src/lib/diceParser';
 
 function withRandomSequence<T>(values: number[], run: () => T): T {
   const originalRandom = Math.random;
@@ -78,19 +78,19 @@ test('chains exploding dice from physical landed results only', () => {
   assert.equal(parsed.diceGroupResults[0].explosionLimit, 2);
 
   const firstWave = updateParsedResultWithPhysicalRolls(parsed, [
-    { rolls: [{ dieType: 'd6', sides: 6, value: 6 }] },
+    { dieType: 'd6', sides: 6, value: 6 },
   ]);
   assert.deepEqual(getPendingExplosionRolls(firstWave), ['1d6']);
   assert.equal(firstWave.total, 6);
 
   const secondWave = updateParsedResultWithPhysicalRolls(firstWave, [
-    { rolls: [{ dieType: 'd6', sides: 6, value: 6 }] },
+    { dieType: 'd6', sides: 6, value: 6 },
   ]);
   assert.deepEqual(getPendingExplosionRolls(secondWave), ['1d6']);
   assert.equal(secondWave.total, 12);
 
   const finalWave = updateParsedResultWithPhysicalRolls(secondWave, [
-    { rolls: [{ dieType: 'd6', sides: 6, value: 2 }] },
+    { dieType: 'd6', sides: 6, value: 2 },
   ]);
   assert.deepEqual(getPendingExplosionRolls(finalWave), []);
   assert.equal(finalWave.total, 14);
@@ -101,7 +101,7 @@ test('chains exploding dice from physical landed results only', () => {
 test('does not keep a simulated explosion when the physical die did not explode', () => {
   const parsed = withRandomSequence([0, 0], () => parseAndRollFormula('1d6!2'));
   const finalResult = updateParsedResultWithPhysicalRolls(parsed, [
-    { rolls: [{ dieType: 'd6', sides: 6, value: 3 }] },
+    { dieType: 'd6', sides: 6, value: 3 },
   ]);
 
   assert.deepEqual(getPendingExplosionRolls(finalResult), []);
@@ -112,10 +112,10 @@ test('does not keep a simulated explosion when the physical die did not explode'
 test('an exploding d20 records a natural 1 on its follow-up physical roll', () => {
   const parsed = withRandomSequence([0, 0], () => parseAndRollFormula('1d20!1'));
   const firstWave = updateParsedResultWithPhysicalRolls(parsed, [
-    { rolls: [{ dieType: 'd20', sides: 20, value: 20 }] },
+    { dieType: 'd20', sides: 20, value: 20 },
   ]);
   const finalWave = updateParsedResultWithPhysicalRolls(firstWave, [
-    { rolls: [{ dieType: 'd20', sides: 20, value: 1 }] },
+    { dieType: 'd20', sides: 20, value: 1 },
   ]);
 
   assert.equal(finalWave.total, 21);
@@ -127,11 +127,9 @@ test('an exploding d20 records a natural 1 on its follow-up physical roll', () =
 test('maps physical d6 face values to Fate dice results', () => {
   const parsed = withRandomSequence([0, 0, 0, 0, 0, 0], () => parseAndRollFormula('3dFate'));
   const result = updateParsedResultWithPhysicalRolls(parsed, [
-    { rolls: [
-      { dieType: 'd6', sides: 6, value: 1 },
-      { dieType: 'd6', sides: 6, value: 4 },
-      { dieType: 'd6', sides: 6, value: 6 },
-    ] },
+    { dieType: 'd6', sides: 6, value: 1 },
+    { dieType: 'd6', sides: 6, value: 4 },
+    { dieType: 'd6', sides: 6, value: 6 },
   ]);
 
   assert.deepEqual(result.diceGroupResults[0].rolls.map((roll) => roll.value), [-1, 0, 1]);
@@ -209,5 +207,34 @@ test('rejects exploding Fate dice and formulas with unsafe modifiers or totals',
   assert.throws(
     () => withRandomSequence([0, 0.1], () => parseAndRollFormula('1d20+9007199254740991')),
     DiceFormulaError
+  );
+});
+
+
+test('validates DiceBox result payloads and rejects incomplete physical collections', () => {
+  const validResults = [{ dieType: 'd20', sides: 20, value: 14 }];
+  assert.equal(isDiceBoxRollResults(validResults), true);
+  assert.equal(isDiceBoxRollResults([{ dieType: 'd20', sides: 20 }]), false);
+
+  const parsed = withRandomSequence([0], () => parseAndRollFormula('1d20'));
+  assert.throws(
+    () => updateParsedResultWithPhysicalRolls(parsed, []),
+    /incomplete physical roll/
+  );
+});
+
+test('rejects invalid physical die faces instead of recording a successful result', () => {
+  const parsed = withRandomSequence([0], () => parseAndRollFormula('1d6'));
+  assert.throws(
+    () => updateParsedResultWithPhysicalRolls(parsed, [
+      { dieType: 'd6', sides: 6, value: 7 },
+    ]),
+    /invalid physical die value/
+  );
+  assert.throws(
+    () => updateParsedResultWithPhysicalRolls(parsed, [
+      { dieType: 'd6', sides: 6, value: 0 },
+    ]),
+    /invalid physical die value/
   );
 });
