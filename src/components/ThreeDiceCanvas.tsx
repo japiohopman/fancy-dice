@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import DiceBox from '@3d-dice/dice-box';
 import {
   DiceBoxDieCompleteResult,
   DiceBoxInstance,
@@ -43,6 +42,10 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   const activeRollCollectorRef = useRef<DiceBoxRollCollector | null>(null);
   const initializationTimeoutRef = useRef<number | null>(null);
   const rollTimeoutRef = useRef<number | null>(null);
+  const initializationAttemptRef = useRef(0);
+  const hasMarkedDiceBoxInitRef = useRef(false);
+  const hasMarkedDiceBoxModuleReadyRef = useRef(false);
+  const hasMarkedDiceBoxReadyRef = useRef(false);
   const materialThemeRef = useRef(materialTheme);
   materialThemeRef.current = materialTheme;
 
@@ -116,6 +119,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     if (box && diceBoxRef.current !== box) return false;
 
     const currentBox = diceBoxRef.current;
+    initializationAttemptRef.current += 1;
     clearInitializationTimeout();
     clearRollTimeout();
     activeRollCollectorRef.current = null;
@@ -228,7 +232,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     let isDisposed = false;
 
     const initialize = () => {
-      if (isDisposed || isInitializedRef.current || isInitializingRef.current) return;
+      if (isDisposed || !isMountedRef.current || isInitializedRef.current || isInitializingRef.current) return;
 
       if (diceBoxRef.current) {
         try {
@@ -241,58 +245,113 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       if (containerRef.current) containerRef.current.innerHTML = '';
 
       isInitializingRef.current = true;
-      const base = (import.meta as any).env.BASE_URL || '/';
-      const resolvedAssetPath = `${base.endsWith('/') ? base : base + '/'}assets/dice-box/`;
-
-      let box: DiceBoxInstance;
-      try {
-        box = new DiceBox({
-          container: '#dice-canvas-box',
-          assetPath: resolvedAssetPath,
-          theme: diceTheme,
-          themeColor: getThemeColor(materialThemeRef.current),
-          offscreen: false,
-          scale: 7,
-          enableShadows: true,
-          shadowTransparency: 0.7,
-          lightIntensity: 1.1,
-        }) as unknown as DiceBoxInstance;
-      } catch (error) {
-        isInitializingRef.current = false;
-        reportRollError(error);
-        return;
+      const initializationAttempt = ++initializationAttemptRef.current;
+      if (!hasMarkedDiceBoxInitRef.current) {
+        hasMarkedDiceBoxInitRef.current = true;
+        performance.mark('fancy-dice:dicebox-init-start');
       }
 
-      diceBoxRef.current = box;
+      // Include the lazy module download and WASM startup in the same bounded timeout.
       initializationTimeoutRef.current = window.setTimeout(() => {
-        if (isDisposed || diceBoxRef.current !== box) return;
+        if (isDisposed || initializationAttemptRef.current !== initializationAttempt) return;
         reportRollError(
-          new Error('The dice engine did not finish initializing. Check your connection and try again.'),
-          box
+          new Error('The dice engine did not finish loading or initializing. Check your connection and try again.')
         );
       }, DICEBOX_INIT_TIMEOUT_MS);
 
-      try {
-        void box.init().then(() => {
-          if (isDisposed || diceBoxRef.current !== box) return;
-          clearInitializationTimeout();
-          isInitializedRef.current = true;
-          isInitializingRef.current = false;
-          box.onDieComplete = (die: DiceBoxDieCompleteResult) => handleDieComplete(box, die);
-          box.onRollComplete = () => handleRollWaveComplete(box);
+      const base = (import.meta as any).env.BASE_URL || '/';
+      const resolvedAssetPath = `${base.endsWith('/') ? base : base + '/'}assets/dice-box/`;
 
-          const pendingRoll = pendingRollRef.current;
-          pendingRollRef.current = null;
-          if (pendingRoll) {
-            rollDice(box, pendingRoll, { themeColor: getThemeColor(materialThemeRef.current) });
+      // Keep the physics engine out of the initial app bundle. It is fetched only
+      // when the first roll needs the 3D table, then retained by the PWA runtime cache.
+      void import('@3d-dice/dice-box').then(({ default: DiceBox }) => {
+        if (
+          isDisposed ||
+          !isMountedRef.current ||
+          initializationAttemptRef.current !== initializationAttempt
+        ) return;
+
+        if (!hasMarkedDiceBoxModuleReadyRef.current) {
+          hasMarkedDiceBoxModuleReadyRef.current = true;
+          performance.mark('fancy-dice:dicebox-module-ready');
+          performance.measure(
+            'fancy-dice:dicebox-module-load',
+            'fancy-dice:dicebox-init-start',
+            'fancy-dice:dicebox-module-ready'
+          );
+        }
+
+        let box: DiceBoxInstance;
+        try {
+          box = new DiceBox({
+            container: '#dice-canvas-box',
+            assetPath: resolvedAssetPath,
+            theme: diceTheme,
+            themeColor: getThemeColor(materialThemeRef.current),
+            offscreen: false,
+            scale: 7,
+            enableShadows: true,
+            shadowTransparency: 0.7,
+            lightIntensity: 1.1,
+          }) as unknown as DiceBoxInstance;
+        } catch (error) {
+          if (initializationAttemptRef.current === initializationAttempt) {
+            reportRollError(error);
           }
-        }).catch((error: unknown) => {
-          if (isDisposed || diceBoxRef.current !== box) return;
-          reportRollError(error, box);
-        });
-      } catch (error) {
-        reportRollError(error, box);
-      }
+          return;
+        }
+
+        diceBoxRef.current = box;
+        try {
+          void box.init().then(() => {
+            if (
+              isDisposed ||
+              diceBoxRef.current !== box ||
+              initializationAttemptRef.current !== initializationAttempt
+            ) return;
+            clearInitializationTimeout();
+            isInitializedRef.current = true;
+            isInitializingRef.current = false;
+
+            if (!hasMarkedDiceBoxReadyRef.current) {
+              hasMarkedDiceBoxReadyRef.current = true;
+              performance.mark('fancy-dice:dicebox-ready');
+              performance.measure(
+                'fancy-dice:dicebox-ready-time',
+                'fancy-dice:dicebox-init-start',
+                'fancy-dice:dicebox-ready'
+              );
+            }
+
+            box.onDieComplete = (die: DiceBoxDieCompleteResult) => handleDieComplete(box, die);
+            box.onRollComplete = () => handleRollWaveComplete(box);
+
+            const pendingRoll = pendingRollRef.current;
+            pendingRollRef.current = null;
+            if (pendingRoll) {
+              rollDice(box, pendingRoll, { themeColor: getThemeColor(materialThemeRef.current) });
+            }
+          }).catch((error: unknown) => {
+            if (
+              isDisposed ||
+              diceBoxRef.current !== box ||
+              initializationAttemptRef.current !== initializationAttempt
+            ) return;
+            reportRollError(error, box);
+          });
+        } catch (error) {
+          if (initializationAttemptRef.current === initializationAttempt) {
+            reportRollError(error, box);
+          }
+        }
+      }).catch((error: unknown) => {
+        if (
+          isDisposed ||
+          !isMountedRef.current ||
+          initializationAttemptRef.current !== initializationAttempt
+        ) return;
+        reportRollError(error);
+      });
     };
 
     initializeDiceBoxRef.current = initialize;
@@ -301,6 +360,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     return () => {
       isDisposed = true;
       isMountedRef.current = false;
+      initializationAttemptRef.current += 1;
       initializeDiceBoxRef.current = null;
       pendingRollRef.current = null;
       clearInitializationTimeout();
