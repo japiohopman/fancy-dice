@@ -33,7 +33,7 @@ function pwaPrecachePlugin(): Plugin {
       const buildAssetFiles = [
         ...initialChunkFiles,
         ...Object.values(bundle)
-          .filter((output) => output.type === 'asset' && /\\.css$/i.test(output.fileName))
+          .filter((output) => output.type === 'asset' && /\.css$/i.test(output.fileName))
           .map((output) => output.fileName),
       ].sort();
 
