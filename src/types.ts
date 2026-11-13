@@ -78,7 +78,7 @@ export interface DiceBoxInstance {
   init(): Promise<unknown>;
   roll(notation: string | string[], options?: { themeColor?: string }): Promise<unknown>;
   clear(): void;
-  updateConfig(options: { themeColor?: string; theme?: string }): void;
+  updateConfig(options: { themeColor?: string; theme?: string }): Promise<unknown>;
 }
 
 export interface ShakeSettings {

@@ -21,6 +21,8 @@ if (viteEnv.PROD && 'serviceWorker' in navigator) {
   );
 }
 
+performance.mark('fancy-dice:app-entry');
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
