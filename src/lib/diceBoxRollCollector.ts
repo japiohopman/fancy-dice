@@ -3,11 +3,25 @@ import type { DiceBoxDieCompleteResult, DiceBoxPhysicalDieResult } from '../type
 /** Collects one result per physical die, ignoring duplicate callbacks for composite dice. */
 export class DiceBoxRollCollector {
   private readonly results = new Map<string, DiceBoxPhysicalDieResult>();
+  private worldComplete = false;
 
   constructor(private readonly expectedCount: number) {
     if (!Number.isSafeInteger(expectedCount) || expectedCount < 1) {
       throw new Error('A DiceBox collection must contain at least one physical die.');
     }
+  }
+
+  /** Records DiceBox's world-level completion, which may precede individual die events. */
+  markWorldComplete(): DiceBoxPhysicalDieResult[] | null {
+    this.worldComplete = true;
+    return this.results.size === this.expectedCount
+      ? Array.from(this.results.values())
+      : null;
+  }
+
+  /** True once DiceBox reports world completion for this physical roll wave. */
+  get isWorldComplete(): boolean {
+    return this.worldComplete;
   }
 
   /** Returns the complete normalized batch once every unique die ID has landed. */
