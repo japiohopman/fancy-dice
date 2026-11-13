@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { DiceFormulaError, getPendingExplosionRolls, parseAndRollFormula, updateParsedResultWithPhysicalRolls } from '../src/lib/diceParser';
 import { DiceBoxRollCollector, getExpectedPhysicalDiceCount } from '../src/lib/diceBoxRollCollector';
+import {
+  buildDiceFormulaFromBuilderState,
+  createDefaultDiceBuilderState,
+  parseDiceBuilderFormula,
+} from '../src/lib/diceBuilderModel';
 
 function withRandomSequence<T>(values: number[], run: () => T): T {
   const originalRandom = Math.random;
@@ -287,4 +292,86 @@ test('waits for world completion when all physical dice arrive first', () => {
 
   assert.deepEqual(collector.markWorldComplete(), completedResults);
   assert.equal(collector.isWorldComplete, true);
+});
+
+
+test('synchronizes manual notation and preset formulas into the visual builder', () => {
+  const representableFormulas = [
+    '1d20+5',
+    '2d20kh1+5',
+    '2d20kl1+5',
+    '8d6',
+    '2d6+3',
+    '1d4+3',
+    '1d20+4',
+    '1d20+2',
+    '4dF',
+    '2d6 + 1d4 - 3',
+  ];
+
+  for (const formula of representableFormulas) {
+    assert.notEqual(parseDiceBuilderFormula(formula), null, formula);
+  }
+});
+
+test('preserves advanced formulas instead of rewriting them as builder state', () => {
+  const customFormulas = [
+    '4d6kh3',
+    '2d6dl1',
+    '1d6!2',
+    '-1d4+2',
+    '1d20+2+3',
+    '2d20kh1+1d20',
+  ];
+
+  for (const formula of customFormulas) {
+    assert.equal(parseDiceBuilderFormula(formula), null, formula);
+  }
+});
+
+test('keeps builder, preset and history formula transitions on one canonical notation', () => {
+  // Manual input and preset selection both produce the same representable state.
+  const manualState = parseDiceBuilderFormula('1d20+5');
+  const presetState = parseDiceBuilderFormula('1d20+5');
+  assert.deepEqual(manualState, presetState);
+
+  // A builder edit updates that state and publishes the matching formula.
+  assert.ok(manualState);
+  const editedState = {
+    ...manualState,
+    stagedDice: { ...manualState.stagedDice, d6: 2 },
+    modifier: 3,
+  };
+  const formula = buildDiceFormulaFromBuilderState(editedState);
+  assert.equal(formula, '1d20+2d6+3');
+  assert.deepEqual(parseDiceBuilderFormula(formula), editedState);
+
+  // A history re-roll passes the same stored notation back into the builder projection.
+  assert.deepEqual(parseDiceBuilderFormula(formula), editedState);
+});
+
+test('represents advantage and disadvantage with the exact physical d20 count', () => {
+  const advantage = parseDiceBuilderFormula('2d20kh1+5');
+  const disadvantage = parseDiceBuilderFormula('2d20kl1+5');
+
+  assert.ok(advantage);
+  assert.equal(advantage.stagedDice.d20, 2);
+  assert.equal(advantage.advantage, 'advantage');
+  assert.equal(buildDiceFormulaFromBuilderState(advantage), '2d20kh1+5');
+
+  assert.ok(disadvantage);
+  assert.equal(disadvantage.stagedDice.d20, 2);
+  assert.equal(disadvantage.advantage, 'disadvantage');
+  assert.equal(buildDiceFormulaFromBuilderState(disadvantage), '2d20kl1+5');
+});
+
+test('resetting the builder restores the same default formula shown to the user', () => {
+  const resetState = createDefaultDiceBuilderState();
+
+  assert.equal(buildDiceFormulaFromBuilderState(resetState), '1d20');
+  assert.deepEqual(parseDiceBuilderFormula('1d20'), resetState);
+  assert.equal(buildDiceFormulaFromBuilderState({
+    ...resetState,
+    stagedDice: { ...resetState.stagedDice, d20: 0 },
+  }), '');
 });
