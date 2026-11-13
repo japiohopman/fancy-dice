@@ -305,18 +305,38 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
         diceBoxRef.current = box;
         try {
-          void box.init().then(() => {
+          void box.init().then(async () => {
             if (
               isDisposed ||
               diceBoxRef.current !== box ||
               initializationAttemptRef.current !== initializationAttempt
             ) return;
+
+            // Theme changes made while the module/WASM is loading must finish
+            // before a queued roll can use the theme's dice data.
+            while (true) {
+              const requestedTheme = diceThemeRef.current;
+              const requestedThemeColor = getThemeColor(materialThemeRef.current);
+              await box.updateConfig({
+                theme: requestedTheme,
+                themeColor: requestedThemeColor,
+              });
+
+              if (
+                isDisposed ||
+                diceBoxRef.current !== box ||
+                initializationAttemptRef.current !== initializationAttempt
+              ) return;
+
+              // If the user changed the theme while it was loading, apply the
+              // latest selection before declaring the engine ready.
+              if (
+                requestedTheme === diceThemeRef.current &&
+                requestedThemeColor === getThemeColor(materialThemeRef.current)
+              ) break;
+            }
+
             clearInitializationTimeout();
-            // Theme controls may change while the lazy module or WASM is loading.
-            box.updateConfig({
-              theme: diceThemeRef.current,
-              themeColor: getThemeColor(materialThemeRef.current),
-            });
             isInitializedRef.current = true;
             isInitializingRef.current = false;
 
@@ -391,16 +411,22 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
 
   // Update theme color when materialTheme changes
   useEffect(() => {
-    if (diceBoxRef.current && isInitializedRef.current) {
+    const box = diceBoxRef.current;
+    if (box && isInitializedRef.current) {
       const hexColor = getThemeColor(materialTheme);
-      diceBoxRef.current.updateConfig({ themeColor: hexColor });
+      void box.updateConfig({ themeColor: hexColor }).catch((error: unknown) => {
+        reportRollError(error, box);
+      });
     }
   }, [materialTheme]);
 
   // Update theme when diceTheme changes
   useEffect(() => {
-    if (diceBoxRef.current && isInitializedRef.current) {
-      diceBoxRef.current.updateConfig({ theme: diceTheme });
+    const box = diceBoxRef.current;
+    if (box && isInitializedRef.current) {
+      void box.updateConfig({ theme: diceTheme }).catch((error: unknown) => {
+        reportRollError(error, box);
+      });
     }
   }, [diceTheme]);
 
