@@ -1,4 +1,4 @@
-class AudioManager {
+export class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private shakeNoiseBuffer: AudioBuffer | null = null;
