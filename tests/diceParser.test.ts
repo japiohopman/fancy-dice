@@ -6,6 +6,7 @@ import {
   buildDiceFormulaFromBuilderState,
   createDefaultDiceBuilderState,
   parseDiceBuilderFormula,
+  withDiceBuilderAdvantage,
 } from '../src/lib/diceBuilderModel';
 
 function withRandomSequence<T>(values: number[], run: () => T): T {
@@ -383,4 +384,22 @@ test('rejects invalid staged counts when serializing a builder formula', () => {
     ...state,
     stagedDice: { ...state.stagedDice, d20: -1 },
   }), '');
+});
+
+
+test('does not publish an advantage formula that exceeds the 100-die limit', () => {
+  const maxDice = parseDiceBuilderFormula('100d6');
+  const validDice = parseDiceBuilderFormula('98d6');
+
+  assert.ok(maxDice);
+  assert.ok(validDice);
+  assert.equal(withDiceBuilderAdvantage(maxDice, 'advantage'), null);
+
+  const advantageAtLimit = withDiceBuilderAdvantage(validDice, 'advantage');
+  assert.ok(advantageAtLimit);
+  assert.equal(buildDiceFormulaFromBuilderState(advantageAtLimit), '2d20kh1+98d6');
+  assert.equal(
+    Object.values(advantageAtLimit.stagedDice).reduce((total, count) => total + count, 0),
+    100
+  );
 });
