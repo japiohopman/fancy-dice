@@ -138,6 +138,23 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       ? 'border-[#8c7851]/60 bg-[#8c7851]/10 text-[#d4c3a1]'
       : 'border-emerald-800/50 bg-emerald-950/20 text-emerald-200';
 
+  const diceThemeOptions = [
+    { id: 'default', name: 'Classic' },
+    { id: 'smooth', name: 'Plastic' },
+    { id: 'wooden', name: 'Wooden' },
+    { id: 'rust', name: 'Rusted' },
+    { id: 'rock', name: 'Stone' },
+    { id: 'gemstone', name: 'Gemstone' },
+  ];
+
+  const materialOptions = [
+    { id: 'emerald', name: 'Emerald', hex: '#059669' },
+    { id: 'ruby', name: 'Ruby', hex: '#d97706' },
+    { id: 'gold', name: 'Gold', hex: '#f59e0b' },
+    { id: 'cyber', name: 'Cyber', hex: '#06b6d4' },
+    { id: 'obsidian', name: 'Obsidian', hex: '#1f2937' },
+  ];
+
   const activeColorHex = materialTheme.startsWith('#')
     ? materialTheme.toUpperCase()
     : (MATERIAL_PRESET_COLORS[materialTheme] || '#8c7851').toUpperCase();
