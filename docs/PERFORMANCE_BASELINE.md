@@ -63,4 +63,22 @@ console.table({
 6. Repeat once with the service worker and warmed engine cache to measure repeat-launch/offline-cache behaviour separately.
 7. On Android, repeat the single-die and `8d6` cases on the physical phone. Keep those measurements separate from desktop results.
 
+## Build after the lazy-load change
+
+Source: GitHub Actions PR build, run [43421219808](https://github.com/japiohopman/fancy-dice/actions/runs/43421219808), on 13 November 2026.
+
+| Output file | Size | Gzip |
+| --- | ---: | ---: |
+| `index-SJ8ClNbn.js` (app entry) | 262.82 kB | 81.43 kB |
+| `dice-box.es-CRq36shK.js` (deferred DiceBox module entry) | 198.12 kB | 40.78 kB |
+| `Dice-CfcuzxNX.js` | 691.35 kB | 168.48 kB |
+| `world.offscreen-C5e_o3iU.js` | 1,447.26 kB | 412.36 kB |
+| `world.onscreen-CrwVg6U4.js` | 391.14 kB | 87.53 kB |
+| `world.none-DlJlViU4.js` | 2.58 kB | 1.11 kB |
+| `index-CnXePHt1.css` | 51.53 kB | 9.85 kB |
+
+The app entry chunk fell from 459.48 kB to 262.82 kB (42.8% smaller); its gzip size fell from 121.79 kB to 81.43 kB (33.1% smaller). DiceBox now has a separate dynamic-import entry. Its larger dependent physics chunks remain available for the engine and are still included in the existing service-worker precache, preserving the pre-change offline asset warm-up behaviour.
+
+This is a concrete bundle-splitting result, not yet proof of faster user-perceived startup or first-roll latency. The runtime measures above must still be collected on desktop and physical Android under matched cold-cache and warm-cache conditions.
+
 The first-roll measure is emitted only once per page session. Reload before each scenario so the `1d20` and `8d6` results are independently comparable.
