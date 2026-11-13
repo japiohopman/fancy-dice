@@ -375,3 +375,12 @@ test('resetting the builder restores the same default formula shown to the user'
     stagedDice: { ...resetState.stagedDice, d20: 0 },
   }), '');
 });
+
+
+test('rejects invalid staged counts when serializing a builder formula', () => {
+  const state = createDefaultDiceBuilderState();
+  assert.equal(buildDiceFormulaFromBuilderState({
+    ...state,
+    stagedDice: { ...state.stagedDice, d20: -1 },
+  }), '');
+});
