@@ -228,7 +228,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     }
   };
 
-  // Create the initializer on mount, but defer downloading DiceBox until the first roll.
+  // Keep the initializer lifecycle mounted while moving the engine import out of the app entry bundle.
   useEffect(() => {
     isMountedRef.current = true;
     let isDisposed = false;
@@ -362,6 +362,9 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
     };
 
     initializeDiceBoxRef.current = initialize;
+    // The app has committed its first render; warm the engine asynchronously so
+    // the initial UI does not need to wait for DiceBox's code or WASM setup.
+    initialize();
 
     return () => {
       isDisposed = true;
