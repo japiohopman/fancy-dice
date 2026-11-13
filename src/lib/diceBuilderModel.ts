@@ -128,12 +128,10 @@ export function buildDiceFormulaFromBuilderState(state: DiceBuilderState): strin
   }
 
   for (const dieType of DIE_TYPES) {
-    if (dieType === 'd20') continue;
     const count = state.stagedDice[dieType];
     if (!Number.isSafeInteger(count) || count < 0) return '';
-    if (count > 0) {
-      parts.push(dieType === 'dfate' ? `${count}dF` : `${count}${dieType}`);
-    }
+    if (dieType === 'd20' || count === 0) continue;
+    parts.push(dieType === 'dfate' ? `${count}dF` : `${count}${dieType}`);
   }
 
   if (parts.length === 0) return '';
