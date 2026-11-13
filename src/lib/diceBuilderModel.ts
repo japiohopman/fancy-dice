@@ -112,6 +112,26 @@ export function parseDiceBuilderFormula(formula: string): DiceBuilderState | nul
   return hasDice ? state : null;
 }
 
+/** Applies advantage/disadvantage only when the resulting formula stays within the 100-die limit. */
+export function withDiceBuilderAdvantage(
+  state: DiceBuilderState,
+  advantage: DiceBuilderAdvantage
+): DiceBuilderState | null {
+  if (advantage === state.advantage) return null;
+
+  const nextState: DiceBuilderState = {
+    ...state,
+    stagedDice: { ...state.stagedDice },
+    advantage,
+  };
+
+  nextState.stagedDice.d20 = advantage === 'none' ? 1 : 2;
+  const totalDice = DIE_TYPES.reduce((total, dieType) => total + nextState.stagedDice[dieType], 0);
+  if (!Number.isSafeInteger(totalDice) || totalDice > 100) return null;
+
+  return nextState;
+}
+
 /** Builds the canonical notation represented by the picker without changing its meaning. */
 export function buildDiceFormulaFromBuilderState(state: DiceBuilderState): string {
   const parts: string[] = [];
