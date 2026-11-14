@@ -131,8 +131,15 @@ class FakeAudioContext {
     return Promise.resolve();
   }
 
+  suspendGate: Promise<void> | null = null;
+
   suspend() {
     this.suspendCount += 1;
+    if (this.suspendGate) {
+      return this.suspendGate.then(() => {
+        this.state = 'suspended';
+      });
+    }
     this.state = 'suspended';
     return Promise.resolve();
   }
@@ -238,6 +245,43 @@ test('routes mute changes through the master gain and suspends audio in the back
     assert.equal(context.sources[0].stopTimes.length, 1);
     assert.equal(context.suspendCount, 1);
     assert.equal(context.state, 'suspended');
+  } finally {
+    environment.cleanup();
+  }
+});
+
+test('resumes audio after an in-flight background suspension when a sound is requested', async () => {
+  const environment = installFakeAudioEnvironment();
+  try {
+    const manager = new AudioManager();
+    manager.playShakeRattle();
+
+    const context = FakeAudioContext.instances[0];
+    assert.ok(context);
+
+    let completeSuspension!: () => void;
+    context.suspendGate = new Promise<void>((resolve) => {
+      completeSuspension = resolve;
+    });
+
+    environment.fakeDocument.hidden = true;
+    environment.listeners.get('visibilitychange')?.();
+    assert.equal(context.suspendCount, 1);
+    // The browser has not finished changing the context state yet.
+    assert.equal(context.state, 'running');
+
+    environment.fakeDocument.hidden = false;
+    manager.playShakeRattle();
+    assert.equal(context.sources.length, 2);
+    assert.equal(context.resumeCount, 0);
+
+    completeSuspension();
+    await context.suspendGate;
+    await Promise.resolve();
+    await Promise.resolve();
+
+    assert.equal(context.state, 'running');
+    assert.equal(context.resumeCount, 1);
   } finally {
     environment.cleanup();
   }
