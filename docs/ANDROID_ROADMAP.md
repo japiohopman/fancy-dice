@@ -14,7 +14,7 @@ To install:
 2. Open Chrome's menu and select **Install app** or **Add to Home screen**.
 3. Launch Fancy Dice from the home screen.
 
-The web app manifest uses standalone display and intentionally omits a fixed orientation request. The app shell follows the device's current viewport and applies CSS safe-area insets.
+The web app manifest requests fullscreen display for installed-PWA launches. Supported environments may hide browser chrome and system UI; environments that do not support fullscreen fall back to standalone display. The manifest intentionally omits a fixed orientation request, and the app shell follows the device's current viewport and applies CSS safe-area insets. A normal browser tab does not demonstrate the installed-PWA display mode.
 
 ## 2. What currently works through browser APIs
 
@@ -43,7 +43,7 @@ Consequently, there is no verified native Android Studio project, native plugin 
 
 A native Android target should be created only after a separate product decision confirms that an APK/AAB is needed and defines its maintenance/release expectations. If approved, use this sequence:
 
-1. Confirm the native app ID, display name, signing ownership, release target and the deliberate decision to track the Android platform directory.
+1. Confirm the native app ID, display name, signing ownership, release target and the deliberate decision to track the Android platform directory. 
 2. Generate the platform with the installed Capacitor CLI (npx cap add android) and update repository ignore rules intentionally. Do not accidentally commit generated build output or signing secrets.
 3. Integrate Capacitor Motion and Haptics behind a small platform adapter, retaining browser DeviceMotionEvent/navigator.vibrate fallbacks for the PWA. Do not add a custom Kotlin sensor event bridge unless a verified plugin limitation requires it.
 4. Build the web app and sync it to the native project with npm run build and npx cap sync android.
@@ -57,19 +57,19 @@ This is a possible future path, not an active native-release commitment. No Kotl
 
 Do not force the PWA or a future native activity to landscape. The current PWA manifest omits orientation and the app uses the live viewport. A future native target should preserve the system/user orientation preference unless a separate product decision explicitly changes it.
 
-On physical devices check the system status bar, navigation area, display cutouts, keyboard and safe-area spacing. Browser viewport emulation is useful but does not replace a real-device test.
+For the installed PWA, verify that fullscreen display is applied where supported and standalone fallback is acceptable elsewhere. On physical devices check system navigation, display cutouts, keyboard and safe-area spacing. Browser viewport emulation is useful but does not replace a real-device test.
 
 ## 6. Test checklist
 
 Use the detailed, repeatable procedure in PWA_ANDROID_TEST_GUIDE.md. At minimum verify:
 
-- Install, standalone launch and relaunch.
+- Install, fullscreen launch on supporting devices, and standalone fallback where fullscreen is unsupported.
 - Portrait and landscape rotation.
 - DiceBox startup, a single d20, multi-die rolls and physical result mapping.
 - Motion permission, shake-to-roll and vibration where supported.
 - Audio start, mute/unmute and background/foreground recovery.
 - Theme/color changes, menu scrolling and history.
 - Online launch followed by an offline relaunch.
-- No content hidden by system UI or display cutouts.
+- System navigation works and no content is hidden by system UI or display cutouts.
 
 Record device model, Android version, Chrome/WebView version, test date and observed failures in the relevant GitHub issue. Mark browser/emulator checks separately from physical-device results.
