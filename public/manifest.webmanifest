@@ -5,7 +5,7 @@
   "description": "A mobile-first 3D physics dice roller for tabletop RPGs.",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#1a1714",
   "theme_color": "#1a1714",
   "categories": ["games", "utilities"],
