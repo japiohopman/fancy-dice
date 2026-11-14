@@ -16,12 +16,11 @@ This roadmap outlines all prioritized polish, performance, Android readiness, an
 ## TASK SPECIFICATIONS
 
 ### P0-1: Dead Code Removal & Workspace Sanitation
-- **Objective**: Remove unimported legacy UI components (`DiceTray.tsx`, `RPGPresets.tsx`, `RollHistory.tsx`, `ThemeSelector.tsx`, `AndroidMobileGuide.tsx`, `RollResultModal.tsx`).
-- **Problem**: 6 legacy files consume maintenance bandwidth and confuse developers.
-- **Reason**: Unused components bloat the repository and create type-checking noise.
-- **Affected Area**: `src/components/`.
-- **Expected Outcome**: Clean, unambiguous component directory containing only active components.
-- **Validation Method**: `npm run lint` and `npm run build` pass cleanly with zero references to deleted files.
+- **Status**: Completed in [Issue #43](https://github.com/japiohopman/fancy-dice/issues/43).
+- **Objective**: Remove the six legacy UI components confirmed unused by the import and reference audit.
+- **Outcome**: The six unreferenced component files, their orphaned preset type, and the unused confetti runtime/type packages have been removed.
+- **Affected Area**: `src/components/`, `src/types.ts`, `package.json`, and `package-lock.json`.
+- **Validation Method**: TypeScript check, automated tests, and production build; no source, test, or documentation references to the deleted component files remain.
 - **Risk**: Low.
 - **Dependencies**: None.
 - **Estimated Complexity**: Low.

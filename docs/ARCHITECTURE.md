@@ -10,7 +10,7 @@ Fantastic 3D Dice Roller is a high-performance, mobile-first 3D physics dice rol
 ### 📱 Responsive App Shell (No Page Scrollbars)
 - **Top Bar (`TopNotationBar.tsx`)**: Prominent current dice notation input (e.g., `1d20+10`, `4d4`), quick preset chips, roll trigger button, sound mute toggle, and shake sensor status indicator.
 - **Center Canvas Stage (`ThreeDiceCanvas.tsx`)**: Fullscreen 3D WebGL viewport running Ammo.js rigid body collision physics for d4, d6, d8, d10, d12, d20, d100, and Fate dice.
-- **Center Outcome Overlay (`RollOutcomeOverlay.tsx`)**: Non-blocking auto-fading result modal directly over the dice box that displays total, natural crits, fumbles, individual roll breakdowns, and confetti particle bursts before smoothly fading out.
+- **Center Outcome Overlay (`RollOutcomeOverlay.tsx`)**: Non-blocking auto-fading result display directly over the dice box that shows the roll total, natural crits, fumbles, and individual roll breakdowns.
 - **Left Options Panel (`LeftOptionsPanel.tsx`)**: Collapsible panel containing quick die count adjusters (+/- d4 through d100), modifier controls, advantage/disadvantage toggles, and 1-tap RPG action presets (e.g., Fireball `8d6`, Attack Roll `1d20+5`).
 - **Right Options Panel (`RightOptionsPanel.tsx`)**: Collapsible panel featuring 3D material themes (Emerald, Ruby, Gold, Cyber Neon, Obsidian, Ivory, Galaxy), table felt surfaces (Emerald, Sapphire, Crimson, Midnight, Leather), and motion accelerometer calibration controls.
 - **Bottom History Bar (`BottomHistoryBar.tsx`)**: Horizontal ticker showing historical rolls with instant re-roll taps and clear options.

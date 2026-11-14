@@ -24,7 +24,7 @@ Fancy Dice is a mobile-first, orientation-neutral 3D tabletop dice rolling PWA t
 However, a technical audit reveals that while the application is functional as a web prototype, **it is not yet ready for release as a premium native Android application**.
 
 ### Primary Findings & Vulnerabilities:
-1. **Unused / Dead Code & Architectural Duplication `[Verified]`**: The codebase contains 6 legacy UI components (`DiceTray.tsx`, `RPGPresets.tsx`, `RollHistory.tsx`, `ThemeSelector.tsx`, `AndroidMobileGuide.tsx`, `RollResultModal.tsx`) that are never imported in `App.tsx`.
+1. **Unused / Dead Code & Architectural Duplication `[Resolved in #43]`**: The six unreferenced legacy UI components identified by this audit have been removed. The active component map is maintained in `docs/ARCHITECTURE.md`.
 2. **WebGL / WebAssembly Asset Size `[Verified]`**: The offscreen WASM physics bundle produces large bundle warnings (>1.4MB) during production builds (`dist/assets/world.offscreen-C5e_o3iU.js`).
 3. **Android Capacitor Project Gap `[Verified]`**: While `@capacitor/core`, `@capacitor/android`, `@capacitor/motion`, and `@capacitor/haptics` are declared in `package.json` (`^8.5.0`) and `capacitor.config.ts` exists (`appId: com.fantasticdice.app`), the native `android/` platform directory is omitted from source control (`.gitignore`). No native Android build target or adaptive splash/icon pipeline is committed.
 4. **Motion Detector & Sensor Disconnect `[Verified]`**: `ShakeDetector.ts` relies on standard `window.addEventListener('devicemotion')` and `navigator.vibrate()`, bypassing the installed `@capacitor/motion` and `@capacitor/haptics` plugins. Furthermore, `docs/ANDROID_ROADMAP.md` contradicts the current implementation by proposing manual Kotlin sensor overrides in `MainActivity.kt`.
@@ -112,6 +112,6 @@ Every proposed change in the roadmap must serve strictly to improve performance,
 ## G. CODE QUALITY ASSESSMENT
 
 ### Technical Debt & Maintenance Concerns
-1. **Dead Code Accumulation `[Verified]`**: 6 legacy files (`DiceTray.tsx`, `RPGPresets.tsx`, `RollHistory.tsx`, `ThemeSelector.tsx`, `AndroidMobileGuide.tsx`, `RollResultModal.tsx`) remain in `src/components/`, creating developer confusion.
+1. **Dead Code Accumulation `[Resolved in #43]`**: The six legacy component files identified in the original audit have been removed from `src/components/`; their orphaned preset type and confetti-only dependencies were removed as well.
 2. **Magic Numbers in Motion Detection `[Verified]`**: `ShakeDetector.ts` uses hardcoded speed thresholds (`2800`, `200`, `180`) and delay intervals (`70ms`, `350ms`) without named constants or adaptive Android calibration.
 3. **Implicit `any` Types in Callback Handlers `[Verified]`**: `handleRollComplete(physicalResults: any)` in `App.tsx` and `ThreeDiceCanvas.tsx` lacks full TypeScript interfaces for Ammo.js physical roll event payloads.
