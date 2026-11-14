@@ -5,10 +5,12 @@ export class AudioManager {
   private activeSources = new Set<AudioScheduledSourceNode>();
   private isMuted = false;
   private hasVisibilityListener = false;
+  private pendingSuspension: Promise<void> | null = null;
 
   private handleVisibilityChange = () => {
     if (!this.ctx || typeof document === 'undefined' || !document.hidden) return;
-    const now = this.ctx.currentTime;
+    const context = this.ctx;
+    const now = context.currentTime;
     this.activeSources.forEach((source) => {
       try {
         source.stop(now);
@@ -16,9 +18,15 @@ export class AudioManager {
         // A source that has already ended no longer needs cancellation.
       }
     });
-    if (this.ctx.state === 'running') {
-      void this.ctx.suspend().catch(() => {
+    if (context.state === 'running' && !this.pendingSuspension) {
+      const suspension = context.suspend().catch(() => {
         // A context may already be closing when the page becomes hidden.
+      });
+      this.pendingSuspension = suspension;
+      void suspension.then(() => {
+        if (this.pendingSuspension === suspension) {
+          this.pendingSuspension = null;
+        }
       });
     }
   };
@@ -51,12 +59,24 @@ export class AudioManager {
       this.hasVisibilityListener = true;
     }
 
-    if (this.ctx.state === 'suspended') {
+    const context = this.ctx;
+    if (this.pendingSuspension) {
+      // A visibility-triggered suspend may still be settling even while state
+      // reports "running". Resume only after it completes and the page is active.
+      const pendingSuspension = this.pendingSuspension;
+      void pendingSuspension.then(() => {
+        if (this.ctx !== context || (typeof document !== 'undefined' && document.hidden)) return;
+        if (context.state === 'suspended') {
+          // Resume rejection is expected on some browsers until a user gesture occurs.
+          void context.resume().catch(() => undefined);
+        }
+      });
+    } else if (context.state === 'suspended') {
       // Resume rejection is expected on some browsers until a user gesture occurs.
-      void this.ctx.resume().catch(() => undefined);
+      void context.resume().catch(() => undefined);
     }
 
-    return this.ctx;
+    return context;
   }
 
   /** Measures only the synchronous Web Audio scheduling work, not audible playback time. */
