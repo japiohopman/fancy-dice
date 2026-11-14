@@ -36,7 +36,7 @@ export const TopNotationBar: React.FC<TopNotationBarProps> = ({
             aria-label={`Edit dice selection. Current roll: ${currentFormula || 'none selected'}`}
             aria-haspopup="dialog"
             aria-expanded={diceBuilderOpen}
-            aria-controls="dice-builder-title"
+            aria-controls="dice-builder-dialog"
             className={`ui-field flex w-full min-w-0 cursor-pointer items-center px-3 text-left ${formulaError ? 'border-rose-500/70' : ''}`}
           >
             <Sparkles className="mr-2 h-3.5 w-3.5 shrink-0 text-[#c5a66b]" aria-hidden="true" />
