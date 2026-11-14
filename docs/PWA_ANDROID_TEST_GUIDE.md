@@ -16,7 +16,7 @@ The app is served from the repository subpath `/fancy-dice/`. Vite sets that bas
 4. Confirm the install.
 5. Launch **Fancy Dice** from the home screen and check that it opens without the normal browser address bar.
 
-If Chrome does not offer installation, check that the page loaded over HTTPS, the manifest is available, and the service worker is active. A first deployment can take a short time to become available after the workflow finishes.
+The manifest requests fullscreen display for installed-PWA launches. Supported environments may hide both browser chrome and system UI; environments that do not support fullscreen fall back to standalone display. A normal browser tab does not prove the installed-PWA display mode. If Chrome does not offer installation, check that the page loaded over HTTPS, the manifest is available, and the service worker is active. A first deployment can take a short time to become available after the workflow finishes.
 
 ## Responsive orientation and viewport test
 
@@ -32,13 +32,13 @@ The PWA manifest intentionally does not request a fixed orientation. Test both o
 
 For each viewport, verify that the dice table remains the main focus, the notation and Menu controls remain reachable, menu content can scroll inside its overlay, and the history strip stays visible without causing page scrolling. Open and close the menu in both orientations and rotate while the app is open.
 
-On the physical phone, include the OS status bar (time, battery and system icons), navigation area, camera/notch cutouts and safe-area spacing in the check. Confirm that content is not hidden behind system UI. Record the device model, Android version and Chrome version with the result. Browser emulation is useful, but does not replace this physical-device check.
+On the physical phone, check the fullscreen result, system navigation/back gesture behaviour, camera/notch cutouts and safe-area spacing. On devices that do not support fullscreen, verify that the standalone fallback still keeps content clear of system UI. Record the device model, Android version and Chrome version with the result. Browser emulation is useful, but does not replace this physical-device check.
 
 ## Functional smoke test
 
-- [ ] App opens in standalone mode and follows the device's current orientation (portrait or landscape).
+- [ ] Installed PWA requests fullscreen display on devices that support it, or uses standalone display after the fallback, and follows the device's current orientation (portrait or landscape).
 - [ ] Rotate the physical phone in both directions; the app reflows without clipping or remounting the dice stage.
-- [ ] Time, battery, status icons and system navigation remain in their normal OS orientation and are not covered by app content.
+- [ ] System navigation remains usable; app content is not obscured by display cutouts or system UI.
 - [ ] A single d20 roll completes and the result matches the visible die.
 - [ ] Mixed and multiple dice (for example `4d6 + 1d20`) roll and settle correctly.
 - [ ] Dice skins and table themes can be changed.

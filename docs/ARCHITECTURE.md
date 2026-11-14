@@ -88,7 +88,7 @@ No Capacitor Motion or Haptics plugin calls are currently present in the active 
 
 The app is published through GitHub Pages under the /fancy-dice/ repository path. Vite switches its production base path in GitHub Actions; local development uses /.
 
-The web app manifest uses standalone display and does not request a fixed orientation. CSS applies top/right/bottom/left safe-area insets to the app shell. The service worker precaches the app shell, manifest, icons and generated JavaScript/CSS bundles. Fingerprinted Vite bundles use cache-first; other same-origin static assets, including stable DiceBox assets, use network-first with a cached fallback.
+The web app manifest requests fullscreen display for installed-PWA launches and leaves orientation unspecified. Supported environments may hide browser and system UI; environments that do not support fullscreen use the manifest's standalone fallback. Ordinary browser tabs do not demonstrate the installed-PWA display mode. CSS applies top/right/bottom/left safe-area insets to the app shell. The service worker precaches the app shell, manifest, icons and generated JavaScript/CSS bundles. Fingerprinted Vite bundles use cache-first; other same-origin static assets, including stable DiceBox assets, use network-first with a cached fallback.
 
 The first visit requires an internet connection. The service worker registers after the page load event and takes control only after activation; DiceBox can begin requesting its assets before that happens. Once the worker is active, relaunch the app while online and wait for the dice table to finish loading so those engine assets are requested under service-worker control. Google Fonts are external and may fall back to system fonts offline.
 
