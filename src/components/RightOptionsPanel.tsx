@@ -170,14 +170,21 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   const wheelRectRef = useRef<DOMRect | null>(null);
   const pendingWheelColorRef = useRef<{ hue: number; saturation: number; queuedAt: number } | null>(null);
   const wheelFrameRef = useRef<number | null>(null);
+  const wheelCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAppliedColorRef = useRef(activeColorHex);
   const lastDiceColorCommitAtRef = useRef(0);
+
+  const clearWheelCommitTimer = () => {
+    if (wheelCommitTimerRef.current !== null) {
+      clearTimeout(wheelCommitTimerRef.current);
+      wheelCommitTimerRef.current = null;
+    }
+  };
 
   const flushPendingWheelColor = (force = false, updateLocalState = true) => {
     const pending = pendingWheelColorRef.current;
     if (!pending) return;
 
-    pendingWheelColorRef.current = null;
     const nextColor = hslToHex(pending.hue, pending.saturation, 50).toUpperCase();
     const now = performance.now();
 
@@ -186,12 +193,25 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       setWheelS(pending.saturation);
     }
 
-    // Preview the dice at most ~30 times per second while dragging; pointer-up
-    // always commits the exact final value immediately.
-    if (
-      nextColor !== lastAppliedColorRef.current &&
-      (force || now - lastDiceColorCommitAtRef.current >= COLOR_PREVIEW_INTERVAL_MS)
-    ) {
+    // Keep a throttled sample queued and deliver it after the preview interval,
+    // even when the pointer stops moving before another animation frame arrives.
+    if (nextColor === lastAppliedColorRef.current) {
+      pendingWheelColorRef.current = null;
+      clearWheelCommitTimer();
+    } else {
+      const remainingDelay = COLOR_PREVIEW_INTERVAL_MS - (now - lastDiceColorCommitAtRef.current);
+      if (!force && remainingDelay > 0) {
+        if (wheelCommitTimerRef.current === null) {
+          wheelCommitTimerRef.current = setTimeout(() => {
+            wheelCommitTimerRef.current = null;
+            flushPendingWheelColorRef.current();
+          }, remainingDelay);
+        }
+        return;
+      }
+
+      pendingWheelColorRef.current = null;
+      clearWheelCommitTimer();
       lastAppliedColorRef.current = nextColor;
       lastDiceColorCommitAtRef.current = now;
       onChangeMaterialTheme(nextColor);
@@ -225,6 +245,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
         cancelAnimationFrame(wheelFrameRef.current);
         wheelFrameRef.current = null;
       }
+      clearWheelCommitTimer();
       flushPendingWheelColorRef.current(true, false);
     };
   }, []);
@@ -289,6 +310,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       cancelAnimationFrame(wheelFrameRef.current);
       wheelFrameRef.current = null;
     }
+    clearWheelCommitTimer();
     flushPendingWheelColor(true);
     activePointerIdRef.current = null;
     wheelRectRef.current = null;
@@ -302,6 +324,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
       cancelAnimationFrame(wheelFrameRef.current);
       wheelFrameRef.current = null;
     }
+    clearWheelCommitTimer();
     flushPendingWheelColor(true);
     activePointerIdRef.current = null;
     wheelRectRef.current = null;
