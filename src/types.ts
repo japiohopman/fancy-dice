@@ -41,15 +41,6 @@ export interface RollParsedResult {
   timestamp: Date;
 }
 
-export interface DicePreset {
-  id: string;
-  name: string;
-  category: 'D&D 5e' | 'Pathfinder' | 'Fate' | 'CoC' | 'Custom';
-  formula: string;
-  description?: string;
-  iconName?: string;
-}
-
 export interface RollHistoryEntry {
   id: string;
   result: RollParsedResult;
