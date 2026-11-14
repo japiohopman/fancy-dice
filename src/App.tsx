@@ -11,7 +11,7 @@ import { RightOptionsPanel } from './components/RightOptionsPanel';
 import { BottomHistoryBar } from './components/BottomHistoryBar';
 import { BookOpen, Dices, Info, Palette, Pipette, SlidersHorizontal, X } from 'lucide-react';
 
-type MenuSection = 'dice' | 'presets' | 'themes' | 'color' | 'options' | 'about';
+type MenuSection = 'presets' | 'themes' | 'color' | 'options' | 'about';
 
 /** Owns dice-roll state, navigation state, themes, sensor settings, and history for the app. */
 export default function App() {
@@ -37,7 +37,7 @@ export default function App() {
   // A single menu shell keeps navigation and section content in one predictable place.
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isMenuMounted, setIsMenuMounted] = useState<boolean>(false);
-  const [activeMenuSection, setActiveMenuSection] = useState<MenuSection>('dice');
+  const [activeMenuSection, setActiveMenuSection] = useState<MenuSection>('presets');
   const menuDialogRef = useRef<HTMLDivElement>(null);
   const lastFocusedTriggerRef = useRef<HTMLButtonElement | null>(null);
   const previousMenuOpenRef = useRef<boolean>(false);
@@ -424,7 +424,6 @@ export default function App() {
 
             <nav aria-label="Menu sections" className="flex shrink-0 gap-1 overflow-x-auto border-b border-[#3d3329] bg-[#181412] p-1.5 no-scrollbar">
               {([
-                { id: 'dice', label: 'Dice', Icon: Dices },
                 { id: 'presets', label: 'Presets', Icon: BookOpen },
                 { id: 'themes', label: 'Themes', Icon: Palette },
                 { id: 'color', label: 'Dice Color', Icon: Pipette },
@@ -449,7 +448,7 @@ export default function App() {
             </nav>
 
             <div className="relative min-h-0 flex-1 overflow-hidden">
-              <div hidden={activeMenuSection !== 'dice' && activeMenuSection !== 'presets'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'dice' ? 'menu-section-enter-dice' : activeMenuSection === 'presets' ? 'menu-section-enter-presets' : ''}`}>
+              <div hidden={activeMenuSection !== 'presets'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'presets' ? 'menu-section-enter-presets' : ''}`}>
                 <LeftOptionsPanel
                   onFormulaUpdate={(formula) => {
                     setCurrentFormula(formula);
@@ -457,7 +456,7 @@ export default function App() {
                     setRollError(null);
                   }}
                   currentFormula={currentFormula}
-                  activeTab={activeMenuSection === 'presets' ? 'presets' : 'dice'}
+                  activeTab="presets"
                 />
               </div>
 
