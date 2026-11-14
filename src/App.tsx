@@ -5,12 +5,13 @@ import { audioManager } from './lib/audioManager';
 import { ShakeDetector } from './lib/shakeDetector';
 import { ThreeDiceCanvas } from './components/ThreeDiceCanvas';
 import { TopNotationBar } from './components/TopNotationBar';
+import { DiceBuilderOverlay } from './components/DiceBuilderOverlay';
 import { LeftOptionsPanel } from './components/LeftOptionsPanel';
 import { RightOptionsPanel } from './components/RightOptionsPanel';
 import { BottomHistoryBar } from './components/BottomHistoryBar';
 import { BookOpen, Dices, Info, Palette, Pipette, SlidersHorizontal, X } from 'lucide-react';
 
-type MenuSection = 'dice' | 'presets' | 'themes' | 'color' | 'options' | 'about';
+type MenuSection = 'presets' | 'themes' | 'color' | 'options' | 'about';
 
 /** Owns dice-roll state, navigation state, themes, sensor settings, and history for the app. */
 export default function App() {
@@ -21,11 +22,22 @@ export default function App() {
   const isRollingRef = useRef<boolean>(false);
   const [rollError, setRollError] = useState<string | null>(null);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
+  const [isDiceBuilderOpen, setIsDiceBuilderOpen] = useState<boolean>(false);
+  const notationTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const previousDiceBuilderOpenRef = useRef<boolean>(false);
+
+  // Return focus to the notation summary after the dedicated editor is dismissed.
+  useEffect(() => {
+    if (previousDiceBuilderOpenRef.current && !isDiceBuilderOpen) {
+      notationTriggerRef.current?.focus();
+    }
+    previousDiceBuilderOpenRef.current = isDiceBuilderOpen;
+  }, [isDiceBuilderOpen]);
 
   // A single menu shell keeps navigation and section content in one predictable place.
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isMenuMounted, setIsMenuMounted] = useState<boolean>(false);
-  const [activeMenuSection, setActiveMenuSection] = useState<MenuSection>('dice');
+  const [activeMenuSection, setActiveMenuSection] = useState<MenuSection>('presets');
   const menuDialogRef = useRef<HTMLDivElement>(null);
   const lastFocusedTriggerRef = useRef<HTMLButtonElement | null>(null);
   const previousMenuOpenRef = useRef<boolean>(false);
@@ -149,8 +161,8 @@ export default function App() {
 
   // Execute Roll Logic
   /** Validates the formula before audio, state changes, or a physical DiceBox roll begin. */
-  const handleExecuteRoll = (formulaToRoll?: string, presetName?: string) => {
-    if (isRollingRef.current) return;
+  const handleExecuteRoll = (formulaToRoll?: string, presetName?: string): boolean => {
+    if (isRollingRef.current) return false;
 
     setRollError(null);
     const formula = (formulaToRoll ?? currentFormula).trim();
@@ -160,7 +172,7 @@ export default function App() {
       result = parseAndRollFormula(formula);
     } catch (error) {
       setFormulaError(error instanceof Error ? error.message : 'Invalid dice formula.');
-      return;
+      return false;
     }
 
     setFormulaError(null);
@@ -181,6 +193,7 @@ export default function App() {
 
     // Trigger visual roll of the validated dice structure.
     setCurrentResult(result);
+    return true;
   };
 
   // Shake callbacks always call the latest handler without restarting the motion listener.
@@ -313,17 +326,37 @@ export default function App() {
       {/* Primary navigation and always-visible dice notation controls. */}
       <TopNotationBar
         currentFormula={currentFormula}
-        onFormulaChange={(formula) => {
-          setCurrentFormula(formula);
-          setFormulaError(null);
-          setRollError(null);
+        onOpenDiceBuilder={() => {
+          if (isMenuOpen) closeMenu();
+          setIsDiceBuilderOpen(true);
         }}
-        onRoll={(f) => handleExecuteRoll(f)}
+        setNotationTrigger={(element) => {
+          notationTriggerRef.current = element;
+        }}
+        onRoll={(f) => {
+          handleExecuteRoll(f);
+        }}
         isRolling={isRolling}
         onToggleMenu={toggleMenu}
         menuOpen={isMenuOpen}
+        diceBuilderOpen={isDiceBuilderOpen}
         formulaError={formulaError ?? rollError}
       />
+
+      {isDiceBuilderOpen && (
+        <DiceBuilderOverlay
+          currentFormula={currentFormula}
+          formulaError={formulaError ?? rollError}
+          isRolling={isRolling}
+          onFormulaChange={(formula) => {
+            setCurrentFormula(formula);
+            setFormulaError(null);
+            setRollError(null);
+          }}
+          onRoll={(formula) => handleExecuteRoll(formula)}
+          onClose={() => setIsDiceBuilderOpen(false)}
+        />
+      )}
 
       {/* The menu floats above the full-width 3D table without resizing it. */}
       <div className="relative flex-1 min-h-0 w-full overflow-hidden">
@@ -394,7 +427,6 @@ export default function App() {
 
             <nav aria-label="Menu sections" className="flex shrink-0 gap-1 overflow-x-auto border-b border-[#3d3329] bg-[#181412] p-1.5 no-scrollbar">
               {([
-                { id: 'dice', label: 'Dice', Icon: Dices },
                 { id: 'presets', label: 'Presets', Icon: BookOpen },
                 { id: 'themes', label: 'Themes', Icon: Palette },
                 { id: 'color', label: 'Dice Color', Icon: Pipette },
@@ -419,7 +451,7 @@ export default function App() {
             </nav>
 
             <div className="relative min-h-0 flex-1 overflow-hidden">
-              <div hidden={activeMenuSection !== 'dice' && activeMenuSection !== 'presets'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'dice' ? 'menu-section-enter-dice' : activeMenuSection === 'presets' ? 'menu-section-enter-presets' : ''}`}>
+              <div hidden={activeMenuSection !== 'presets'} className={`h-full overflow-y-auto p-2 sm:p-3 ${activeMenuSection === 'presets' ? 'menu-section-enter-presets' : ''}`}>
                 <LeftOptionsPanel
                   onFormulaUpdate={(formula) => {
                     setCurrentFormula(formula);
@@ -427,7 +459,7 @@ export default function App() {
                     setRollError(null);
                   }}
                   currentFormula={currentFormula}
-                  activeTab={activeMenuSection === 'presets' ? 'presets' : 'dice'}
+                  activeTab="presets"
                 />
               </div>
 
