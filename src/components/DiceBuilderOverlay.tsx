@@ -122,6 +122,7 @@ export const DiceBuilderOverlay: React.FC<DiceBuilderOverlayProps> = ({
       />
 
       <section
+        id="dice-builder-dialog"
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
