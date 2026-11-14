@@ -15,13 +15,15 @@ interface LeftOptionsPanelProps {
   onFormulaUpdate: (formula: string) => void;
   currentFormula: string;
   activeTab: 'dice' | 'presets';
+  compact?: boolean;
 }
 
 /** Renders the die builder and RPG preset sections in the existing left-side panel. */
 export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   onFormulaUpdate,
   currentFormula,
-  activeTab
+  activeTab,
+  compact = false,
 }) => {
 
   // The canonical formula is owned by App; the picker is a synchronized projection of it.
@@ -140,15 +142,62 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex-1 p-2 flex flex-col min-h-0 overflow-y-auto gap-2 text-xs no-scrollbar">
+      <div className={`flex-1 flex flex-col min-h-0 overflow-y-auto text-xs no-scrollbar ${compact ? "gap-1 p-1" : "gap-2 p-2"}`}>
         {activeTab === 'dice' ? (
           <>
             {isCustomFormula && (
-              <div role="status" className="rounded-lg border border-[#8c7851]/50 bg-[#8c7851]/10 px-2.5 py-2 text-[10px] leading-relaxed text-[#d4c3a1]/85">
-                Custom formula active: <code className="font-mono text-[#f4ead5]">{currentFormula || '(empty)'}</code>.
-                Adjusting the picker starts a new builder formula; simply opening this panel never changes custom notation.
+              <div role="status" className={`rounded-lg border border-[#8c7851]/50 bg-[#8c7851]/10 px-2 py-1 text-[9px] leading-tight text-[#d4c3a1]/85 ${compact ? "truncate" : "px-2.5 py-2 text-[10px] leading-relaxed"}`}>
+                Custom notation active: <code className="font-mono text-[#f4ead5]">{currentFormula || '(empty)'}</code>. Changing a die starts a new builder formula.
               </div>
             )}
+            {compact ? (
+              <div className="grid shrink-0 grid-cols-4 gap-1">
+                {diceList.map((die) => (
+                  <div
+                    key={die.type}
+                    data-selected={stagedDice[die.type] > 0}
+                    className="ui-choice-tile grid min-h-[3.35rem] grid-cols-[minmax(0,1fr)_1.65rem] items-center gap-1 p-1"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleIncrement(die.type)}
+                      aria-label={`Add one ${die.label}`}
+                      className="flex min-w-0 flex-col items-center justify-center gap-0.5 py-0.5"
+                    >
+                      <img
+                        src={getIconSrc(die.type)}
+                        className={`h-5 w-5 object-contain brightness-0 invert-[89%] sepia-[12%] saturate-[485%] hue-rotate-[353deg] contrast-[91%] ${stagedDice[die.type] > 0 ? 'opacity-100 scale-105' : 'opacity-45'} transition-all duration-200`}
+                        alt=""
+                      />
+                      <span className="max-w-full truncate font-mono text-[9px] font-bold uppercase leading-none text-[#d4c3a1]">
+                        {die.label}{stagedDice[die.type] > 0 ? ` ×${stagedDice[die.type]}` : ''}
+                      </span>
+                    </button>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleIncrement(die.type)}
+                        disabled={Object.values(stagedDice).reduce((total, count) => total + count, 0) >= 100}
+                        aria-label={`Add one ${die.label}`}
+                        className="ui-stepper-button !h-6 !min-h-6 !w-full !rounded-md !text-[10px]"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDecrement(die.type)}
+                        disabled={isCustomFormula || stagedDice[die.type] === 0}
+                        aria-label={`Remove one ${die.label}`}
+                        className="ui-stepper-button !h-6 !min-h-6 !w-full !rounded-md !text-[10px]"
+                      >
+                        −
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
             {/* Grid of Die Selectors with SVGs */}
             <div className="grid grid-cols-2 gap-1.5 pr-0.5 shrink-0">
               {diceList.map((die) => (
@@ -199,6 +248,70 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               ))}
             </div>
 
+
+              </>
+            )}
+
+            {compact ? (
+              <div className="grid shrink-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-1">
+                <div className="ui-inset-surface flex min-w-0 items-center justify-between gap-1 px-2 py-1">
+                  <span className="font-title text-[9px] font-semibold text-[#d4c3a1]/80">Mod</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleModifierChange(-1)}
+                      aria-label="Decrease modifier"
+                      className="ui-stepper-button !h-8 !min-h-8 !w-7"
+                    >
+                      −
+                    </button>
+                    <span className="w-7 text-center font-mono text-[10px] font-bold text-[#f4ead5]">
+                      {modifier >= 0 ? `+${modifier}` : modifier}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleModifierChange(1)}
+                      aria-label="Increase modifier"
+                      className="ui-stepper-button !h-8 !min-h-8 !w-7"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="ui-inset-surface grid min-w-0 grid-cols-3 gap-1 p-1">
+                  <button
+                    type="button"
+                    onClick={() => handleAdvantageChange('none')}
+                    aria-pressed={advantage === 'none'}
+                    data-selected={advantage === 'none'}
+                    className="ui-segment-button !min-h-8 !gap-0 !rounded-md !text-[9px]"
+                  >
+                    NORM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAdvantageChange('advantage')}
+                    aria-pressed={advantage === 'advantage'}
+                    data-selected={advantage === 'advantage'}
+                    title="Advantage"
+                    className="ui-segment-button !min-h-8 !gap-0 !rounded-md !text-[9px]"
+                  >
+                    ADV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAdvantageChange('disadvantage')}
+                    aria-pressed={advantage === 'disadvantage'}
+                    data-selected={advantage === 'disadvantage'}
+                    title="Disadvantage"
+                    className="ui-segment-button !min-h-8 !gap-0 !rounded-md !text-[9px]"
+                  >
+                    DIS
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* Modifier & Advantage Controls */}
             <div className="ui-inset-surface flex shrink-0 flex-col gap-1.5 p-2">
               <div className="flex items-center justify-between text-[11px]">
@@ -267,11 +380,15 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               </div>
             </div>
 
+
+              </>
+            )}
+
             {/* Clear Button */}
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={handleClear}
-                className="ui-button ui-button--quiet w-full"
+                className={`ui-button ui-button--quiet w-full ${compact ? "!h-8 !min-h-8 !py-1 !text-[9px]" : ""}`}
                 title="Reset picker to the default 1d20 formula"
               >
                 <RotateCcw className="w-3 h-3" />
