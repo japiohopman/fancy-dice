@@ -6,7 +6,7 @@ Fancy Dice is a standalone, installable 3D dice roller for tabletop role-playing
 
 ## Features
 
-- **3D dice physics** — d4, d6, d8, d10, d12, d20, percentile and Fate dice, powered by @3d-dice/dice-box, Three.js and Ammo.js.
+- **3D dice physics** — d4, d6, d8, d10, d12, d20, percentile and Fate dice, powered by @3d-dice/dice-box, Babylon.js and Ammo.js.
 - **Dice notation** — standard dice formulas, modifiers, keep/drop operators and exploding dice. Invalid notation is rejected before a physical roll starts.
 - **Compact navigation** — the notation field and Roll action stay visible in the top bar. Dice tools, presets, themes, color and settings live in one overlay menu; the dice stage remains mounted beneath it.
 - **Custom appearance** — dice materials, custom color selection and tabletop felt themes.
@@ -24,7 +24,7 @@ A possible future integration with Artificer is documented as a concept only in 
 
 - React 19, TypeScript and Vite
 - Tailwind CSS and Lucide React
-- @3d-dice/dice-box, Three.js and Ammo.js WebAssembly physics
+- @3d-dice/dice-box, Babylon.js and Ammo.js WebAssembly physics
 - Web Audio API for sound synthesis
 - Browser DeviceMotionEvent and navigator.vibrate APIs for motion and vibration feedback
 - Vite-generated PWA service-worker precache
@@ -33,7 +33,7 @@ Capacitor Core, CLI, Android, Motion and Haptics packages are present in the dep
 
 ## Development
 
-Requirements: Node.js 18 or newer and npm.
+Requirements: Node.js 22.12 or newer and npm.
 
 Install dependencies:
 
@@ -67,7 +67,7 @@ https://japiohopman.github.io/fancy-dice/
 2. Open Chrome's menu and select **Install app** or **Add to Home screen**.
 3. Launch Fancy Dice from the home screen.
 
-The PWA uses the device's current orientation; the manifest does not request a fixed orientation. The service worker caches the app shell and generated JavaScript/CSS bundles, then caches same-origin game assets as they are requested. The first visit requires an internet connection. Complete one online launch before relying on offline use.
+The PWA uses the device's current orientation; the manifest does not request a fixed orientation. The service worker caches the app shell and generated JavaScript/CSS bundles, then caches same-origin game assets as they are requested. The first visit requires an internet connection. After the service worker is active, relaunch once while online and wait for the dice table to finish loading before relying on offline use.
 
 The app's browser motion, sound, vibration, WebGL rendering, safe-area spacing and offline behaviour should be checked on a physical device. Browser emulation does not replace that check.
 
