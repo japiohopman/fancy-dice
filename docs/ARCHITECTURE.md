@@ -8,7 +8,7 @@ The active runtime uses:
 
 - React 19 and TypeScript for the interface and application state.
 - Vite for development, production builds and the PWA service-worker precache plugin.
-- @3d-dice/dice-box with Three.js and Ammo.js WebAssembly for physical dice.
+- @3d-dice/dice-box with Babylon.js and Ammo.js WebAssembly for physical dice.
 - A local notation parser and dice-builder model.
 - Web Audio API for synthesized roll, shake, critical and fumble sounds.
 - Browser DeviceMotionEvent and navigator.vibrate APIs for shake and vibration feedback.
@@ -90,7 +90,7 @@ The app is published through GitHub Pages under the /fancy-dice/ repository path
 
 The web app manifest uses standalone display and does not request a fixed orientation. CSS applies top/right/bottom/left safe-area insets to the app shell. The service worker precaches the app shell, manifest, icons and generated JavaScript/CSS bundles. Fingerprinted Vite bundles use cache-first; other same-origin static assets, including stable DiceBox assets, use network-first with a cached fallback.
 
-The first visit requires an internet connection. DiceBox assets are cached as they are requested through the service worker. Google Fonts are external and may fall back to system fonts offline.
+The first visit requires an internet connection. The service worker registers after the page load event and takes control only after activation; DiceBox can begin requesting its assets before that happens. Once the worker is active, relaunch the app while online and wait for the dice table to finish loading so those engine assets are requested under service-worker control. Google Fonts are external and may fall back to system fonts offline.
 
 ## 8. Scope boundary
 
