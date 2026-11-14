@@ -1,172 +1,75 @@
-# Android Native App Roadmap & Deployment Guide
+# Android delivery status and roadmap
 
-This document outlines step-by-step instructions for converting the **Fantastic 3D Dice Roller** web app into a native Android application (`.apk` / `.aab`) with hardware accelerometer motion detection and haptic vibration feedback.
+## 1. Current delivery: installable PWA
 
----
+The current supported Android experience is the published Progressive Web App (PWA), not a native APK/AAB.
 
-## 🚀 Option A: Capacitor Native Bridge (Recommended)
+**Published URL:** https://japiohopman.github.io/fancy-dice/
 
-Capacitor by Ionic wraps our React + WebGL + Three.js web application into a native Android Studio project with full access to native Android Kotlin APIs, hardware sensors, and haptics.
+The app is served under the GitHub Pages repository path /fancy-dice/. The Vite production build sets that base path in GitHub Actions; local development uses /.
 
-### Step 1: Install Capacitor Dependencies in Project
+To install:
 
-Run the following commands in your project terminal:
+1. Open the published URL in Chrome on Android while online.
+2. Open Chrome's menu and select **Install app** or **Add to Home screen**.
+3. Launch Fancy Dice from the home screen.
 
-```bash
-npm install @capacitor/core @capacitor/cli @capacitor/android
-npm install @capacitor/motion @capacitor/haptics
-```
+The web app manifest uses standalone display and intentionally omits a fixed orientation request. The app shell follows the device's current viewport and applies CSS safe-area insets.
 
-### Step 2: Initialize Capacitor Configuration
+## 2. What currently works through browser APIs
 
-Initialize Capacitor with your app name and package ID:
+| Capability | Current implementation | Boundary |
+| --- | --- | --- |
+| Shake-to-roll | ShakeDetector.ts listens for browser DeviceMotionEvent on supported mobile/touch browsers. | Physical sensor behaviour and permission prompts require a real-device check. |
+| Motion permission | Calls the browser DeviceMotionEvent.requestPermission API when the browser exposes it. | This is not a Capacitor permission flow. |
+| Vibration | Uses navigator.vibrate when available and enabled. | Browser/device support varies. |
+| Sound | Web Audio API synthesis in audioManager.ts. | Audio requires an appropriate user interaction and browser audio support. |
+| 3D dice | DiceBox, Three.js and Ammo.js WebAssembly in the browser. | WebGL/WebAssembly availability and performance require physical-device verification. |
+| Offline launch | Service worker precaches the app shell, icons, generated JS/CSS; same-origin stable game assets are cached when requested. | First visit needs internet; complete one online launch before relying on offline use. |
 
-```bash
-npx cap init "Fantastic Dice 3D" "com.fantasticdice.app" --web-dir "dist"
-```
+## 3. Capacitor status — configured dependencies, no native app yet
 
-In `capacitor.config.json`, enable mixed hardware acceleration:
+The repository currently contains:
 
-```json
-{
-  "appId": "com.fantasticdice.app",
-  "appName": "Fantastic Dice 3D",
-  "webDir": "dist",
-  "server": {
-    "androidScheme": "https"
-  },
-  "android": {
-    "allowMixedContent": true,
-    "captureInput": true,
-    "webContentsDebuggingEnabled": true
-  }
-}
-```
+- Capacitor Core, CLI, Android, Motion and Haptics dependencies in package.json.
+- capacitor.config.ts with appId com.fantasticdice.app, appName Fantastic Dice 3D and webDir dist.
+- Android WebView options in that config, including allowMixedContent, captureInput and webContentsDebuggingEnabled.
 
-### Step 3: Add Android Platform Target
+The repository does **not** contain a committed android/ platform directory. The directory is excluded by .gitignore. The active app source does not import or call @capacitor/motion or @capacitor/haptics; sensor and vibration behaviour currently uses browser APIs.
 
-Add the native Android platform folder:
+Consequently, there is no verified native Android Studio project, native plugin bridge, APK/AAB build or Play Store release in this repository. Do not describe the Capacitor packages as integrated native functionality.
 
-```bash
-npx cap add android
-```
+## 4. Conditional native Android path
 
-### Step 4: Build Web App & Sync to Android
+A native Android target should be created only after a separate product decision confirms that an APK/AAB is needed and defines its maintenance/release expectations. If approved, use this sequence:
 
-Compile the production bundle and copy assets into the Android native platform folder:
+1. Confirm the native app ID, display name, signing ownership, release target and the deliberate decision to track the Android platform directory.
+2. Generate the platform with the installed Capacitor CLI (npx cap add android) and update repository ignore rules intentionally. Do not accidentally commit generated build output or signing secrets.
+3. Integrate Capacitor Motion and Haptics behind a small platform adapter, retaining browser DeviceMotionEvent/navigator.vibrate fallbacks for the PWA. Do not add a custom Kotlin sensor event bridge unless a verified plugin limitation requires it.
+4. Build the web app and sync it to the native project with npm run build and npx cap sync android.
+5. Open the project in Android Studio, complete Gradle sync, inspect permissions and WebView settings, and verify the PWA/native capability differences on a physical Android device.
+6. Validate rotation, status/navigation bars, safe-area spacing, WebGL context recovery, motion, haptics, audio lifecycle, app background/foreground and offline behaviour.
+7. Only after those checks, configure app icons/splash resources, signing, APK/AAB output and any store release.
 
-```bash
-npm run build
-npx cap sync android
-```
+This is a possible future path, not an active native-release commitment. No Kotlin sensor implementation is currently maintained in the repository.
 
----
+## 5. Orientation and device UI policy
 
-## 📱 Hardware Shake & Sensor Integration (Native Android Kotlin)
+Do not force the PWA or a future native activity to landscape. The current PWA manifest omits orientation and the app uses the live viewport. A future native target should preserve the system/user orientation preference unless a separate product decision explicitly changes it.
 
-Capacitor automatically bridges native Android accelerometer events. Alternatively, to write direct native Android Kotlin sensor listeners inside `android/app/src/main/java/com/fantasticdice/app/MainActivity.kt`:
+On physical devices check the system status bar, navigation area, display cutouts, keyboard and safe-area spacing. Browser viewport emulation is useful but does not replace a real-device test.
 
-```kotlin
-package com.fantasticdice.app
+## 6. Test checklist
 
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.os.Bundle
-import com.getcapacitor.BridgeActivity
-import kotlin.math.sqrt
+Use the detailed, repeatable procedure in PWA_ANDROID_TEST_GUIDE.md. At minimum verify:
 
-class MainActivity : BridgeActivity(), SensorEventListener {
-    private lateinit var sensorManager: SensorManager
-    private var accelCurrent = SensorManager.GRAVITY_EARTH
-    private var accelLast = SensorManager.GRAVITY_EARTH
-    private var shakeThreshold = 12.0f
+- Install, standalone launch and relaunch.
+- Portrait and landscape rotation.
+- DiceBox startup, a single d20, multi-die rolls and physical result mapping.
+- Motion permission, shake-to-roll and vibration where supported.
+- Audio start, mute/unmute and background/foreground recovery.
+- Theme/color changes, menu scrolling and history.
+- Online launch followed by an offline relaunch.
+- No content hidden by system UI or display cutouts.
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        sensorManager.registerListener(
-            this,
-            sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-            SensorManager.SENSOR_DELAY_GAME
-        )
-    }
-
-    override fun onSensorChanged(event: SensorEvent) {
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-
-        accelLast = accelCurrent
-        accelCurrent = sqrt((x * x + y * y + z * z).toDouble()).toFloat()
-        val delta = accelCurrent - accelLast
-
-        if (delta > shakeThreshold) {
-            // Dispatch custom event to WebGL Javascript context
-            bridge.webView.post {
-                bridge.webView.evaluateJavascript("window.dispatchEvent(new Event('devicemotion'));", null)
-            }
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-}
-```
-
----
-
-## 🔒 Android orientation policy
-
-The installable PWA does not force an orientation: its manifest omits the `orientation` member so the device/operating system can choose portrait or landscape. The page uses safe-area insets to keep controls clear of display cutouts and system UI.
-
-Keep a future Capacitor/native Android build separate from the PWA policy. **Do not add** `android:screenOrientation="landscape"` or `"sensorLandscape"` to `AndroidManifest.xml` by copying an old example. Leave the activity's orientation unspecified by default so Android can follow the device and user orientation settings. A fixed native orientation would require a separate, explicit product decision and physical-device verification.
-
-For a native build, also verify the Android status/navigation bars, edge-to-edge behaviour and safe-area spacing together with the WebView content. The current repository does not declare a native orientation lock in `capacitor.config.ts`.
-
----
-
-## 🛠️ Building the Android APK / App Bundle
-
-### Open in Android Studio:
-
-```bash
-npx cap open android
-```
-
-1. Inside Android Studio, wait for Gradle sync to complete.
-2. Select **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
-3. The generated `.apk` file will be located at:
-   `android/app/build/outputs/apk/debug/app-debug.apk`
-4. Transfer `app-debug.apk` to your Android device via USB/Google Drive and tap to install!
-
----
-
-## ⚡ Option B: Trusted Web Activity (TWA) / Bubblewrap
-
-For a lightweight web APK without native plugins:
-
-1. Install Google's CLI:
-   ```bash
-   npm install -g @bubblewrap/cli
-   ```
-2. Initialize from your live HTTPS app URL:
-   ```bash
-   bubblewrap init --manifest=https://your-app-url.com/manifest.json
-   ```
-3. Build release APK:
-   ```bash
-   bubblewrap build
-   ```
-
----
-
-## 🗺️ Native Android Feature Roadmap
-
-- [x] **3D Physics Engine**: Ammo.js WebGL rendering for d4–d100 & Fate dice.
-- [x] **Motion Detection**: `DeviceMotionEvent` accelerometer shake handler.
-- [ ] **Responsive portrait/landscape UI**: Validate the dice stage, overlays, header/footer and Android system bars in both orientations (issue #37).
-- [x] **Auto-Fading Outcome**: Center result modal with critical success/fumble particle animations.
-- [ ] **Native Capacitor Build**: Android Studio project generation (`npx cap add android`).
-- [ ] **Custom App Icon & Splash**: 512x512 adaptive icon for Android home screen launcher.
-- [ ] **Google Play Release**: Signed AAB bundle and Play Console publishing.
+Record device model, Android version, Chrome/WebView version, test date and observed failures in the relevant GitHub issue. Mark browser/emulator checks separately from physical-device results.
