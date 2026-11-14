@@ -1,117 +1,122 @@
-# FANCY DICE — MASTER TECHNICAL AUDIT REPORT
+# Fancy Dice — master technical audit
 
-**Repository**: `japiohopman/fancy-dice`
-**Role**: Lead Engineering Auditor & Agentic Workflow Architect
-**Scope**: Full Repository Audit (WebGL Physics, Android/Capacitor, Motion Sensors, Audio/Haptics, UX/UI, Code Quality, Documentation)
-**Status**: Feature Complete — Polish & Optimization Phase Pre-Audit
-**Verification Standard**: All claims classified as `[Verified]`, `[Inferred]`, or `[Requires Real-Device Measurement]`.
+**Repository:** japiohopman/fancy-dice  
+**Snapshot date:** 14 November 2026  
+**Scope:** Active application architecture, dice physics, notation and roll lifecycle, PWA delivery, browser motion/audio, performance, maintenance and documentation.  
+**Verification labels:** [Verified in source], [Verified in build/CI], [Inferred], [Requires physical-device measurement].
 
----
+## A. Executive summary
 
-## OFFICIAL EXTERNAL REFERENCE
+Fancy Dice is an installable, orientation-neutral 3D dice-roller PWA published through GitHub Pages. Its active interface has a persistent notation bar, a full-width 3D dice stage, a single overlay menu and a compact bottom history bar. It is designed to remain a standalone client-side app.
 
-The official ecosystem documentation for `@3d-dice` is located at:
-👉 **[Fantastic Dice Documentation](https://fantasticdice.games/docs/intro)**
+The repository contains Capacitor dependencies and configuration, but it does not contain a committed Android platform project. The current app uses browser motion and vibration APIs; Capacitor Motion/Haptics are not integrated. The current shipped Android experience is therefore the PWA installed from Chrome, not a native APK/AAB.
 
-This external documentation serves as the authoritative reference for the underlying `@3d-dice` ecosystem, including DiceBox configuration, rolling mechanisms, parser interfaces, theme creation, callbacks, physics methods, and addons. External documentation is not copied into this repository; Fancy Dice-specific architecture and behaviors remain documented locally in `docs/`.
+The six unused legacy UI files identified by the previous audit were removed in Issue #43. The active component map is in ARCHITECTURE.md.
 
----
+## B. Product scope
 
-## A. EXECUTIVE SUMMARY
+The existing product is a standalone dice roller. The active backlog is limited to performance, reliability, usability, accessibility, responsive behaviour, visual quality, maintainability and PWA/device compatibility.
 
-Fancy Dice is a mobile-first, orientation-neutral 3D tabletop dice rolling PWA that adapts to portrait and landscape viewports. Its core capabilities—realistic 3D polyhedral dice physics powered by Three.js and Ammo.js (`@3d-dice/dice-box`), custom TRPG notation parsing (`1d20+5`, `4d6kh3`, `4dF`), device shake/motion controls, Web Audio sound synthesis, felt table customizations, and collapsible sidebar panels—are functionally implemented and operational `[Verified]`.
+Out of scope: accounts, cloud synchronization, multiplayer, remote rolling, Bluetooth, backend services and implementation of the future Artificer companion concept. FUTURE_COMPANION_INTEGRATION.md remains a concept note only.
 
-However, a technical audit reveals that while the application is functional as a web prototype, **it is not yet ready for release as a premium native Android application**.
+## C. Active application architecture
 
-### Primary Findings & Vulnerabilities:
-1. **Unused / Dead Code & Architectural Duplication `[Resolved in #43]`**: The six unreferenced legacy UI components identified by this audit have been removed. The active component map is maintained in `docs/ARCHITECTURE.md`.
-2. **WebGL / WebAssembly Asset Size `[Verified]`**: The offscreen WASM physics bundle produces large bundle warnings (>1.4MB) during production builds (`dist/assets/world.offscreen-C5e_o3iU.js`).
-3. **Android Capacitor Project Gap `[Verified]`**: While `@capacitor/core`, `@capacitor/android`, `@capacitor/motion`, and `@capacitor/haptics` are declared in `package.json` (`^8.5.0`) and `capacitor.config.ts` exists (`appId: com.fantasticdice.app`), the native `android/` platform directory is omitted from source control (`.gitignore`). No native Android build target or adaptive splash/icon pipeline is committed.
-4. **Motion Detector & Sensor Disconnect `[Verified]`**: `ShakeDetector.ts` relies on standard `window.addEventListener('devicemotion')` and `navigator.vibrate()`, bypassing the installed `@capacitor/motion` and `@capacitor/haptics` plugins. Furthermore, `docs/ANDROID_ROADMAP.md` contradicts the current implementation by proposing manual Kotlin sensor overrides in `MainActivity.kt`.
-5. **Documentation Drift & Template Rot `[Verified]`**: `README.md` is an unedited Google AI Studio template mentioning Gemini API keys. `docs/ARCHITECTURE.md` and `docs/ANDROID_ROADMAP.md` describe outdated Kotlin procedures and missing UI elements.
+### Application state and composition [Verified in source]
 
----
+App.tsx owns the canonical formula, formula/roll errors, current result, rolling state, shake feedback, menu state, themes, shake/audio/vibration settings and in-memory session history.
 
-## B. PRODUCT FREEZE BOUNDARIES
+The active component tree is:
 
-The existing feature set is strictly **frozen**. The following categories are explicitly **OUT OF SCOPE**:
+| Component | Responsibility |
+| --- | --- |
+| TopNotationBar.tsx | Persistent formula input, Roll action, validation feedback and Menu trigger. |
+| ThreeDiceCanvas.tsx | Asynchronous DiceBox import/init, 3D stage, pending roll, physical result collection and engine error handling. |
+| RollOutcomeOverlay.tsx | Auto-fading result display above the dice stage. |
+| LeftOptionsPanel.tsx | Dice builder and formula presets inside the menu overlay. |
+| RightOptionsPanel.tsx | Dice/table themes, custom color wheel and device/audio settings inside the menu overlay. |
+| BottomHistoryBar.tsx | Compact one-row session history, repeat roll and clear action. |
 
-- ❌ New gameplay features
-- ❌ Social features / Friends lists
-- ❌ Account systems / User registration
-- ❌ Cloud synchronization / Remote databases
-- ❌ Multiplayer / Shared rooms
-- ❌ Artificer companion integration implementation
-- ❌ Remote rolling implementation
-- ❌ Bluetooth / WebSockets / Backend services
+The menu is a modal-style overlay above the mounted dice stage; permanent left/right sidebars are not part of the active layout. App shell safe-area spacing is defined in src/index.css.
 
-Every proposed change in the roadmap must serve strictly to improve performance, reliability, usability, clarity, responsiveness, accessibility, visual quality, maintainability, or Android compatibility.
+### Roll flow [Verified in source]
 
----
+1. The notation is parsed and validated in App.tsx before audio or physical DiceBox rolling begins.
+2. The parsed result becomes the active roll context and ThreeDiceCanvas receives the request.
+3. ThreeDiceCanvas lazily imports @3d-dice/dice-box and initializes the engine. A request received before initialization is held as a pending roll.
+4. DiceBox physical die events are collected and reconciled with the parsed formula.
+5. Exploding dice may trigger subsequent physical roll waves. The result is finalized only when no pending explosion dice remain.
+6. The completed roll is added to in-memory history, capped at 50 entries.
 
-## C. ARCHITECTURE ASSESSMENT
+Initialization and roll timeouts/error callbacks are present so failures can return the interface to an actionable state. Detailed implementation acceptance for notation and roll lifecycle is tracked in Issues #38–#40.
 
-### Core React Architecture & State Management
-- **State Organization `[Verified]`**: Application state resides in root `App.tsx` (`currentFormula`, `currentResult`, `isRolling`, `isCupShaking`, `shakeSettings`, `history`, `materialTheme`, `tableTheme`, `diceTheme`).
-- **Data Flow `[Verified]`**: Unidirectional state flow passes setters and props to child components (`TopNotationBar`, `LeftOptionsPanel`, `RightOptionsPanel`, `BottomHistoryBar`, `ThreeDiceCanvas`).
-- **Sidebar Panel Real-time Sync `[Verified]`**: `LeftOptionsPanel.tsx` uses an internal `useEffect` on `stagedDice`, `modifier`, and `advantage` to call `onFormulaUpdate(formula)` in real-time, updating `App.tsx`'s `currentFormula`.
-- **Async Closure Management `[Verified]`**: `ThreeDiceCanvas.tsx` employs `onRollCompleteRef` to maintain the latest reference to `handleRollComplete` from `App.tsx`, avoiding stale closure bugs when Ammo.js physics callbacks resolve asynchronously.
+## D. PWA and Android readiness
 
-### 3D Physics Engine (`@3d-dice/dice-box` & Three.js / Ammo.js)
-- **Container Cleanup `[Verified]`**: `ThreeDiceCanvas.tsx` explicitly resets `containerRef.current.innerHTML = ''` prior to `box.init()` to prevent duplicate WebGL canvases during React StrictMode double-mounting or Vite Hot Module Replacement (HMR).
-- **Offscreen vs Main Thread `[Verified]`**: DiceBox is instantiated with `offscreen: false` to guarantee synchronous canvas mounting on mobile WebViews.
-- **Physical Result Mapping `[Verified]`**: Physical dice roll outcomes are captured in `handleRollComplete` and mapped back into the structured formula result via `updateParsedResultWithPhysicalRolls()` in `diceParser.ts`.
+| Area | Current repository state | Verification |
+| --- | --- | --- |
+| PWA delivery | Published at https://japiohopman.github.io/fancy-dice/ under /fancy-dice/. | [Verified in README, Vite config and deployment workflow] |
+| Orientation | Manifest omits orientation; app follows live viewport. | [Verified in manifest and CSS] |
+| Safe areas | App shell applies top/right/bottom/left env(safe-area-inset-*) padding. | [Verified in src/index.css] |
+| Offline | Service worker precaches app shell, manifest, icons and generated JS/CSS; same-origin static assets are cached as requested. | [Verified in sw.js and Vite build plugin]; first visit still needs internet. |
+| Motion | ShakeDetector uses browser DeviceMotionEvent. | [Verified in source]; physical sensor/permission behaviour requires device testing. |
+| Vibration | Uses navigator.vibrate when available and enabled. | [Verified in source]; actual device behaviour requires device testing. |
+| Audio | Web Audio AudioContext synthesis with shared master gain and hidden-page lifecycle handling. | [Verified in source]; audible quality requires device testing. |
+| Capacitor packages | Core, CLI, Android, Motion and Haptics dependencies plus capacitor.config.ts exist. | [Verified in package.json and config] |
+| Native Android project | android/ is excluded by .gitignore and is absent from the repository tree. | [Verified in source tree] |
+| Native plugin integration | Active source has no Capacitor Motion/Haptics plugin calls. | [Verified by source inspection] |
+| APK/AAB or Play Store | No committed native project or verified native build/release is present. | [Verified in repository tree; release not claimed] |
 
----
+Do not describe the current app as a shipped native Android app. See ANDROID_ROADMAP.md for the conditional native path.
 
-## D. ANDROID READINESS
+## E. Performance assessment
 
-### Capacitor Bridge Analysis
-| Component / Layer | Configured State | Audit Finding | Verification Status |
-| :--- | :--- | :--- | :--- |
-| **Capacitor CLI / Core** | Installed (`^8.5.0`) | Configured in `capacitor.config.ts` (`appId: com.fantasticdice.app`, `webDir: dist`). | `[Verified]` |
-| **Android Native Project** | Ignored in `.gitignore` | `android/` folder does NOT exist in source tree; requires `npx cap add android`. | `[Verified]` |
-| **Hardware Motion / Accelerometer** | Browser API (`devicemotion`) | Works in Chrome/WebView, but fails on iOS Safari without permission prompts; does not utilize `@capacitor/motion`. | `[Verified]` |
-| **Haptic Feedback** | Web API (`navigator.vibrate`) | Web fallback used; `@capacitor/haptics` plugin is unlinked in code. | `[Verified]` |
-| **App Icons & Launcher** | Default Android Studio assets | Adaptive icons, vector splash screens, and Android theme styling are missing. | `[Verified]` |
+### DiceBox initial-load split [Verified in build output]
 
----
+Issue #41 introduced a dynamic import of @3d-dice/dice-box after the initial React render. The recorded build comparison in PERFORMANCE_BASELINE.md shows the app entry chunk reduced from 459.48 kB to 262.82 kB (42.8% smaller); gzip size fell from 121.79 kB to 81.43 kB (33.1% smaller).
 
-## E. PERFORMANCE ASSESSMENT
+The dependent DiceBox and physics assets remain substantial and are loaded/cached for the engine. This build-size improvement is not itself proof of faster user-perceived startup or first-roll latency. Matched runtime measurements remain the standard; see PERFORMANCE_BASELINE.md.
 
-### Identified Bottlenecks
+### Audio and color wheel [Verified in source; runtime gains require device measurement]
 
-#### 1. Offscreen WebAssembly Physics Bundle Size (>1.4MB)
-- **Problem**: Rollup outputs chunk size warnings during `npm run build` (`dist/assets/world.offscreen-C5e_o3iU.js` = 1,447 kB).
-- **Evidence**: `vite build` terminal output `[Verified]`.
-- **Impact**: Slower cold-start initialization times on lower-tier Android mobile devices `[Inferred]`.
-- **Measurement Needed**: Time-to-Interactive (TTI) and WebGL Context Creation time on physical low-end Android hardware `[Requires Real-Device Measurement]`.
+Issue #42's implementation was merged in PR #61:
 
-#### 2. Sound Synthesis Garbage Collection
-- **Problem**: `audioManager.playDiceRollSound()` creates multiple `AudioContext` oscillators, gain nodes, and noise buffers dynamically on every bounce (up to 14 timeouts per roll).
-- **Evidence**: `src/lib/audioManager.ts` lines 60–98 `[Verified]`.
-- **Impact**: Micro-stutters/jank during heavy dice collision physics if garbage collection runs mid-animation `[Inferred]`.
-- **Measurement Needed**: Chrome DevTools CPU profile during multi-dice rolls (`8d6`) on Android WebViews `[Requires Real-Device Measurement]`.
+- Shake noise AudioBuffer is generated once per AudioContext and reused.
+- Dice bounce sounds are scheduled on the Web Audio clock rather than through separate JavaScript timers.
+- Sounds share a master gain; one-shot nodes are disconnected after playback.
+- Hidden-page handling stops active sources and suspends the context; a sound request during a pending suspension is handled after it settles.
+- The color wheel caches its bounds for a drag, coalesces pointer input through animation frames, limits parent/DiceBox previews to about 30 Hz and commits the final selection.
+- Performance measures record JavaScript scheduling/commit work.
 
-#### 3. Real-Time Conic Gradient Color Picker Drag Overhead
-- **Problem**: Dragging on the interactive color wheel in `RightOptionsPanel.tsx` updates React state (`wheelH`, `wheelS`) and executes `onChangeMaterialTheme()` on every `touchmove` / `mousemove` frame without throttling.
-- **Evidence**: `RightOptionsPanel.tsx` lines 140–165 `[Verified]`.
-- **Impact**: Potential frame drops on 60Hz/120Hz mobile screens during color picking `[Inferred]`.
-- **Measurement Needed**: Frame rate recording during color wheel interaction `[Requires Real-Device Measurement]`.
+No matched physical-device CPU/frame-time trace or speaker-latency result is claimed here. Issue #42 remains open until manual sound, color, mute and background/foreground acceptance is completed.
 
----
+### Remaining measurement limits
 
-## F. UX / UI ASSESSMENT
+- [Requires physical-device measurement] Cold/warm PWA startup, DiceBox-ready time and first-roll latency on representative Android hardware.
+- [Requires physical-device measurement] Audio quality, motion permission, vibration and app background/foreground behaviour.
+- [Requires physical-device measurement] Color-wheel responsiveness and main-thread/frame-time comparison on the same phone/browser before and after the change.
 
-### Critical UX Findings
-1. **Viewport Width Contraction on Mobile `[Verified]`**: On screens between 768px and 1024px in landscape mode, expanding both `LeftOptionsPanel` (160px) and `RightOptionsPanel` (160px) consumes 320px of horizontal space, reducing the center 3D canvas stage to less than 50% of the screen width.
-2. **Outcome Text Size Overflow `[Verified]`**: `RollOutcomeOverlay.tsx` uses fixed font size classes (`text-[120px] sm:text-[160px]`). On 3-digit total results (e.g. `128`), text overflows mobile viewport bounds.
+## F. Logic and reliability status
 
----
+- Strict notation validation, full-input checking, limits and chained physical explosions are implemented in PR #56; Issue #38 remains open for manual formula/preset/Fate/keep-drop/explosion verification.
+- Notation/builder/preset/history synchronization is closed in Issue #39.
+- Roll lifecycle, error handling and sensor listener lifecycle work is closed in Issue #40.
+- These implementation statuses do not replace the manual acceptance still listed on the open issues.
 
-## G. CODE QUALITY ASSESSMENT
+## G. Maintenance and documentation
 
-### Technical Debt & Maintenance Concerns
-1. **Dead Code Accumulation `[Resolved in #43]`**: The six legacy component files identified in the original audit have been removed from `src/components/`; their orphaned preset type and confetti-only dependencies were removed as well.
-2. **Magic Numbers in Motion Detection `[Verified]`**: `ShakeDetector.ts` uses hardcoded speed thresholds (`2800`, `200`, `180`) and delay intervals (`70ms`, `350ms`) without named constants or adaptive Android calibration.
-3. **Implicit `any` Types in Callback Handlers `[Verified]`**: `handleRollComplete(physicalResults: any)` in `App.tsx` and `ThreeDiceCanvas.tsx` lacks full TypeScript interfaces for Ammo.js physical roll event payloads.
+- [Resolved in #43] Six unused UI components removed: DiceTray.tsx, RPGPresets.tsx, RollHistory.tsx, ThemeSelector.tsx, AndroidMobileGuide.tsx and RollResultModal.tsx.
+- [Resolved in #43] Orphaned DicePreset type and confetti runtime/type dependencies removed.
+- RollHistoryEntry remains active and is used by App.tsx and BottomHistoryBar.tsx.
+- The active component map and state ownership are described in ARCHITECTURE.md.
+- The published PWA and conditional native Android path are described in ANDROID_ROADMAP.md.
+- Current priorities and issue dependencies are summarized in ROADMAP.md.
+
+## H. Current open acceptance items
+
+| Issue | Remaining verification |
+| --- | --- |
+| #38 | Manual valid/invalid formula, presets, keep/drop, Fate and chained-explosion checks. |
+| #42 | Physical-device audio/color-wheel/mute/background checks and matched performance traces where available. |
+| #44 | Keep architecture, roadmap, Android guide and this audit aligned with source reality. |
+| #55 | Gradual Tavern Table visual direction; no global rebrand. |
+
+Use the GitHub issues as the live source of truth for status. Re-run this audit when a material product/runtime boundary changes; do not retain old claims simply because they appeared in an earlier audit.
