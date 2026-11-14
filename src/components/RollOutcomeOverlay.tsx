@@ -94,7 +94,7 @@ export const RollOutcomeOverlay: React.FC<RollOutcomeOverlayProps> = ({
       >
         {/* Banner header for Critical Hit / Fumble */}
         {result.isCrit && (
-          <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-title font-black text-xs uppercase tracking-widest animate-pulse">
+          <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-numeric font-black text-xs uppercase tracking-widest animate-pulse">
             <Trophy className="w-4 h-4 text-amber-300" />
             <span>NATURAL 20 - CRITICAL HIT!</span>
             <Sparkles className="w-4 h-4 text-amber-300" />
@@ -102,7 +102,7 @@ export const RollOutcomeOverlay: React.FC<RollOutcomeOverlayProps> = ({
         )}
 
         {result.isFumble && (
-          <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-rose-900/30 border border-rose-600 text-rose-300 font-title font-black text-xs uppercase tracking-widest animate-pulse">
+          <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-rose-900/30 border border-rose-600 text-rose-300 font-numeric font-black text-xs uppercase tracking-widest animate-pulse">
             <AlertTriangle className="w-4 h-4 text-rose-400" />
             <span>NATURAL 1 - CRITICAL FUMBLE!</span>
           </div>
@@ -115,7 +115,7 @@ export const RollOutcomeOverlay: React.FC<RollOutcomeOverlayProps> = ({
 
         {/* Grand Total Number Display */}
         <div
-          className={`font-black font-display tracking-tight leading-none ${
+          className={`font-numeric font-black tracking-tight leading-none ${
             result.isCrit
               ? 'text-amber-300 text-shadow-crit text-7xl sm:text-8xl'
               : result.isFumble

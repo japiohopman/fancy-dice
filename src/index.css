@@ -50,6 +50,12 @@ body,
   font-family: 'JetBrains Mono', monospace;
 }
 
+/* Clear system numerals for roll totals and numeric result badges. */
+.font-numeric {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
 /* Custom UI Glows & Accents */
 .text-shadow-gold {
   text-shadow: 0 0 12px rgba(212, 195, 161, 0.4), 0 2px 4px rgba(0, 0, 0, 0.8);
