@@ -12,34 +12,37 @@ The longer-term visual direction is **Tavern Table**: deep felt, ivory/bone dice
 
 The current roadmap does not authorize new gameplay systems, accounts, cloud sync, multiplayer, remote rolling, Bluetooth, backend services or implementation of the Artificer companion concept. The companion document is future architecture only.
 
-## Current issue status
+## Current issue status and priority order
 
-| Area | Issue | Status | Remaining work / dependency |
-| --- | --- | --- | --- |
-| Navigation | [#30 Compact two-tier navigation](https://github.com/japiohopman/fancy-dice/issues/30) | Complete | — |
-| Navigation | [#31 Non-disruptive overlay menus](https://github.com/japiohopman/fancy-dice/issues/31) | Complete | — |
-| Navigation | [#32 Unified Options menu](https://github.com/japiohopman/fancy-dice/issues/32) | Complete | — |
-| Customization | [#33 Discoverable custom dice color picker](https://github.com/japiohopman/fancy-dice/issues/33) | Complete | — |
-| History | [#34 Compact one-line Roll History](https://github.com/japiohopman/fancy-dice/issues/34) | Complete | — |
-| Visual UX | [#35 Stage framing](https://github.com/japiohopman/fancy-dice/issues/35) | Complete | — |
-| Visual UX | [#36 Premium tabletop visual system](https://github.com/japiohopman/fancy-dice/issues/36) | Complete | — |
-| Responsive UX | [#37 Responsive and accessibility verification](https://github.com/japiohopman/fancy-dice/issues/37) | Complete | — |
-| Overlay polish | [#48 Menu and overlay transitions](https://github.com/japiohopman/fancy-dice/issues/48) | Complete | — |
-| Logic | [#38 Strict dice notation validation](https://github.com/japiohopman/fancy-dice/issues/38) | Implementation merged | Manual formula, keep/drop, Fate and chained-explosion verification remains. |
-| Logic | [#39 Synchronize notation, builder, presets and history](https://github.com/japiohopman/fancy-dice/issues/39) | Complete | — |
-| Reliability | [#40 Roll lifecycle and sensor listener reliability](https://github.com/japiohopman/fancy-dice/issues/40) | Complete | — |
-| Performance | [#41 DiceBox/WebGL startup performance](https://github.com/japiohopman/fancy-dice/issues/41) | Complete | Bundle-splitting implementation and repeatable runtime measurement guidance are recorded. Do not infer device latency without measurements. |
-| Performance | [#42 Audio and color-picker interaction performance](https://github.com/japiohopman/fancy-dice/issues/42) | Implementation merged | Physical-device sound, color-wheel, mute and background/foreground acceptance remains. |
-| Maintenance | [#43 Remove unused legacy UI components](https://github.com/japiohopman/fancy-dice/issues/43) | Complete | Six unused files, orphaned type and unused confetti dependencies removed. |
-| Documentation | [#44 Align architecture, roadmap and Android guidance](https://github.com/japiohopman/fancy-dice/issues/44) | In progress | This documentation pass aligns the repository docs with the shipped PWA and current source. |
-| Visual direction | [#55 Tavern Table and numeric typography](https://github.com/japiohopman/fancy-dice/issues/55) | Open | Gradual, separately reviewed visual slices; no global rebrand. |
+The order below follows the approved workstreams and sequencing in the master tracking issue #45. The GitHub issues do not carry numeric priority labels, so this roadmap does not invent P0–P3 ratings. “Priority” here means the agreed sequence and track.
+
+| Area | Issue | Status | Priority / sequence | Remaining work / dependency |
+| --- | --- | --- | --- | --- |
+| Navigation | [#30 Compact two-tier navigation](https://github.com/japiohopman/fancy-dice/issues/30) | Complete | Done | — |
+| Navigation | [#31 Non-disruptive overlay menus](https://github.com/japiohopman/fancy-dice/issues/31) | Complete | Done | — |
+| Navigation | [#32 Unified Options menu](https://github.com/japiohopman/fancy-dice/issues/32) | Complete | Done | — |
+| Customization | [#33 Discoverable custom dice color picker](https://github.com/japiohopman/fancy-dice/issues/33) | Complete | Done | — |
+| History | [#34 Compact one-line Roll History](https://github.com/japiohopman/fancy-dice/issues/34) | Complete | Done | — |
+| Visual UX | [#35 Stage framing](https://github.com/japiohopman/fancy-dice/issues/35) | Complete | Done | — |
+| Visual UX | [#36 Premium tabletop visual system](https://github.com/japiohopman/fancy-dice/issues/36) | Complete | Done | — |
+| Responsive UX | [#37 Responsive and accessibility verification](https://github.com/japiohopman/fancy-dice/issues/37) | Complete | Done | — |
+| Overlay polish | [#48 Menu and overlay transitions](https://github.com/japiohopman/fancy-dice/issues/48) | Complete | Done | — |
+| Logic | [#38 Strict dice notation validation](https://github.com/japiohopman/fancy-dice/issues/38) | Implementation merged | First remaining acceptance check | Manual formula, keep/drop, Fate and chained-explosion verification; no implementation dependency remains. |
+| Logic | [#39 Synchronize notation, builder, presets and history](https://github.com/japiohopman/fancy-dice/issues/39) | Complete | Done | — |
+| Reliability | [#40 Roll lifecycle and sensor listener reliability](https://github.com/japiohopman/fancy-dice/issues/40) | Complete | Done | — |
+| Performance | [#41 DiceBox/WebGL startup performance](https://github.com/japiohopman/fancy-dice/issues/41) | Complete | Done | Bundle-splitting implementation and repeatable runtime measurement guidance are recorded. Do not infer device latency without measurements. |
+| Performance | [#42 Audio and color-picker interaction performance](https://github.com/japiohopman/fancy-dice/issues/42) | Implementation merged | Next acceptance track after #38 | Physical-device sound, color-wheel, mute and background/foreground acceptance; matched runtime traces where available. |
+| Maintenance | [#43 Remove unused legacy UI components](https://github.com/japiohopman/fancy-dice/issues/43) | Complete | Done | Six unused files, orphaned type and unused confetti dependencies removed. |
+| Documentation | [#44 Align architecture, roadmap and Android guidance](https://github.com/japiohopman/fancy-dice/issues/44) | In progress | Current documentation pass | This PR aligns the repository docs with the shipped PWA and current source; depends on the already-merged navigation, reliability and cleanup work. |
+| Visual direction | [#55 Tavern Table and numeric typography](https://github.com/japiohopman/fancy-dice/issues/55) | Open | Long-term, independent track | Gradual, separately reviewed visual slices; no global rebrand. |
 
 ## Dependencies and order
 
-- Issues #38 and #42 have implementation merged, but stay open for their explicitly required manual acceptance. These checks can be completed independently.
-- Issues #39 and #40 are complete; they are not blockers for the remaining manual checks.
-- Issue #44 documents the actual shipped product and does not authorize creation of a native Android project.
-- Issue #55 is a gradual visual track and should not be mixed into logic, reliability or documentation fixes.
+- The #38 implementation is merged; its manual correctness checks are the first remaining acceptance task in the logic/reliability workstream.
+- The #42 implementation is merged; its physical-device acceptance follows the logic/reliability verification. It has no code dependency on #38.
+- Issues #39 and #40 are complete; their work supports the current architecture described above.
+- Issue #44 reconciles the docs after the navigation, reliability and maintenance changes are in place. It does not authorize a native Android project.
+- Issue #55 is deliberately a long-term, independent visual track and should not be mixed into logic, reliability or documentation fixes.
 
 ## Android delivery status
 
