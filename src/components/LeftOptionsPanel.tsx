@@ -34,6 +34,10 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
     () => parseDiceBuilderFormula(currentFormula) === null
   );
   const { stagedDice, modifier, advantage } = builderState;
+  const totalSelectedDice = (Object.keys(stagedDice) as DieType[]).reduce(
+    (total, dieType) => total + stagedDice[dieType],
+    0
+  );
 
   useEffect(() => {
     const nextState = parseDiceBuilderFormula(currentFormula);
@@ -186,7 +190,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                       <button
                         type="button"
                         onClick={() => handleIncrement(die.type)}
-                        disabled={Object.values(stagedDice).reduce((total, count) => total + count, 0) >= 100}
+                        disabled={totalSelectedDice >= 100}
                         aria-label={`Add one ${die.label}`}
                         className="ui-stepper-button !h-6 !min-h-6 !w-full !rounded-md !text-[10px]"
                       >
