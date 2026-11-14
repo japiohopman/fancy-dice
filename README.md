@@ -1,137 +1,88 @@
-# 🎲 Fantastic 3D Dice Roller — Natural Tones Edition
+# Fancy Dice
 
-A high-performance, mobile-first 3D physics dice rolling web & mobile application designed for tabletop RPG enthusiasts, Dungeon Masters, and players. Powered by **Three.js**, **Ammo.js WebAssembly physics**, **React**, and **Tailwind CSS**, Fantastic Dice Roller brings real polyhedral 3D dice physics directly to your browser and mobile device.
+Fancy Dice is a standalone, installable 3D dice roller for tabletop role-playing games. It runs as a Progressive Web App (PWA) in the browser and on supported mobile devices. Dice physics, notation parsing, roll results, themes, audio and interaction state run locally in the app.
 
-![Fantastic Dice Roller Preview](public/assets/screenshots/app_preview.png)
+![Fancy Dice app preview](public/assets/screenshots/app_preview.png)
 
----
+## Features
 
-## ✨ Key Features
+- **3D dice physics** — d4, d6, d8, d10, d12, d20, percentile and Fate dice, powered by @3d-dice/dice-box, Three.js and Ammo.js.
+- **Dice notation** — standard dice formulas, modifiers, keep/drop operators and exploding dice. Invalid notation is rejected before a physical roll starts.
+- **Compact navigation** — the notation field and Roll action stay visible in the top bar. Dice tools, presets, themes, color and settings live in one overlay menu; the dice stage remains mounted beneath it.
+- **Custom appearance** — dice materials, custom color selection and tabletop felt themes.
+- **Roll history** — a compact horizontal history bar supports repeat rolls and clearing the current session history.
+- **Motion and feedback** — browser DeviceMotionEvent support for shake-to-roll, Web Audio sound, and vibration through the browser vibration API when available.
+- **Installable PWA** — standalone display, app icons, offline app-shell caching and responsive portrait/landscape layouts.
 
-- 🎲 **Realistic 3D Physics Simulation**: Polyhedral dice (d4, d6, d8, d10, d12, d20, d100, and Fate/FUDGE `dF`) with realistic weight, collision physics, and angular momentum powered by Three.js and Ammo.js WebAssembly.
-- 📜 **Full TTRPG Dice Notation Engine**: Supports complex notation including keep high (`kh`), keep low (`kl`), drop high/low (`dh`/`dl`), modifiers (e.g. `1d20+10`, `4d6kh3`, `8d6`), and exploding dice (`!`).
-- 🎨 **High-Fantasy RPG Aesthetics**: Styled with Google Fonts (*Cinzel Decorative*, *Cinzel*, *EB Garamond*, *JetBrains Mono*), metallic gold gradients, dark parchment backgrounds, and glowing critical hit indicators.
-- 🏆 **High-Fantasy Outcome Cards**: Auto-fading outcome badges displaying **CRITICAL HIT! (Natural 20)** gold sparkle banners, **CRITICAL FUMBLE! (Natural 1)** crimson thud banners, and detailed mathematical roll breakdowns.
-- 📱 **Mobile & Tablet Optimized**: Responsive layout with collapsible side panels, compact navigation bars, and native Android support via Capacitor.
-- 📱 **Shake-to-Roll Gesture Controls**: Hardware accelerometer integration that lets you shake your phone like a dice cup and place it flat on the table to roll.
-- 🎨 **Interactive Color Wheel & Board Themes**: Choose from 3D dice skins (*Classic*, *Plastic*, *Wooden*, *Rusted*, *Stone*, *Gemstone*), custom conic-gradient color picker, and felt board surfaces (*Emerald*, *Sapphire*, *Crimson*, *Midnight*, *Leather*).
-- 🔊 **Dynamic Audio & Haptics**: Built-in Web Audio API synthesizers and HTML5 audio for realistic dice impact sounds, victory chimes, and haptic vibration feedback.
+## Product scope
 
----
+Fancy Dice is an independent dice roller. It does not currently provide accounts, cloud sync, multiplayer, remote rolling, Bluetooth pairing or a backend service.
 
-## 🔗 Companion App Architecture & Inner Workings
+A possible future integration with Artificer is documented as a concept only in [FUTURE_COMPANION_INTEGRATION.md](docs/FUTURE_COMPANION_INTEGRATION.md). No companion protocol or network integration is implemented or part of the current roadmap.
 
-Fantastic Dice Roller is designed as a standalone mobile application that serves as the **mobile companion app** for [**japiohopman/artificer**](https://github.com/japiohopman/artificer) — an advanced tabletop RPG campaign and character management tool.
+## Technology
 
-### 🧠 How It Works (Inner Workings)
+- React 19, TypeScript and Vite
+- Tailwind CSS and Lucide React
+- @3d-dice/dice-box, Three.js and Ammo.js WebAssembly physics
+- Web Audio API for sound synthesis
+- Browser DeviceMotionEvent and navigator.vibrate APIs for motion and vibration feedback
+- Vite-generated PWA service-worker precache
 
-```text
-┌─────────────────────────────────────────┐
-│     japiohopman/artificer               │
-│  (Desktop / Web TTRPG Companion Tool)   │
-└──────────────────┬──────────────────────┘
-                   │
-                   │  1. Roll Request / Formula (e.g., "1d20+5")
-                   ▼
-┌─────────────────────────────────────────┐
-│     Fantastic 3D Dice Roller            │
-│  (Mobile Physics Dice Rolling Engine)   │
-└──────────────────┬──────────────────────┘
-                   │
-                   │  2. WebGL 3D Physics Simulation (Ammo.js)
-                   │  3. Physical Face Evaluation & Result Overlay
-                   ▼
-┌─────────────────────────────────────────┐
-│     Aggregated Roll Outcome              │
-│  (Total, Crits, Fumbles, Breakdown)     │
-└─────────────────────────────────────────┘
-```
+Capacitor Core, CLI, Android, Motion and Haptics packages are present in the dependency manifest and a Capacitor configuration exists. The current runtime still uses browser motion and vibration APIs; the Capacitor Motion and Haptics plugins are not integrated. A native Android project is not committed or currently shipped.
 
-1. **Independent Standalone Core**: Fantastic Dice Roller remains 100% self-contained without mandatory cloud or backend server dependencies. All physics simulations and notation parsing execute locally in WebGL.
-2. **Data Exchange Structure**: Designed around standard TTRPG data structures:
-   - **Roll Requests**: Formula notation strings (e.g. `2d20kh1+5`, `8d6`).
-   - **Physical Mapping**: Physical 3D dice collision results map back onto parsed formulas via `updateParsedResultWithPhysicalRolls()` so the text overlay matches visual die faces accurately.
-   - **Companion Integration Protocol**: Documented under [`docs/FUTURE_COMPANION_INTEGRATION.md`](docs/FUTURE_COMPANION_INTEGRATION.md) for lightweight asynchronous communication with [Artificer](https://github.com/japiohopman/artificer).
+## Development
 
----
+Requirements: Node.js 18 or newer and npm.
 
-## 🛠️ Tech Stack
+Install dependencies:
 
-- **Frontend Framework**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS, Lucide React Icons, Custom CSS Glows
-- **3D Physics & Graphics**: `@3d-dice/dice-box` (Three.js & Ammo.js WebAssembly)
-- **Audio Synthesis**: Web Audio API & HTML5 audio
-- **Mobile Native Bridge**: Capacitor Core, Motion & Haptics (`@capacitor/android`)
+    npm install
 
----
+Start the development server:
 
-## 🚀 Getting Started
+    npm run dev
 
-### Prerequisites
+Run the TypeScript check:
 
-- **Node.js** (v18 or higher recommended)
-- **npm** or **bun**
+    npm run lint
 
-### Installation
+Run automated tests:
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/japiohopman/fancy-dice.git
-   cd fancy-dice
-   ```
+    npm test
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+Create a production build:
 
-3. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-   Open `http://localhost:3000` in your browser.
+    npm run build
 
-4. **Build for production**:
-   ```bash
-   npm run build
-   ```
+The local development server is available at http://localhost:3000.
 
----
+## Install the Android PWA
 
-## 📱 Install on Android (PWA)
+The published application is available at:
 
-Fancy Dice is published as an installable Progressive Web App. It runs directly in Chrome on Android and does not require an APK or a native Android project.
+https://japiohopman.github.io/fancy-dice/
 
-**GitHub Pages URL:** <https://japiohopman.github.io/fancy-dice/>
+1. Open the URL in Chrome on Android while online.
+2. Open Chrome's menu and select **Install app** or **Add to Home screen**.
+3. Launch Fancy Dice from the home screen.
 
-The latest changes from this pull request become available at that URL after the pull request is merged to `main` and the GitHub Pages deployment completes.
+The PWA uses the device's current orientation; the manifest does not request a fixed orientation. The service worker caches the app shell and generated JavaScript/CSS bundles, then caches same-origin game assets as they are requested. The first visit requires an internet connection. Complete one online launch before relying on offline use.
 
-1. Open the GitHub Pages URL in Chrome on your Android phone.
-2. Open Chrome's menu and choose **Install app** (or **Add to Home screen**).
-3. Launch **Fancy Dice** from the new home-screen icon. It opens in a standalone, app-like window.
-4. After the first successful load, the service worker keeps the app shell and same-origin game assets available for repeat/offline launches.
+The app's browser motion, sound, vibration, WebGL rendering, safe-area spacing and offline behaviour should be checked on a physical device. Browser emulation does not replace that check.
 
-The first load requires an internet connection. Google Fonts are loaded from Google Fonts, so typography may fall back to system fonts while offline. Device motion, vibration, audio, and WebGL behaviour still need to be checked on the physical Android device.
+For the repeatable checklist, see [PWA_ANDROID_TEST_GUIDE.md](docs/PWA_ANDROID_TEST_GUIDE.md).
 
-### GitHub Pages deployment
+## Documentation
 
-Every pull request runs the TypeScript check and production build. Merging to `main` publishes `dist/` through GitHub Actions.
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — active component map, state ownership and runtime flow.
+- [ANDROID_ROADMAP.md](docs/ANDROID_ROADMAP.md) — current PWA delivery and conditional native Android path.
+- [ROADMAP.md](docs/ROADMAP.md) — prioritized active issues and product direction.
+- [MASTER_AUDIT.md](docs/MASTER_AUDIT.md) — evidence-based technical status and remaining verification.
+- [PERFORMANCE_BASELINE.md](docs/PERFORMANCE_BASELINE.md) — DiceBox startup/bundle baseline and runtime measurement procedure.
+- [INTERACTION_PERFORMANCE.md](docs/INTERACTION_PERFORMANCE.md) — audio and color-wheel interaction changes and measurement procedure.
+- [FUTURE_COMPANION_INTEGRATION.md](docs/FUTURE_COMPANION_INTEGRATION.md) — future concept only; not implemented or in scope.
 
-If Pages has not been enabled for this repository yet, open **Settings → Pages** and select **GitHub Actions** as the build and deployment source.
+## License
 
-For the manual Android smoke-test checklist, see [`docs/PWA_ANDROID_TEST_GUIDE.md`](docs/PWA_ANDROID_TEST_GUIDE.md).
-
----
-
-## 📚 Documentation
-
-For deeper architectural details, check out the documentation in `docs/`:
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — System architecture & design principles
-- [`docs/FUTURE_COMPANION_INTEGRATION.md`](docs/FUTURE_COMPANION_INTEGRATION.md) — Mobile companion integration protocol with [Artificer](https://github.com/japiohopman/artificer)
-- [`docs/ANDROID_ROADMAP.md`](docs/ANDROID_ROADMAP.md) — Android deployment guide
-
----
-
-## 📄 License
-
-MIT License — free for open-source and tabletop gaming use.
+MIT License.
