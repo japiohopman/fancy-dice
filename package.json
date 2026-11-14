@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test tests/diceParser.test.ts"
+    "test": "tsx --test tests/diceParser.test.ts tests/audioManager.test.ts"
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",
