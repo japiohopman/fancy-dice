@@ -5,6 +5,7 @@ import { audioManager } from './lib/audioManager';
 import { ShakeDetector } from './lib/shakeDetector';
 import { ThreeDiceCanvas } from './components/ThreeDiceCanvas';
 import { TopNotationBar } from './components/TopNotationBar';
+import { DiceBuilderOverlay } from './components/DiceBuilderOverlay';
 import { LeftOptionsPanel } from './components/LeftOptionsPanel';
 import { RightOptionsPanel } from './components/RightOptionsPanel';
 import { BottomHistoryBar } from './components/BottomHistoryBar';
@@ -21,6 +22,17 @@ export default function App() {
   const isRollingRef = useRef<boolean>(false);
   const [rollError, setRollError] = useState<string | null>(null);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
+  const [isDiceBuilderOpen, setIsDiceBuilderOpen] = useState<boolean>(false);
+  const notationTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const previousDiceBuilderOpenRef = useRef<boolean>(false);
+
+  // Return focus to the notation summary after the dedicated editor is dismissed.
+  useEffect(() => {
+    if (previousDiceBuilderOpenRef.current && !isDiceBuilderOpen) {
+      notationTriggerRef.current?.focus();
+    }
+    previousDiceBuilderOpenRef.current = isDiceBuilderOpen;
+  }, [isDiceBuilderOpen]);
 
   // A single menu shell keeps navigation and section content in one predictable place.
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -149,8 +161,8 @@ export default function App() {
 
   // Execute Roll Logic
   /** Validates the formula before audio, state changes, or a physical DiceBox roll begin. */
-  const handleExecuteRoll = (formulaToRoll?: string, presetName?: string) => {
-    if (isRollingRef.current) return;
+  const handleExecuteRoll = (formulaToRoll?: string, presetName?: string): boolean => {
+    if (isRollingRef.current) return false;
 
     setRollError(null);
     const formula = (formulaToRoll ?? currentFormula).trim();
@@ -160,7 +172,7 @@ export default function App() {
       result = parseAndRollFormula(formula);
     } catch (error) {
       setFormulaError(error instanceof Error ? error.message : 'Invalid dice formula.');
-      return;
+      return false;
     }
 
     setFormulaError(null);
@@ -181,6 +193,7 @@ export default function App() {
 
     // Trigger visual roll of the validated dice structure.
     setCurrentResult(result);
+    return true;
   };
 
   // Shake callbacks always call the latest handler without restarting the motion listener.
@@ -313,17 +326,34 @@ export default function App() {
       {/* Primary navigation and always-visible dice notation controls. */}
       <TopNotationBar
         currentFormula={currentFormula}
-        onFormulaChange={(formula) => {
-          setCurrentFormula(formula);
-          setFormulaError(null);
-          setRollError(null);
+        onOpenDiceBuilder={() => setIsDiceBuilderOpen(true)}
+        setNotationTrigger={(element) => {
+          notationTriggerRef.current = element;
         }}
-        onRoll={(f) => handleExecuteRoll(f)}
+        onRoll={(f) => {
+          handleExecuteRoll(f);
+        }}
         isRolling={isRolling}
         onToggleMenu={toggleMenu}
         menuOpen={isMenuOpen}
+        diceBuilderOpen={isDiceBuilderOpen}
         formulaError={formulaError ?? rollError}
       />
+
+      {isDiceBuilderOpen && (
+        <DiceBuilderOverlay
+          currentFormula={currentFormula}
+          formulaError={formulaError ?? rollError}
+          isRolling={isRolling}
+          onFormulaChange={(formula) => {
+            setCurrentFormula(formula);
+            setFormulaError(null);
+            setRollError(null);
+          }}
+          onRoll={(formula) => handleExecuteRoll(formula)}
+          onClose={() => setIsDiceBuilderOpen(false)}
+        />
+      )}
 
       {/* The menu floats above the full-width 3D table without resizing it. */}
       <div className="relative flex-1 min-h-0 w-full overflow-hidden">
