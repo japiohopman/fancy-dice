@@ -326,7 +326,10 @@ export default function App() {
       {/* Primary navigation and always-visible dice notation controls. */}
       <TopNotationBar
         currentFormula={currentFormula}
-        onOpenDiceBuilder={() => setIsDiceBuilderOpen(true)}
+        onOpenDiceBuilder={() => {
+          if (isMenuOpen) closeMenu();
+          setIsDiceBuilderOpen(true);
+        }}
         setNotationTrigger={(element) => {
           notationTriggerRef.current = element;
         }}
