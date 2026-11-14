@@ -43,7 +43,7 @@ Consequently, there is no verified native Android Studio project, native plugin 
 
 A native Android target should be created only after a separate product decision confirms that an APK/AAB is needed and defines its maintenance/release expectations. If approved, use this sequence:
 
-1. Confirm the native app ID, display name, signing ownership, release target and the deliberate decision to track the Android platform directory. 
+1. Confirm the native app ID, display name, signing ownership, release target and the deliberate decision to track the Android platform directory.
 2. Generate the platform with the installed Capacitor CLI (npx cap add android) and update repository ignore rules intentionally. Do not accidentally commit generated build output or signing secrets.
 3. Integrate Capacitor Motion and Haptics behind a small platform adapter, retaining browser DeviceMotionEvent/navigator.vibrate fallbacks for the PWA. Do not add a custom Kotlin sensor event bridge unless a verified plugin limitation requires it.
 4. Build the web app and sync it to the native project with npm run build and npx cap sync android.
