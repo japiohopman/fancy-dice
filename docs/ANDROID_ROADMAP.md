@@ -24,8 +24,8 @@ The web app manifest uses standalone display and intentionally omits a fixed ori
 | Motion permission | Calls the browser DeviceMotionEvent.requestPermission API when the browser exposes it. | This is not a Capacitor permission flow. |
 | Vibration | Uses navigator.vibrate when available and enabled. | Browser/device support varies. |
 | Sound | Web Audio API synthesis in audioManager.ts. | Audio requires an appropriate user interaction and browser audio support. |
-| 3D dice | DiceBox, Three.js and Ammo.js WebAssembly in the browser. | WebGL/WebAssembly availability and performance require physical-device verification. |
-| Offline launch | Service worker precaches the app shell, icons, generated JS/CSS; same-origin stable game assets are cached when requested. | First visit needs internet; complete one online launch before relying on offline use. |
+| 3D dice | DiceBox, Babylon.js and Ammo.js WebAssembly in the browser. | WebGL/WebAssembly availability and performance require physical-device verification. |
+| Offline launch | Service worker precaches the app shell, icons, generated JS/CSS; same-origin stable game assets are cached when requested. | First visit needs internet. After the service worker is active, relaunch once while online and wait for the dice table to finish loading before relying on offline use. |
 
 ## 3. Capacitor status — configured dependencies, no native app yet
 
