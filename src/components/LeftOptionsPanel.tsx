@@ -141,7 +141,16 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div
+      className="flex h-full min-h-0 flex-col"
+      onPointerDownCapture={(event) => {
+        // Keep focus in the notation input while tapping compact controls so
+        // the native mobile keyboard stays open during dice selection.
+        if (compact && event.target instanceof Element && event.target.closest('button')) {
+          event.preventDefault();
+        }
+      }}
+    >
       <div className={`flex-1 flex flex-col min-h-0 overflow-y-auto text-xs no-scrollbar ${compact ? "gap-1 p-1" : "gap-2 p-2"}`}>
         {activeTab === 'dice' ? (
           <>
