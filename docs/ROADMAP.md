@@ -1,91 +1,56 @@
-# FANCY DICE — MASTER ROADMAP (P0 – P3)
+# Fancy Dice — product and engineering roadmap
 
-This roadmap outlines all prioritized polish, performance, Android readiness, and refactoring tasks for **Fancy Dice**.
+This document is a concise map of the approved backlog. GitHub issues are the source of truth for scope and acceptance criteria; do not use this page to create a second implementation queue.
 
----
+## Product direction
 
-## PRIORITIZATION SUMMARY
+Keep Fancy Dice a standalone 3D dice roller. The dice table remains the centre of the experience. Navigation should be compact and non-disruptive; formula correctness, reliable physical rolls, responsiveness, accessibility, maintainability and PWA behaviour remain first-class requirements.
 
-- **P0 (Critical — Blocker)**: Must be completed for basic project integrity and native Android compilation.
-- **P1 (High — Priority)**: Essential performance optimizations, hardware sensor bridging, and UX bug fixes.
-- **P2 (Medium — Quality)**: Code cleanup, dead code removal, and responsive UI refinements.
-- **P3 (Polish — Enhancement)**: Visual enhancements and documentation synchronization.
+The longer-term visual direction is **Tavern Table**: deep felt, ivory/bone dice, warm walnut/espresso surfaces, restrained brass and clear numeric typography. This is a gradual visual direction, not permission for a wholesale redesign or rename. See Issue #55.
 
----
+## Product freeze boundaries
 
-## TASK SPECIFICATIONS
+The current roadmap does not authorize new gameplay systems, accounts, cloud sync, multiplayer, remote rolling, Bluetooth, backend services or implementation of the Artificer companion concept. The companion document is future architecture only.
 
-### P0-1: Dead Code Removal & Workspace Sanitation
-- **Status**: Completed in [Issue #43](https://github.com/japiohopman/fancy-dice/issues/43).
-- **Objective**: Remove the six legacy UI components confirmed unused by the import and reference audit.
-- **Outcome**: The six unreferenced component files, their orphaned preset type, and the unused confetti runtime/type packages have been removed.
-- **Affected Area**: `src/components/`, `src/types.ts`, `package.json`, and `package-lock.json`.
-- **Validation Method**: TypeScript check, automated tests, and production build; no source, test, or documentation references to the deleted component files remain.
-- **Risk**: Low.
-- **Dependencies**: None.
-- **Estimated Complexity**: Low.
+## Current issue status
 
-### P0-2: Native Android Project Generation & Capacitor Sync
-- **Objective**: Initialize and commit the native `android/` platform project via Capacitor CLI.
-- **Problem**: `android/` directory is missing from source control (`.gitignore`), preventing APK compilation.
-- **Reason**: Application cannot be compiled for Android without the native wrapper project.
-- **Affected Area**: `.gitignore`, `android/` directory.
-- **Expected Outcome**: Native Android project checked into git with correct `appId` (`com.fantasticdice.app`) and Capacitor bridge settings.
-- **Validation Method**: `npx cap sync android` executes with 0 errors; Android Studio syncs Gradle cleanly.
-- **Risk**: Medium.
-- **Dependencies**: P0-1.
-- **Estimated Complexity**: Medium.
+| Area | Issue | Status | Remaining work / dependency |
+| --- | --- | --- | --- |
+| Navigation | [#30 Compact two-tier navigation](https://github.com/japiohopman/fancy-dice/issues/30) | Complete | — |
+| Navigation | [#31 Non-disruptive overlay menus](https://github.com/japiohopman/fancy-dice/issues/31) | Complete | — |
+| Navigation | [#32 Unified Options menu](https://github.com/japiohopman/fancy-dice/issues/32) | Complete | — |
+| Customization | [#33 Discoverable custom dice color picker](https://github.com/japiohopman/fancy-dice/issues/33) | Complete | — |
+| History | [#34 Compact one-line Roll History](https://github.com/japiohopman/fancy-dice/issues/34) | Complete | — |
+| Visual UX | [#35 Stage framing](https://github.com/japiohopman/fancy-dice/issues/35) | Complete | — |
+| Visual UX | [#36 Premium tabletop visual system](https://github.com/japiohopman/fancy-dice/issues/36) | Complete | — |
+| Responsive UX | [#37 Responsive and accessibility verification](https://github.com/japiohopman/fancy-dice/issues/37) | Complete | — |
+| Overlay polish | [#48 Menu and overlay transitions](https://github.com/japiohopman/fancy-dice/issues/48) | Complete | — |
+| Logic | [#38 Strict dice notation validation](https://github.com/japiohopman/fancy-dice/issues/38) | Implementation merged | Manual formula, keep/drop, Fate and chained-explosion verification remains. |
+| Logic | [#39 Synchronize notation, builder, presets and history](https://github.com/japiohopman/fancy-dice/issues/39) | Complete | — |
+| Reliability | [#40 Roll lifecycle and sensor listener reliability](https://github.com/japiohopman/fancy-dice/issues/40) | Complete | — |
+| Performance | [#41 DiceBox/WebGL startup performance](https://github.com/japiohopman/fancy-dice/issues/41) | Complete | Bundle-splitting implementation and repeatable runtime measurement guidance are recorded. Do not infer device latency without measurements. |
+| Performance | [#42 Audio and color-picker interaction performance](https://github.com/japiohopman/fancy-dice/issues/42) | Implementation merged | Physical-device sound, color-wheel, mute and background/foreground acceptance remains. |
+| Maintenance | [#43 Remove unused legacy UI components](https://github.com/japiohopman/fancy-dice/issues/43) | Complete | Six unused files, orphaned type and unused confetti dependencies removed. |
+| Documentation | [#44 Align architecture, roadmap and Android guidance](https://github.com/japiohopman/fancy-dice/issues/44) | In progress | This documentation pass aligns the repository docs with the shipped PWA and current source. |
+| Visual direction | [#55 Tavern Table and numeric typography](https://github.com/japiohopman/fancy-dice/issues/55) | Open | Gradual, separately reviewed visual slices; no global rebrand. |
 
----
+## Dependencies and order
 
-### P1-1: Capacitor Hardware Motion & Haptic Plugin Integration
-- **Objective**: Upgrade `ShakeDetector.ts` to utilize `@capacitor/motion` and `@capacitor/haptics` when running inside Capacitor Android WebView, with Web API fallback for browsers.
-- **Problem**: Current implementation uses browser `DeviceMotionEvent` and `navigator.vibrate()`, which fail or behave inconsistently across native mobile environments.
-- **Reason**: Native Capacitor plugins ensure reliable background/foreground hardware sensor access on Android.
-- **Affected Area**: `src/lib/shakeDetector.ts`, `src/App.tsx`.
-- **Expected Outcome**: Flawless shake-to-roll gesture detection and haptic feedback on real Android devices.
-- **Validation Method**: Manual hardware testing on physical Android device.
-- **Risk**: Medium.
-- **Dependencies**: P0-2.
-- **Estimated Complexity**: Medium.
+- Issues #38 and #42 have implementation merged, but stay open for their explicitly required manual acceptance. These checks can be completed independently.
+- Issues #39 and #40 are complete; they are not blockers for the remaining manual checks.
+- Issue #44 documents the actual shipped product and does not authorize creation of a native Android project.
+- Issue #55 is a gradual visual track and should not be mixed into logic, reliability or documentation fixes.
 
-### P1-2: WebGL Bundle & Physics Chunk Optimization
-- **Objective**: Optimize Vite build configuration and `@3d-dice/dice-box` dynamic imports to eliminate Rollup >500kB chunk warnings.
-- **Problem**: Production build outputs a 1.4MB offscreen WebAssembly chunk (`world.offscreen.js`).
-- **Reason**: Large initial chunk slows WebGL initialization on budget mobile devices.
-- **Affected Area**: `vite.config.ts`, `src/components/ThreeDiceCanvas.tsx`.
-- **Expected Outcome**: Reduced chunk size warnings and faster 3D stage loading.
-- **Validation Method**: `npm run build` produces optimized chunk sizes with zero warnings.
-- **Risk**: Medium.
-- **Dependencies**: P0-1.
-- **Estimated Complexity**: Medium.
+## Android delivery status
 
-### P1-3: Mobile Landscape Viewport & Overlay Overflow Fixes
-- **Objective**: Prevent `RollOutcomeOverlay.tsx` text overflow and optimize left/right panel width in landscape mode on screens under 1024px.
-- **Problem**: 3-digit totals overflow viewports, and expanded sidebars squeeze the 3D canvas stage.
-- **Reason**: Ensures mobile landscape users have an uncluttered, responsive 3D viewport.
-- **Affected Area**: `src/components/RollOutcomeOverlay.tsx`, `src/components/LeftOptionsPanel.tsx`, `src/components/RightOptionsPanel.tsx`.
-- **Expected Outcome**: Responsive text scaling for total values and optimized sidebar widths on compact mobile devices.
-- **Validation Method**: Multi-resolution mobile viewport testing in Chrome DevTools / Playwright.
-- **Risk**: Low.
-- **Dependencies**: None.
-- **Estimated Complexity**: Low.
+The current delivery is the installable PWA on GitHub Pages. Capacitor dependencies and configuration exist, but the native Android platform folder is ignored/not committed and the Motion/Haptics plugins are not integrated into the active runtime. Native Android project generation is not an active roadmap deliverable. See ANDROID_ROADMAP.md for the conditional path if this becomes an explicit product decision.
 
----
+## Working agreement
 
-## P2 & P3 TASKS
+Work one issue at a time:
 
-### P2-1: Color Wheel Interaction Throttling
-- **Objective**: Throttle drag event handlers on the interactive color picker in `RightOptionsPanel.tsx`.
-- **Affected Area**: `src/components/RightOptionsPanel.tsx`.
-- **Expected Outcome**: Smooth 60fps color updates without frame drops.
-
-### P2-2: Audio Manager Web Audio Node Pooling
-- **Objective**: Reuse `AudioContext` and gain nodes in `audioManager.ts` to prevent GC pauses during rapid multi-dice rolls.
-- **Affected Area**: `src/lib/audioManager.ts`.
-- **Expected Outcome**: Zero audio buffer allocation overhead during physics rolls.
-
-### P3-1: Documentation Synchronization & README Rewrite
-- **Objective**: Rewrite `README.md` and synchronize `docs/ARCHITECTURE.md` and `docs/ANDROID_ROADMAP.md` with current codebase reality.
-- **Affected Area**: `README.md`, `docs/`.
-- **Expected Outcome**: Precise, authoritative project documentation.
+1. Re-check the current source and the issue's acceptance criteria.
+2. Keep the implementation within the issue's approved scope.
+3. Run the relevant TypeScript checks, tests and production build.
+4. Review the changed UI at relevant viewport sizes and on a physical device when the acceptance criteria require it.
+5. Merge only after review and required acceptance; close the issue and update this roadmap/master tracker only when its criteria are complete.
