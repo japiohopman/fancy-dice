@@ -15,6 +15,7 @@ type MenuSection = 'presets' | 'themes' | 'color' | 'options' | 'about';
 
 /** Owns dice-roll state, navigation state, themes, sensor settings, and history for the app. */
 export default function App() {
+  const assetBaseUrl = (import.meta as any).env.BASE_URL || '/';
   const [currentFormula, setCurrentFormula] = useState<string>('1d20');
   const [formulaError, setFormulaError] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
@@ -415,10 +416,10 @@ export default function App() {
             <picture aria-hidden="true" className="absolute inset-0 block h-full w-full">
               <source
                 media="(orientation: portrait)"
-                srcSet={`${import.meta.env.BASE_URL}loading/tavern-loader-portrait.webp`}
+                srcSet={`${assetBaseUrl}loading/tavern-loader-portrait.webp`}
               />
               <img
-                src={`${import.meta.env.BASE_URL}loading/tavern-loader-wide.webp`}
+                src={`${assetBaseUrl}loading/tavern-loader-wide.webp`}
                 alt=""
                 className="h-full w-full object-cover object-center"
                 loading="eager"
