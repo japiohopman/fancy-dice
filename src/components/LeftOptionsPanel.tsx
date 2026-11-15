@@ -164,7 +164,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               </div>
             )}
             {compact ? (
-              <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-1">
+              <div className="grid min-h-[14rem] shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-1">
                 {diceList.map((die) => (
                   <div
                     key={die.type}
@@ -201,7 +201,7 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
                         onClick={() => handleDecrement(die.type)}
                         disabled={isCustomFormula || stagedDice[die.type] === 0}
                         aria-label={`Remove one ${die.label}`}
-                        className="ui-stepper-button !h-6 !min-h-6 !w-full !rounded-md !text-[10px]"
+                        className="ui-stepper-button !h-9 !min-h-9 !w-9 !rounded-md !text-sm sm:!h-6 sm:!min-h-6 sm:!w-full sm:!text-[10px]"
                       >
                         −
                       </button>
