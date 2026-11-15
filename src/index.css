@@ -608,3 +608,26 @@ body,
     color: #fda4af;
   }
 }
+
+
+/* Startup feedback stays subtle and honours the user's motion preference. */
+.startup-loading-glyph {
+  animation: startup-dice-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes startup-dice-breathe {
+  0%, 100% {
+    opacity: 0.65;
+    transform: translateY(0) scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startup-loading-glyph {
+    animation: none;
+  }
+}
