@@ -107,8 +107,10 @@ export const DiceBuilderOverlay: React.FC<DiceBuilderOverlayProps> = ({
     if (onRoll(formula)) onClose();
   };
 
-  const panelHeight = Math.min(430, Math.max(180, viewport.height - 16));
-  const panelMaxHeight = Math.max(140, viewport.height - 16);
+  // Fit the dialog inside the live viewport, including when the software
+  // keyboard reduces the visible height on a portrait phone.
+  const panelHeight = Math.max(0, Math.min(480, viewport.height - 24));
+  const panelMaxHeight = panelHeight;
 
   return (
     <div
@@ -197,7 +199,7 @@ export const DiceBuilderOverlay: React.FC<DiceBuilderOverlayProps> = ({
           )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5 sm:p-2">
           <LeftOptionsPanel
             onFormulaUpdate={onFormulaChange}
             currentFormula={currentFormula}
