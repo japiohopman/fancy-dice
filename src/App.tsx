@@ -123,7 +123,7 @@ export default function App() {
   }, [isMenuOpen]);
 
   // Customization State
-  const [materialTheme, setMaterialTheme] = useState<string>('emerald');
+  const [materialTheme, setMaterialTheme] = useState<string>('ivory');
   const [tableTheme, setTableTheme] = useState<TableTheme>('green');
   const [diceTheme, setDiceTheme] = useState<string>('default');
 
@@ -365,7 +365,7 @@ export default function App() {
 
       {/* The menu floats above the full-width 3D table without resizing it. */}
       <div className="relative flex-1 min-h-0 w-full overflow-hidden">
-        <main aria-busy={diceEngineStatus === 'loading'} className="absolute inset-0 h-full w-full overflow-hidden bg-[#064e3b] shadow-inner">
+        <main aria-busy={diceEngineStatus === 'loading'} className="absolute inset-0 h-full w-full overflow-hidden bg-[#12382d] shadow-inner">
           <ThreeDiceCanvas
             rollResult={currentResult}
             isRolling={isRolling}
