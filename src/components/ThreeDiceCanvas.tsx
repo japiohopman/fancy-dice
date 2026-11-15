@@ -17,6 +17,7 @@ interface ThreeDiceCanvasProps {
   diceTheme: string;
   onRollComplete?: (results: DiceBoxRollResults) => string[];
   onRollError?: (error: Error) => void;
+  onInitializationStateChange?: (state: 'loading' | 'ready' | 'error') => void;
 }
 
 const DICEBOX_INIT_TIMEOUT_MS = 20_000;
@@ -29,7 +30,8 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   tableTheme,
   diceTheme,
   onRollComplete,
-  onRollError
+  onRollError,
+  onInitializationStateChange
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const diceBoxRef = useRef<DiceBoxInstance | null>(null);
@@ -54,6 +56,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   // Keep callbacks current without recreating the DiceBox instance.
   const onRollCompleteRef = useRef<typeof onRollComplete>(onRollComplete);
   const onRollErrorRef = useRef<typeof onRollError>(onRollError);
+  const onInitializationStateChangeRef = useRef<typeof onInitializationStateChange>(onInitializationStateChange);
 
   useEffect(() => {
     onRollCompleteRef.current = onRollComplete;
@@ -62,6 +65,10 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   useEffect(() => {
     onRollErrorRef.current = onRollError;
   }, [onRollError]);
+
+  useEffect(() => {
+    onInitializationStateChangeRef.current = onInitializationStateChange;
+  }, [onInitializationStateChange]);
 
   // Map user materialTheme choice to DiceBox theme color
   const getThemeColor = (theme: string): string => {
@@ -148,6 +155,13 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       : new Error(typeof error === 'string' ? error : 'The dice engine could not complete the roll.');
     console.error('DiceBox operation failed:', normalizedError);
     onRollErrorRef.current?.(normalizedError);
+  };
+
+  /** Ends the startup loader while preserving the existing visible error/retry path. */
+  const reportInitializationError = (error: unknown, box?: DiceBoxInstance) => {
+    if (!isMountedRef.current) return;
+    onInitializationStateChangeRef.current?.('error');
+    reportRollError(error, box);
   };
 
   /** Finishes a wave only after world completion and every unique die result have arrived. */
@@ -247,6 +261,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       if (containerRef.current) containerRef.current.innerHTML = '';
 
       isInitializingRef.current = true;
+      onInitializationStateChangeRef.current?.('loading');
       const initializationAttempt = ++initializationAttemptRef.current;
       if (!hasMarkedDiceBoxInitRef.current) {
         hasMarkedDiceBoxInitRef.current = true;
@@ -256,7 +271,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
       // Include the lazy module download and WASM startup in the same bounded timeout.
       initializationTimeoutRef.current = window.setTimeout(() => {
         if (isDisposed || initializationAttemptRef.current !== initializationAttempt) return;
-        reportRollError(
+        reportInitializationError(
           new Error('The dice engine did not finish loading or initializing. Check your connection and try again.')
         );
       }, DICEBOX_INIT_TIMEOUT_MS);
@@ -298,7 +313,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
           }) as unknown as DiceBoxInstance;
         } catch (error) {
           if (initializationAttemptRef.current === initializationAttempt) {
-            reportRollError(error);
+            reportInitializationError(error);
           }
           return;
         }
@@ -349,6 +364,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
                 'fancy-dice:dicebox-ready'
               );
             }
+            onInitializationStateChangeRef.current?.('ready');
 
             box.onDieComplete = (die: DiceBoxDieCompleteResult) => handleDieComplete(box, die);
             box.onRollComplete = () => handleRollWaveComplete(box);
@@ -364,11 +380,11 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
               diceBoxRef.current !== box ||
               initializationAttemptRef.current !== initializationAttempt
             ) return;
-            reportRollError(error, box);
+            reportInitializationError(error, box);
           });
         } catch (error) {
           if (initializationAttemptRef.current === initializationAttempt) {
-            reportRollError(error, box);
+            reportInitializationError(error, box);
           }
         }
       }).catch((error: unknown) => {
@@ -377,7 +393,7 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
           !isMountedRef.current ||
           initializationAttemptRef.current !== initializationAttempt
         ) return;
-        reportRollError(error);
+        reportInitializationError(error);
       });
     };
 

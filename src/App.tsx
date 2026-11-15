@@ -19,6 +19,7 @@ export default function App() {
   const [formulaError, setFormulaError] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
+  const [diceEngineStatus, setDiceEngineStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const isRollingRef = useRef<boolean>(false);
   const [rollError, setRollError] = useState<string | null>(null);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
@@ -162,7 +163,9 @@ export default function App() {
   // Execute Roll Logic
   /** Validates the formula before audio, state changes, or a physical DiceBox roll begin. */
   const handleExecuteRoll = (formulaToRoll?: string, presetName?: string): boolean => {
-    if (isRollingRef.current) return false;
+    // Do not start audio, rolling state, or a queued roll until the engine is ready.
+    // Keep the error state actionable so the next roll can retry initialization.
+    if (diceEngineStatus === 'loading' || isRollingRef.current) return false;
 
     setRollError(null);
     const formula = (formulaToRoll ?? currentFormula).trim();
@@ -360,7 +363,7 @@ export default function App() {
 
       {/* The menu floats above the full-width 3D table without resizing it. */}
       <div className="relative flex-1 min-h-0 w-full overflow-hidden">
-        <main className="absolute inset-0 h-full w-full overflow-hidden bg-[#064e3b] shadow-inner">
+        <main aria-busy={diceEngineStatus === 'loading'} className="absolute inset-0 h-full w-full overflow-hidden bg-[#064e3b] shadow-inner">
           <ThreeDiceCanvas
             rollResult={currentResult}
             isRolling={isRolling}
@@ -369,7 +372,12 @@ export default function App() {
             diceTheme={diceTheme}
             onRollComplete={handleRollComplete}
             onRollError={handleRollError}
+            onInitializationStateChange={(status) => {
+              setDiceEngineStatus(status);
+              if (status === 'loading') setRollError(null);
+            }}
           />
+
 
           {/* Cup shaking feedback remains attached to the table, beneath the drawer layer. */}
           {isCupShaking && (
@@ -381,6 +389,25 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Keep the live status outside the busy canvas subtree so assistive technology can announce it. */}
+        {diceEngineStatus === 'loading' && (
+          <div
+            className="absolute inset-0 z-20 flex items-center justify-center bg-[#12100e]/75 px-5 backdrop-blur-sm"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#8c7851]/60 bg-[#1a1613]/95 px-6 py-5 shadow-xl shadow-black/40">
+              <Dices className="startup-loading-glyph h-8 w-8 text-[#c5a66b]" aria-hidden="true" />
+              <div className="text-center">
+                <p className="font-title text-xs font-bold uppercase tracking-[0.18em] text-[#f4ead5]">
+                  Preparing the dice table
+                </p>
+                <p className="mt-1 text-xs text-[#d4c3a1]/65">Warming up the dice engine…</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isMenuMounted && (
         <div
