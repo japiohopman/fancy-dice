@@ -88,12 +88,12 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   // Map table theme to background colors
   const getTableBgClass = (theme: TableTheme): string => {
     switch (theme) {
-      case 'green': return 'bg-[#064e3b]';
+      case 'green': return 'bg-[#12382d]';
       case 'blue': return 'bg-[#1e3a8a]';
       case 'crimson': return 'bg-[#881337]';
       case 'dark': return 'bg-[#0f172a]';
       case 'leather': return 'bg-[#451a03]';
-      default: return 'bg-[#064e3b]';
+      default: return 'bg-[#12382d]';
     }
   };
 
