@@ -9,7 +9,7 @@ import { DiceBuilderOverlay } from './components/DiceBuilderOverlay';
 import { LeftOptionsPanel } from './components/LeftOptionsPanel';
 import { RightOptionsPanel } from './components/RightOptionsPanel';
 import { BottomHistoryBar } from './components/BottomHistoryBar';
-import { BookOpen, Dices, Info, Palette, Pipette, SlidersHorizontal, X } from 'lucide-react';
+import { BookOpen, Dices, ExternalLink, Info, Palette, Pipette, SlidersHorizontal, X } from 'lucide-react';
 
 type MenuSection = 'presets' | 'themes' | 'color' | 'options' | 'about';
 
@@ -552,6 +552,20 @@ export default function App() {
                   <p className="text-[10px] font-title uppercase tracking-wider text-[#8c7851]">
                     Made for your next adventure.
                   </p>
+                  <div className="border-t border-[#3d3329] pt-3">
+                    <p className="text-sm leading-relaxed text-[#d4c3a1]/80">
+                      Like tabletop games? Check out{" "}
+                      <a
+                        href="https://github.com/japiohopman/artificer"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-8 items-center gap-1 rounded-md text-[#e2c28a] underline decoration-[#a38c5e]/70 underline-offset-4 transition-colors hover:text-[#fff4df] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
+                      >
+                        Artificer
+                        <ExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      </a>.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
