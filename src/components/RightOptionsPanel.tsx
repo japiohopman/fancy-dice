@@ -148,6 +148,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   ];
 
   const materialOptions = [
+    { id: 'ivory', name: 'Ivory', hex: '#fef3c7' },
     { id: 'emerald', name: 'Emerald', hex: '#059669' },
     { id: 'ruby', name: 'Ruby', hex: '#d97706' },
     { id: 'gold', name: 'Gold', hex: '#f59e0b' },
@@ -251,7 +252,7 @@ export const RightOptionsPanel: React.FC<RightOptionsPanelProps> = ({
   }, []);
 
   const tableOptions: { id: TableTheme; name: string; color: string }[] = [
-    { id: 'green', name: 'Emerald Felt', color: 'bg-[#064e3b]' },
+    { id: 'green', name: 'Emerald Felt', color: 'bg-[#12382d]' },
     { id: 'blue', name: 'Sapphire Felt', color: 'bg-[#1e3a8a]' },
     { id: 'crimson', name: 'Crimson Felt', color: 'bg-[#881337]' },
     { id: 'dark', name: 'Midnight Felt', color: 'bg-[#0f172a]' },
