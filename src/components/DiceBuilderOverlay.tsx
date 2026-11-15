@@ -130,7 +130,7 @@ export const DiceBuilderOverlay: React.FC<DiceBuilderOverlayProps> = ({
         aria-modal="true"
         aria-labelledby="dice-builder-title"
         tabIndex={-1}
-        className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#a38c5e]/70 bg-[#1a1613]/[98%] shadow-2xl shadow-black/50 backdrop-blur-xl"
+        className="relative flex w-full max-w-2xl flex-col overflow-y-auto overflow-x-hidden rounded-2xl border border-[#a38c5e]/70 bg-[#1a1613]/[98%] shadow-2xl shadow-black/50 backdrop-blur-xl"
         style={{ height: `${panelHeight}px`, maxHeight: `${panelMaxHeight}px`, marginTop: '8px' }}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-[#3d3329] bg-[#14100e] px-3 py-2">
