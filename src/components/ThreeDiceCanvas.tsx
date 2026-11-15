@@ -469,7 +469,10 @@ export const ThreeDiceCanvas: React.FC<ThreeDiceCanvasProps> = ({
   }, [rollResult, isRolling]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden transition-colors duration-500 ${getTableBgClass(tableTheme)}`}>
+    <div
+      data-table-theme={tableTheme}
+      className={`dice-table-surface relative w-full h-full overflow-hidden transition-colors duration-500 ${getTableBgClass(tableTheme)}`}
+    >
       <div
         id="dice-canvas-box"
         ref={containerRef}

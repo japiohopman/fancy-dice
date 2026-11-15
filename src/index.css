@@ -659,3 +659,14 @@ body,
     animation-duration: 1ms;
   }
 }
+
+
+/* A restrained woven finish gives the default forest felt a little depth without competing with the dice. */
+.dice-table-surface[data-table-theme="green"] {
+  background-color: #12382d;
+  background-image:
+    radial-gradient(ellipse at 50% 44%, rgb(72 111 82 / 13%) 0%, transparent 64%),
+    linear-gradient(135deg, rgb(5 20 15 / 13%) 0%, transparent 42%, rgb(4 18 13 / 16%) 100%),
+    repeating-linear-gradient(0deg, rgb(232 238 224 / 2%) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, rgb(4 18 13 / 2.5%) 0 1px, transparent 1px 6px);
+}
