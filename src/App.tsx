@@ -20,6 +20,7 @@ export default function App() {
   const [currentResult, setCurrentResult] = useState<RollParsedResult | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [diceEngineStatus, setDiceEngineStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [startupLoaderState, setStartupLoaderState] = useState<'visible' | 'exiting' | 'hidden'>('visible');
   const isRollingRef = useRef<boolean>(false);
   const [rollError, setRollError] = useState<string | null>(null);
   const [isCupShaking, setIsCupShaking] = useState<boolean>(false);
@@ -374,7 +375,12 @@ export default function App() {
             onRollError={handleRollError}
             onInitializationStateChange={(status) => {
               setDiceEngineStatus(status);
-              if (status === 'loading') setRollError(null);
+              if (status === 'loading') {
+                setRollError(null);
+                setStartupLoaderState('visible');
+              } else {
+                setStartupLoaderState((current) => current === 'hidden' ? current : 'exiting');
+              }
             }}
           />
 
@@ -391,19 +397,45 @@ export default function App() {
         </main>
 
         {/* Keep the live status outside the busy canvas subtree so assistive technology can announce it. */}
-        {diceEngineStatus === 'loading' && (
+        {startupLoaderState !== 'hidden' && (
           <div
-            className="absolute inset-0 z-20 flex items-center justify-center bg-[#12100e]/75 px-5 backdrop-blur-sm"
+            className={`startup-loader-overlay absolute inset-0 z-20 overflow-hidden bg-[#12100e] ${startupLoaderState === 'exiting' ? 'startup-loader-overlay--exit' : 'startup-loader-overlay--enter'}`}
             role="status"
             aria-live="polite"
+            onAnimationEnd={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                event.animationName === 'startup-loader-fade-out' &&
+                diceEngineStatus !== 'loading'
+              ) {
+                setStartupLoaderState('hidden');
+              }
+            }}
           >
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#8c7851]/60 bg-[#1a1613]/95 px-6 py-5 shadow-xl shadow-black/40">
-              <Dices className="startup-loading-glyph h-8 w-8 text-[#c5a66b]" aria-hidden="true" />
-              <div className="text-center">
-                <p className="font-title text-xs font-bold uppercase tracking-[0.18em] text-[#f4ead5]">
+            <picture aria-hidden="true" className="absolute inset-0 block h-full w-full">
+              <source
+                media="(orientation: portrait)"
+                srcSet={`${import.meta.env.BASE_URL}loading/tavern-loader-portrait.webp`}
+              />
+              <img
+                src={`${import.meta.env.BASE_URL}loading/tavern-loader-wide.webp`}
+                alt=""
+                className="h-full w-full object-cover object-center"
+                loading="eager"
+                fetchPriority="high"
+                draggable={false}
+              />
+            </picture>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-[#120c08]/75 via-[#120c08]/15 to-[#120c08]/25" aria-hidden="true" />
+
+            <div className="absolute inset-x-4 bottom-7 flex flex-col items-center gap-2 text-center">
+              <Dices className="startup-loading-glyph h-7 w-7 text-[#e2c28a] drop-shadow-lg" aria-hidden="true" />
+              <div className="drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                <p className="font-title text-xs font-bold uppercase tracking-[0.18em] text-[#fff4df]">
                   Preparing the dice table
                 </p>
-                <p className="mt-1 text-xs text-[#d4c3a1]/65">Warming up the dice engine…</p>
+                <p className="mt-1 text-xs text-[#f1dfc2]/85">Warming up the dice engine…</p>
               </div>
             </div>
           </div>
