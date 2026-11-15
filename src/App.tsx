@@ -556,7 +556,7 @@ export default function App() {
                     <p className="text-sm leading-relaxed text-[#d4c3a1]/80">
                       Like tabletop games? Check out{" "}
                       <a
-                        href="https://github.com/japiohopman/artificer"
+                        href="https://artificer-promo-site.onrender.com/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex min-h-8 items-center gap-1 rounded-md text-[#e2c28a] underline decoration-[#a38c5e]/70 underline-offset-4 transition-colors hover:text-[#fff4df] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c5a66b]"
