@@ -164,35 +164,35 @@ export const LeftOptionsPanel: React.FC<LeftOptionsPanelProps> = ({
               </div>
             )}
             {compact ? (
-              <div className="grid shrink-0 grid-cols-4 gap-1">
+              <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-1">
                 {diceList.map((die) => (
                   <div
                     key={die.type}
                     data-selected={stagedDice[die.type] > 0}
-                    className="ui-choice-tile grid min-h-[3.35rem] grid-cols-[minmax(0,1fr)_1.65rem] items-center gap-1 p-1"
+                    className="ui-choice-tile flex min-h-[3.5rem] min-w-0 items-center gap-2 px-2 py-1.5 sm:grid sm:min-h-[3.35rem] sm:grid-cols-[minmax(0,1fr)_1.65rem] sm:items-center sm:gap-1 sm:p-1"
                   >
                     <button
                       type="button"
                       onClick={() => handleIncrement(die.type)}
                       aria-label={`Add one ${die.label}`}
-                      className="flex min-w-0 flex-col items-center justify-center gap-0.5 py-0.5"
+                      className="flex min-w-0 flex-1 flex-row items-center justify-start gap-2 py-1 text-left sm:flex-col sm:justify-center sm:gap-0.5 sm:py-0.5"
                     >
                       <img
                         src={getIconSrc(die.type)}
-                        className={`h-5 w-5 object-contain brightness-0 invert-[89%] sepia-[12%] saturate-[485%] hue-rotate-[353deg] contrast-[91%] ${stagedDice[die.type] > 0 ? 'opacity-100 scale-105' : 'opacity-45'} transition-all duration-200`}
+                        className={`h-7 w-7 shrink-0 object-contain sm:h-5 sm:w-5 brightness-0 invert-[89%] sepia-[12%] saturate-[485%] hue-rotate-[353deg] contrast-[91%] ${stagedDice[die.type] > 0 ? 'opacity-100 scale-105' : 'opacity-45'} transition-all duration-200`}
                         alt=""
                       />
                       <span className="max-w-full truncate font-mono text-[9px] font-bold uppercase leading-none text-[#d4c3a1]">
                         {die.label}{stagedDice[die.type] > 0 ? ` ×${stagedDice[die.type]}` : ''}
                       </span>
                     </button>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex shrink-0 items-center gap-1 sm:flex-col">
                       <button
                         type="button"
                         onClick={() => handleIncrement(die.type)}
                         disabled={totalSelectedDice >= 100}
                         aria-label={`Add one ${die.label}`}
-                        className="ui-stepper-button !h-6 !min-h-6 !w-full !rounded-md !text-[10px]"
+                        className="ui-stepper-button !h-9 !min-h-9 !w-9 !rounded-md !text-sm sm:!h-6 sm:!min-h-6 sm:!w-full sm:!text-[10px]"
                       >
                         +
                       </button>
