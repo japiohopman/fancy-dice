@@ -163,7 +163,9 @@ export default function App() {
   // Execute Roll Logic
   /** Validates the formula before audio, state changes, or a physical DiceBox roll begin. */
   const handleExecuteRoll = (formulaToRoll?: string, presetName?: string): boolean => {
-    if (isRollingRef.current) return false;
+    // Do not start audio, rolling state, or a queued roll until the engine is ready.
+    // Keep the error state actionable so the next roll can retry initialization.
+    if (diceEngineStatus === 'loading' || isRollingRef.current) return false;
 
     setRollError(null);
     const formula = (formulaToRoll ?? currentFormula).trim();
@@ -376,23 +378,6 @@ export default function App() {
             }}
           />
 
-          {diceEngineStatus === 'loading' && (
-            <div
-              className="absolute inset-0 z-20 flex items-center justify-center bg-[#12100e]/75 px-5 backdrop-blur-sm"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#8c7851]/60 bg-[#1a1613]/95 px-6 py-5 shadow-xl shadow-black/40">
-                <Dices className="startup-loading-glyph h-8 w-8 text-[#c5a66b]" aria-hidden="true" />
-                <div className="text-center">
-                  <p className="font-title text-xs font-bold uppercase tracking-[0.18em] text-[#f4ead5]">
-                    Preparing the dice table
-                  </p>
-                  <p className="mt-1 text-xs text-[#d4c3a1]/65">Warming up the dice engine…</p>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Cup shaking feedback remains attached to the table, beneath the drawer layer. */}
           {isCupShaking && (
@@ -404,6 +389,25 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Keep the live status outside the busy canvas subtree so assistive technology can announce it. */}
+        {diceEngineStatus === 'loading' && (
+          <div
+            className="absolute inset-0 z-20 flex items-center justify-center bg-[#12100e]/75 px-5 backdrop-blur-sm"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#8c7851]/60 bg-[#1a1613]/95 px-6 py-5 shadow-xl shadow-black/40">
+              <Dices className="startup-loading-glyph h-8 w-8 text-[#c5a66b]" aria-hidden="true" />
+              <div className="text-center">
+                <p className="font-title text-xs font-bold uppercase tracking-[0.18em] text-[#f4ead5]">
+                  Preparing the dice table
+                </p>
+                <p className="mt-1 text-xs text-[#d4c3a1]/65">Warming up the dice engine…</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isMenuMounted && (
         <div
