@@ -199,7 +199,7 @@ export const DiceBuilderOverlay: React.FC<DiceBuilderOverlayProps> = ({
           )}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5 sm:p-2">
+        <div className="min-h-[9rem] flex-1 overflow-y-auto overscroll-contain p-1.5 sm:p-2">
           <LeftOptionsPanel
             onFormulaUpdate={onFormulaChange}
             currentFormula={currentFormula}
